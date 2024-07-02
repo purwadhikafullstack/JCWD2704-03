@@ -10,12 +10,161 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Sample {
-  id        Int      @id @default(autoincrement())
-  name      String
-  code      String   @unique
+// model Sample {
+//   id        Int      @id @default(autoincrement())
+//   name      String
+//   code      String   @unique
+//   createdAt DateTime @default(now())
+//   updatedAt DateTime @updatedAt
+
+//   @@map("samples") // if you want to use snake_case format
+// }
+
+enum Role {
+  user
+  tenant
+}
+
+model User {
+  id         String   @id @default(cuid())
+  email      String   @unique
+  password   String?
+  social_id  String?
+  first_name String?
+  last_name  String?
+  role       Role
+  isVerified Boolean? @default(false)
+  image      Bytes?   @db.LongBlob
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  Property Property[]
+  Order    Order[]
+  Review   Review[]
+
+  @@map("users")
+}
+
+// signup (user) -> email -> verifikasi -> firstname, lastname, username, password -> update ke db
+
+// tidak ada signup via social
+
+// sign up
+// login pake social
+
+enum Category {
+  apartment
+  guesthouse
+  villa
+  hotel
+}
+
+// enum Location {
+//   jakarta
+//   bandung
+//   surabaya
+//   yogyakarta
+//   medan
+//   palembang
+//   bali
+//   makassar
+// }
+
+model Property {
+  id        String   @id @default(cuid())
+  tenant_id String
+  category  Category
+  pic       Bytes?   @db.LongBlob
+  desc      String   @db.LongText
+  location  String
+  address   String
+  latitude  Float?
+  longitude Float?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@map("samples") // if you want to use snake_case format
+  Room   Room[]
+  Order  Order[]
+  Review Review[]
+
+  tenant User @relation(fields: [tenant_id], references: [id])
+
+  @@map("properties")
+}
+
+enum Type {
+  standard
+  deluxe
+  suite
+}
+
+model Room {
+  id              String    @id @default(cuid())
+  property_id     String
+  type            Type
+  price           Float     @db.Double
+  peak_price      Float?    @db.Double
+  start_date_peak DateTime?
+  end_date_peak   DateTime?
+  desc            String    @db.LongText
+  pic             Bytes?    @db.LongBlob
+  availability    Int
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  property Property @relation(fields: [property_id], references: [id])
+
+  Order Order[]
+
+  @@map("rooms")
+}
+
+enum Status {
+  pending_payment
+  awaiting_confirmation
+  cancelled
+  success
+}
+
+model Order {
+  id            String   @id @default(cuid())
+  user_id       String
+  property_id   String
+  room_id       String
+  checkIn_date  DateTime
+  checkOut_date DateTime
+  total_room    Int
+  total_price   Float
+  guest         Int
+  payment_proof Bytes    @db.LongBlob
+  status        Status
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user     User     @relation(fields: [user_id], references: [id])
+  room     Room     @relation(fields: [room_id], references: [id])
+  property Property @relation(fields: [property_id], references: [id])
+
+  Review Review[]
+
+  @@map("orders")
+}
+
+model Review {
+  id          String   @id @default(cuid())
+  user_id     String
+  order_id    String
+  property_id String
+  review      String   @db.LongText
+  reply       String?  @db.LongText
+  rating      Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user     User     @relation(fields: [user_id], references: [id])
+  order    Order    @relation(fields: [order_id], references: [id])
+  property Property @relation(fields: [property_id], references: [id])
+  userId   String?
+
+  @@map("reviews")
 }
