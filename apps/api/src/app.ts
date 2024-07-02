@@ -10,7 +10,7 @@ import express, {
 import cors from 'cors';
 import { PORT } from './config';
 import { SampleRouter } from './routers/sample.router';
-
+// test
 export default class App {
   private app: Express;
 
