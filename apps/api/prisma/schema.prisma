@@ -59,16 +59,29 @@ enum Category {
   hotel
 }
 
-// enum Location {
-//   jakarta
-//   bandung
-//   surabaya
-//   yogyakarta
-//   medan
-//   palembang
-//   bali
-//   makassar
-// }
+enum City {
+  jakarta
+  bandung
+  yogyakarta
+  solo
+  semarang
+  surabaya
+  bali
+  makassar
+  manado
+  ambon
+  medan
+  palembang
+  pekanbaru
+  balikpapan
+  banjarmasin
+  pontianak
+  samarinda
+  batam
+  padang
+  malang
+  other
+}
 
 model Property {
   id        String   @id @default(cuid())
@@ -76,7 +89,7 @@ model Property {
   category  Category
   pic       Bytes?   @db.LongBlob
   desc      String   @db.LongText
-  location  String
+  city      City
   address   String
   latitude  Float?
   longitude Float?
