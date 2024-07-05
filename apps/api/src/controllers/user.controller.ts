@@ -1,5 +1,5 @@
 import { type NextFunction, type Response, type Request } from 'express';
-import usersServices from '@/services/users.services';
+import usersServices from '@/services/user.services';
 
 export class UserController {
   async userRegisterEmail(req: Request, res: Response, next: NextFunction) {

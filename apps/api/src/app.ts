@@ -10,9 +10,9 @@ import express, {
 import cors from 'cors';
 // import { PORT } from './config';
 import { PORT, corsOptions } from './configs/config';
-import { UserRouter } from './routers/users.router';
+import { UserRouter } from './routers/user.router';
 // import { SampleRouter } from './routers/sample.router';
-import reservationsRouter from './routers/reservations.router';
+import reservationsRouter from './routers/reservation.router';
 // test
 export default class App {
   private app: Express;

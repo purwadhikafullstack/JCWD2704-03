@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from 'express';
-import reservationsServices from '../services/reservations.services';
+import reservationsServices from '../services/reservation.services';
 class ReservationController {
   async getAll(req: Request, res: Response, next: NextFunction) {
     try {

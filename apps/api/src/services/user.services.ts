@@ -1,4 +1,4 @@
-import type { TUser } from '@/models/users.model';
+import type { TUser } from '@/models/user.model';
 import { Request } from 'express';
 import { comparePassword, hashPassword } from '../libs/bcrypt';
 import { createToken } from '../libs/jwt';

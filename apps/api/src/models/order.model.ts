@@ -1,5 +1,5 @@
 import { Status } from '@prisma/client';
-import { TProperty } from './properties.model';
+import { TProperty } from './property.model';
 import { TRoom } from './room.model';
 import { TUser } from './user.model';
 
