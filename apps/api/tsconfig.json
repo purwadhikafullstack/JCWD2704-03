@@ -13,6 +13,7 @@
     },
     "typeRoots": ["./src/models"]
   },
-  "include": ["**/*.ts"],
+  // "include": ["src/**/*"],
+  "include": ["src/**/*", "types.d.ts"],
   "exclude": ["node_modules"]
 }
