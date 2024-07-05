@@ -10,9 +10,9 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]
-    }
+    },
+    "typeRoots": ["./src/models"]
   },
-  // "include": ["src/**/*"],
   "include": ["**/*.ts"],
   "exclude": ["node_modules"]
 }
