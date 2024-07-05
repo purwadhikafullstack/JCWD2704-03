@@ -1,30 +1,38 @@
-// import { Request, Response } from 'express';
-// import prisma from '@/libs/prisma';
+import { Request, Response } from 'express';
+import { prisma } from '@/libs/prisma';
 
-// export class SampleController {
-//   async getSampleData(req: Request, res: Response) {
-//     const sampleData = await prisma.user.findMany();
+export class SampleController {
+  async getSampleData(req: Request, res: Response) {
+    const sampleData = await prisma.user.findMany();
+    // import { Request, Response } from 'express';
+    // import prisma from '@/libs/prisma';
 
-//     return res.status(200).send(sampleData);
-//   }
+    // export class SampleController {
+    //   async getSampleData(req: Request, res: Response) {
+    //     const sampleData = await prisma.user.findMany();
 
-//   async getSampleDataById(req: Request, res: Response) {
-//     const { id } = req.params;
+    //     return res.status(200).send(sampleData);
+    //   }
 
-//     // if (!sample) {
-//     //   return res.send(404);
-//     // }
+    //   async getSampleDataById(req: Request, res: Response) {
+    //     const { id } = req.params;
 
-//     // return res.status(200).send(sample);
-//   }
+    //     // if (!sample) {
+    //     //   return res.send(404);
+    //     // }
 
-//   async createSampleData(req: Request, res: Response) {
-//     const { last_name, first_name, email, role } = req.body;
+    //     // return res.status(200).send(sample);
+    //   }
 
-//     const newSampleData = await prisma.user.create({
-//       data: { last_name, first_name, email, role },
-//     });
+    //   async createSampleData(req: Request, res: Response) {
+    //     const { last_name, first_name, email, role } = req.body;
 
-//     return res.status(201).send(newSampleData);
-//   }
-// }
+    //     const newSampleData = await prisma.user.create({
+    //       data: { last_name, first_name, email, role },
+    //     });
+
+    //     return res.status(201).send(newSampleData);
+    //   }
+    // }
+  }
+}

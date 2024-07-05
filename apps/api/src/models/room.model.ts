@@ -1,5 +1,5 @@
 import { Type } from '@prisma/client';
-import { TProperty } from './properties.model';
+import { TProperty } from './property.model';
 
 export type TRoom = {
   id: string;

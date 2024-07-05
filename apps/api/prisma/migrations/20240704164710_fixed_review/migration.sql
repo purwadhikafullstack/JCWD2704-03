@@ -8,9 +8,6 @@
 ALTER TABLE `reviews` DROP FOREIGN KEY `reviews_user_id_fkey`;
 
 -- AlterTable
-ALTER TABLE `orders` ADD COLUMN `invoice_id` VARCHAR(191) NULL;
-
--- AlterTable
 ALTER TABLE `reviews` DROP COLUMN `userId`,
     MODIFY `user_id` VARCHAR(191) NULL;
 
