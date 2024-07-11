@@ -13,6 +13,7 @@ import { PORT, corsOptions } from './configs/config';
 import { UserRouter } from './routers/user.router';
 // import { SampleRouter } from './routers/sample.router';
 import reservationsRouter from './routers/reservation.router';
+import propertyRouter from './routers/property.router';
 // test
 export default class App {
   private app: Express;
@@ -58,6 +59,7 @@ export default class App {
     // this.app.use('/sample', sampleRouter.getRouter());
 
     this.app.use('/api/users', userRouter.getRouter());
+    this.app.use('/api/properties', propertyRouter.getRouter());
     this.app.use('/api/reservations', reservationsRouter.getRouter());
   }
 

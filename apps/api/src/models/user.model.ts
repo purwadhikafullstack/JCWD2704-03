@@ -12,4 +12,4 @@ export type TUser = {
   image?: string | null;
   createdAt?: Date;
   updatedAt?: Date;
-} | null;
+};
