@@ -3,7 +3,7 @@ export interface Property {
   id: string;
   tenant_id: string;
   category: string;
-  city_id: City;
+  city: string;
   pic: string;
   desc: string;
   address: string;
@@ -13,7 +13,7 @@ export interface Property {
   updateAt: string;
 }
 
-interface City {
-  id: string;
-  city: string;
-}
+//   interface City {
+//     id: string;
+//     city: string;
+//   }

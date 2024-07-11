@@ -1,20 +1,33 @@
-import propertyController from '@/controllers/property.controller';
 import { Router } from 'express';
-class PropertyRouter {
+import { verifyUser } from '../middlewares/auth.middleware';
+import { PropertyController } from '@/controllers/property.controller';
+
+export class PropertyRouter {
   private router: Router;
+  private propertyController: PropertyController;
+
   constructor() {
+    this.propertyController = new PropertyController();
     this.router = Router();
-    this.initializedRoutes();
+    this.initializeRoutes();
   }
-  initializedRoutes() {
-    this.router.get('/:Id', propertyController.getAllRoom);
-    this.router.get('/room/:id', propertyController.getRoomById);
-    this.router.get('/image/:propertyId', propertyController.renderPicProp);
-    this.router.get('/room/image/:roomId', propertyController.renderPicRoom);
+
+  private initializeRoutes(): void {
+    this.router.get('/v1', this.propertyController.getRoomAvailability);
+    this.router.get('/search', this.propertyController.searchProperties);
+    this.router.get('/:Id', this.propertyController.getAllRoom);
+    this.router.get('/room/:id', this.propertyController.getRoomById);
+    this.router.get(
+      '/image/:propertyId',
+      this.propertyController.renderPicProp,
+    );
+    this.router.get(
+      '/room/image/:roomId',
+      this.propertyController.renderPicRoom,
+    );
   }
-  getRouter() {
+
+  getRouter(): Router {
     return this.router;
   }
 }
-
-export default new PropertyRouter();

@@ -25,8 +25,11 @@ class UserService {
     });
     console.log('Existing user:', existingUser);
 
-    if (existingUser.length)
-      throw new Error('Email has already been registered');
+    if (existingUser.length) {
+      const error = new Error('Email has already been registered');
+      (error as any).statusCode = 409;
+      throw error;
+    }
 
     const newUser = await prisma.user.create({
       data: {
@@ -128,12 +131,8 @@ class UserService {
       }
 
       await prisma.user.update({
-        where: {
-          id: user?.id,
-        },
-        data: {
-          isVerified: true,
-        },
+        where: { id: user?.id },
+        data: { isVerified: true },
       });
 
       return { success: true };
@@ -144,17 +143,12 @@ class UserService {
 
   async userEntryData(req: Request) {
     const { token, password, first_name, last_name } = req.body;
-
     const decodedToken = verify(token, SECRET_KEY) as { id: string };
-
     if (!decodedToken || !decodedToken.id) {
       throw new Error('Invalid token');
     }
-
     const userId = decodedToken.id;
-
     const hashPass = await hashPassword(password);
-
     const updatedUser = await prisma.user.update({
       where: { id: userId },
       data: {
@@ -164,10 +158,38 @@ class UserService {
       },
     });
 
-    console.log('User data updated:', updatedUser);
+    return updatedUser;
   }
 
-  async userLogin(req: Request) {}
+  async resendVerification(req: Request) {
+    try {
+      const { email } = req.body;
+      const select: Prisma.UserSelectScalar = {
+        id: true,
+        isVerified: true,
+      };
+      const data = await prisma.user.findUnique({
+        select,
+        where: { email: email },
+      });
+      if (data) {
+        if (data.isVerified) {
+          return 'You have previously verified your email';
+        } else {
+          let message = await this.sendingEmail(
+            data.id,
+            email,
+            '/../templates/verification.html',
+            'Confirm Your Email Address For Atcasa',
+            'verify',
+          );
+          return message;
+        }
+      }
+    } catch (error) {
+      console.log('error resend email');
+    }
+  }
 }
 
 export default new UserService();

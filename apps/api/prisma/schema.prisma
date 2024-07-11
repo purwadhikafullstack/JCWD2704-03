@@ -46,23 +46,10 @@ model User {
   @@map("users")
 }
 
-// signup (user) -> email -> verifikasi -> firstname, lastname, username, password -> update ke db
-
-// tidak ada signup via social
-
-// sign up
-// login pake social
-
 enum Category {
-  apartment
-  guesthouse
-  hotel
-}
-
-model City {
-  id       String     @id @default(cuid())
-  city     String
-  Property Property[]
+  Apartment
+  Guesthouse
+  Hotel
 }
 
 model Property {
@@ -72,7 +59,7 @@ model Property {
   category  Category
   pic       Bytes?   @db.LongBlob
   desc      String   @db.LongText
-  city_id   String?
+  city      String?
   address   String
   latitude  Float?
   longitude Float?
@@ -83,8 +70,7 @@ model Property {
   Order  Order[]
   Review Review[]
 
-  tenant User  @relation(fields: [tenant_id], references: [id])
-  city   City? @relation(fields: [city_id], references: [id])
+  tenant User @relation(fields: [tenant_id], references: [id])
 
   @@map("properties")
 }
