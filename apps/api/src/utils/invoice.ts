@@ -12,7 +12,7 @@ const generateRandomString = (length: number) => {
 // Function to generate invoice code
 export const generateInvoice = (id: string) => {
   const date = new Date().toISOString().split('T')[0].replace(/-/g, '');
-  const eventIdPrefix = id.substring(0, 5);
+  const propertyIdPrefix = id.substring(0, 5);
   const randomString = generateRandomString(5); // Generate a random string of 5 characters
-  return `INV-${date}-${eventIdPrefix}-${randomString}`;
+  return `INV-${date}-${propertyIdPrefix}-${randomString}`;
 };

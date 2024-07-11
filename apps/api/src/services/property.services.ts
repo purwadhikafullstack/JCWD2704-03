@@ -1,5 +1,6 @@
 import { Prisma } from '@prisma/client';
 import { prisma } from '../libs/prisma';
+import { Request } from 'express';
 
 class PropertyService {
   async getRoomAvailability(
@@ -7,9 +8,8 @@ class PropertyService {
     checkIn: Date,
     checkOut: Date,
   ): Promise<number> {
-    // Get the initial availability of the room
     const room = await prisma.room.findUnique({
-      where: { id: roomId }, // Specify the room ID here
+      where: { id: roomId },
       select: { availability: true },
     });
 
@@ -17,7 +17,6 @@ class PropertyService {
       throw new Error('Room not found');
     }
 
-    // Get the count of bookings for the room within the specified date range
     const bookings = await prisma.order.findMany({
       where: {
         room_id: roomId,
@@ -37,7 +36,6 @@ class PropertyService {
       0,
     );
 
-    // Calculate remaining availability
     const remainingAvailability = room.availability - bookedRooms;
 
     return remainingAvailability;
@@ -78,7 +76,7 @@ class PropertyService {
             },
           },
           tenant: true,
-          City: true,
+          // City: true,
         },
       });
 
@@ -86,6 +84,44 @@ class PropertyService {
     } catch (error) {
       throw new Error('Error searching properties');
     }
+  }
+
+  async getAllProp() {}
+
+  async getAllRoom(req: Request) {
+    const { id } = req.params;
+    const rooms = await prisma.room.findMany({
+      where: {
+        property_id: id,
+      },
+    });
+    return rooms;
+  }
+
+  async getRoomByRoomId(req: Request) {
+    const { id } = req.params;
+    const room = await prisma.room.findUnique({
+      where: { id },
+    });
+    return room;
+  }
+
+  async renderPicProperty(req: Request) {
+    const data = await prisma.property.findUnique({
+      where: {
+        id: req.params.id,
+      },
+    });
+    return data?.pic;
+  }
+
+  async renderPicRoom(req: Request) {
+    const data = await prisma.room.findUnique({
+      where: {
+        id: req.params.id,
+      },
+    });
+    return data?.pic;
   }
 }
 

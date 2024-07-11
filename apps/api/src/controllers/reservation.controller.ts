@@ -12,11 +12,33 @@ class ReservationController {
       next(error);
     }
   }
+  async getOrderByOrderId(req: Request, res: Response, next: NextFunction) {
+    try {
+      const data = await reservationsServices.getOrderByOrderId(req);
+      return res.send({
+        message: 'fetch order detail of 1 buyer',
+        data,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
   async getOrderByUserId(req: Request, res: Response, next: NextFunction) {
     try {
       const data = await reservationsServices.getOrderByUserId(req);
       return res.send({
         message: 'fetch order detail of 1 buyer',
+        data,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+  async getOrderBySellerId(req: Request, res: Response, next: NextFunction) {
+    try {
+      const data = await reservationsServices.getOrderBySellerId(req);
+      return res.send({
+        message: 'fetch order detail of 1 seller',
         data,
       });
     } catch (error) {
@@ -29,6 +51,16 @@ class ReservationController {
       return res.send({
         message: 'a user successfully made a reservation',
         data,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+  async updateOrder(req: Request, res: Response, next: NextFunction) {
+    try {
+      await reservationsServices.updateOrder(req);
+      return res.send({
+        message: 'success upload payment proof',
       });
     } catch (error) {
       next(error);

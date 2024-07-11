@@ -4,11 +4,11 @@ import { useRouter } from 'next/navigation';
 import React, { useState, useEffect, useRef } from 'react';
 import { useAppDispatch, useAppSelector } from '@/app/hooks';
 import { logout } from '@/libs/redux/slices/user.slice';
-import { TUser } from '@/models/user.model';
+import { User } from '@/models/user.model';
 type Props = {};
 
 export const Header = () => {
-  const loggedinUser = useAppSelector((state) => state.auth) as TUser;
+  const loggedinUser = useAppSelector((state) => state.auth) as User;
   const router = useRouter();
   const dispatch = useAppDispatch();
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -64,7 +64,7 @@ export const Header = () => {
           </a>
 
           <div className="">
-            <div className="flex flex-row gap-2 items-center justify-center">
+            <div className="flex flex-row gap-4 items-center justify-center">
               {!loggedinUser.first_name && (
                 <button
                   className="font-semibold text-sm hidden lg:flex hover:text-[#ED777B] hover:border-b-2"
@@ -83,7 +83,7 @@ export const Header = () => {
                 <div
                   tabIndex={0}
                   role="button"
-                  className="btn btn-ghost btn-circle avatar w-16"
+                  className="btn btn-ghost btn-circle avatar w-12"
                   onClick={() => setDropdownOpen(!dropdownOpen)}
                   style={{
                     display: 'flex',

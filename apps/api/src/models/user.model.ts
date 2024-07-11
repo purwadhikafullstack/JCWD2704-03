@@ -9,7 +9,7 @@ export type TUser = {
   last_name: string | null;
   role: Role;
   isVerified: boolean | null;
-  image: Buffer | null;
-  createdAt: Date;
-  updatedAt: Date;
+  image?: Buffer | null;
+  createdAt?: Date;
+  updatedAt?: Date;
 };
