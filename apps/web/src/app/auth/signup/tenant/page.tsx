@@ -1,7 +1,12 @@
+import SignupHostForm from '@/components/auth/signup/SignupHostForm';
 import React from 'react';
 
 function page() {
-  return <div>ini signup tenant</div>;
+  return (
+    <>
+      <SignupHostForm />
+    </>
+  );
 }
 
 export default page;
