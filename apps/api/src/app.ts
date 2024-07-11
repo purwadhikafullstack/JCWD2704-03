@@ -13,6 +13,7 @@ import { PORT, corsOptions } from './configs/config';
 import { UserRouter } from './routers/user.router';
 // import { SampleRouter } from './routers/sample.router';
 import reservationsRouter from './routers/reservation.router';
+import { PropertyRouter } from './routers/property.router';
 // test
 export default class App {
   private app: Express;
@@ -35,11 +36,25 @@ export default class App {
     });
 
     // error
+    // this.app.use(
+    //   (err: Error, req: Request, res: Response, next: NextFunction) => {
+    //     if (req.path.includes('/api/')) {
+    //       console.error('Error : ', err.stack);
+    //       res.status(500).send(err.message);
+    //     } else {
+    //       next();
+    //     }
+    //   },
+    // );
+
     this.app.use(
       (err: Error, req: Request, res: Response, next: NextFunction) => {
         if (req.path.includes('/api/')) {
           console.error('Error : ', err.stack);
-          res.status(500).send(err.message);
+          const statusCode = (err as any).statusCode || 500;
+          res.status(statusCode).send({
+            message: err.message,
+          });
         } else {
           next();
         }
@@ -49,7 +64,7 @@ export default class App {
 
   private routes(): void {
     const userRouter = new UserRouter();
-    // const sampleRouter = new SampleRouter();
+    const propertyRouter = new PropertyRouter();
 
     this.app.get('/api', (req: Request, res: Response) => {
       res.send(`Hello, Purwadhika Student API!`);
@@ -59,6 +74,7 @@ export default class App {
 
     this.app.use('/api/users', userRouter.getRouter());
     this.app.use('/api/reservations', reservationsRouter.getRouter());
+    this.app.use('/api/properties', propertyRouter.getRouter());
   }
 
   private configure(): void {
