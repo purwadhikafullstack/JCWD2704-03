@@ -2,7 +2,7 @@
 
 import { useAppSelector } from '@/app/hooks';
 import { axiosInstance } from '@/libs/axios.config';
-import { TUser } from '@/models/user.model';
+import { User } from '@/models/user.model';
 import { useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 import Swal from 'sweetalert2';
@@ -13,7 +13,7 @@ export default function ResendEmail() {
   const searchParams = useSearchParams();
   const [responseMessage, setResponseMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { email } = useAppSelector((state) => state.auth) as TUser;
+  const { email } = useAppSelector((state) => state.auth) as User;
   let userEmail: string | undefined = email || undefined;
   if (!userEmail) {
     const emailParam: string | null = searchParams.get('email');

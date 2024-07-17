@@ -1,49 +1,60 @@
 'use client';
 import React, { useState } from 'react';
-import * as Yup from 'yup';
-import YupPassword from 'yup-password';
 import { useFormik } from 'formik';
-import { axiosInstance } from '@/libs/axios.config';
+import * as Yup from 'yup';
 import { useRouter } from 'next/navigation';
-import { toast } from 'react-toastify';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import { userLogin } from '@/libs/redux/middlewares/auth.middleware';
+import { toast } from 'react-toastify';
+import { UserLoginPayload } from '@/models/user.model';
 import Link from 'next/link';
 import { AxiosError } from 'axios';
 import Spinner from 'react-bootstrap/Spinner';
 import supabase from '@/libs/supabase';
+import { login } from '@/libs/redux/slices/user.slice';
+import { useAppDispatch } from '@/app/hooks';
+import { setCookie } from 'cookies-next';
+import { axiosInstance } from '@/libs/axios.config';
 
-function SignupHostForm() {
+const LoginForm: React.FC = () => {
   const router = useRouter();
-  const [isChecked, setIsChecked] = useState(false);
+  const dispatch = useAppDispatch();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  YupPassword(Yup);
 
   const initialValues = {
     email: '',
+    password: '',
   };
 
   const formik = useFormik({
     initialValues,
-    validationSchema: Yup.object().shape({
+    validationSchema: Yup.object({
       email: Yup.string()
-        .required('Email is required')
-        .email('Please enter a valid email address'),
+        .email('Invalid email address')
+        .required('Email is required'),
+      password: Yup.string().required('Password is required'),
     }),
-    onSubmit: async (values, formikHelpers) => {
+    onSubmit: async (values) => {
       setIsSubmitting(true);
       try {
-        console.log('Sign up as user starts');
-
-        await axiosInstance().post('/api/users/v2', values);
-
-        router.push(`/auth/verification?email=${values.email}`);
+        console.log('Sign in as user starts');
+        const result = await dispatch(
+          userLogin({
+            email: values.email,
+            password: values.password,
+          } as UserLoginPayload),
+        );
+        formik.resetForm();
+        if (result?.role && result?.url) {
+          router.push(result.url);
+        }
       } catch (error) {
         console.log(error);
 
         if (error instanceof AxiosError) {
           toast.error(
             error.response?.data.message ||
-              'An error occurred while signing up.',
+              'An error occurred while signing in.',
           );
         } else {
           toast.error('An unexpected error occurred.');
@@ -54,46 +65,51 @@ function SignupHostForm() {
     },
   });
 
-  const isSubmitDisabled =
-    !isChecked || !formik.values.email || !!formik.errors.email;
-
   const handleGoogleSignIn = async () => {
-    const { data, error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: 'http://localhost:3000/auth/callback?userType=tenant',
-      },
-    });
+    try {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: 'http://localhost:3000/auth/callback?userType=user',
+        },
+      });
 
-    if (error) {
-      console.log('Error signing in with Google:', error.message);
-      return;
-    }
-
-    supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_IN' && session) {
-        const user = session.user;
-        const { email, id } = user;
-        const { full_name } = user.user_metadata;
-
-        const [first_name, last_name] = full_name.split(' ');
-
-        // Send data to backend
-        try {
-          await axiosInstance().post('/api/users/v5', {
-            email,
-            social_id: id,
-            first_name,
-            last_name,
-            role: 'tenant',
-          });
-
-          // window.location.href = '/dashboard';
-        } catch (error) {
-          console.error('Error logging in with Google:', error);
-        }
+      if (error) {
+        console.log('Error signing in with Google:', error.message);
+        return;
       }
-    });
+
+      supabase.auth.onAuthStateChange(async (event, session) => {
+        if (event === 'SIGNED_IN' && session) {
+          const user = session.user;
+          const { email, id } = user;
+          const { full_name } = user.user_metadata;
+
+          console.log(session);
+
+          const [first_name, last_name] = full_name.split(' ');
+
+          try {
+            await axiosInstance().post('/api/users/v4', {
+              email,
+              social_id: id,
+              first_name,
+              last_name,
+              role: 'user',
+            });
+
+            setCookie('access_token', session.access_token);
+            setCookie('refresh_token', session.refresh_token);
+
+            dispatch(login({ email, id, first_name, last_name }));
+          } catch (error) {
+            console.error('Error logging in with Google:', error);
+          }
+        }
+      });
+    } catch (error) {
+      console.error('Error signing in with Google:', error);
+    }
   };
 
   return (
@@ -101,27 +117,36 @@ function SignupHostForm() {
       {/* Desktop View */}
       <div className="hidden lg:flex w-screen h-screen">
         <div className="flex flex-row items-center justify-between w-full">
+          {/* BANNER */}
+          <div className="h-full w-2/5 mx-8 lg:flex justify-center sm:hidden md:hidden">
+            <img
+              src="https://i.ibb.co.com/rtS8j9q/photo-1526057565006-20beab8dd2ed-1-1-2.png"
+              alt=""
+              className="h-screen object-cover lg:flex sm:hidden md:hidden"
+            />
+          </div>
+
           {/* FORM LOGIN */}
           <div className="flex flex-col items-center justify-center w-3/5">
             {/* HEADER SECTION */}
-            <div className=" mb-3 flex items-center justify-center flex-col">
+            <div className="mb-3 flex items-center justify-center flex-col">
               <Link href="/">
                 <img
                   src="https://i.ibb.co.com/QPvYKBk/1.png"
                   alt=""
-                  className="w-24 "
+                  className="w-24"
                 />
               </Link>
-              <h2 className="font-bold">Ready to become a property host?</h2>
+              <h2 className="font-bold">Welcome back</h2>
               <div className="text-zinc-400">
-                Sign up now to rent out your property with ease!
+                Sign in to continue browsing properties in Atcasa
               </div>
             </div>
 
             {/* login google */}
             <div>
               <button
-                className="btn btn-outline-dark w-full "
+                className="btn btn-outline-dark w-full"
                 type="button"
                 onClick={handleGoogleSignIn}
               >
@@ -133,7 +158,6 @@ function SignupHostForm() {
                       alt=""
                     />
                   </div>
-
                   <div className="font-semibold">Login with Google</div>
                 </div>
               </button>
@@ -155,7 +179,7 @@ function SignupHostForm() {
                 <div className="form-floating w-full">
                   <input
                     type="email"
-                    className="form-control mb-3"
+                    className="form-control mb-2"
                     id="floatingInput"
                     placeholder="name@example.com"
                     {...formik.getFieldProps('email')}
@@ -168,26 +192,26 @@ function SignupHostForm() {
                   </div>
                 ) : null}
 
-                {/* // TERMS AND CONDITION */}
-                <div className="flex flex-row gap-2 items-center">
+                <div className="form-floating w-full">
                   <input
-                    type="checkbox"
-                    className="checkbox"
-                    checked={isChecked}
-                    onChange={() => setIsChecked(!isChecked)}
+                    type="password"
+                    className="form-control mb-2"
+                    id="floatingPassword"
+                    placeholder="•••••••"
+                    {...formik.getFieldProps('password')}
                   />
-                  <div className="text-xs">
-                    I agree to
-                    <span className="font-semibold text-[#263C94] cursor-pointer">
-                      {' '}
-                      Terms & Privacy Policy
-                    </span>
-                  </div>
+                  <label htmlFor="floatingPassword">Password</label>
                 </div>
+                {formik.touched.password && formik.errors.password ? (
+                  <div className="text-red-700 text-xs mb-3">
+                    {formik.errors.password}
+                  </div>
+                ) : null}
+
                 <button
                   className="btn bsb-btn-xl btn-dark w-full my-3"
                   type="submit"
-                  disabled={isSubmitDisabled || isSubmitting}
+                  disabled={!formik.isValid || isSubmitting}
                 >
                   {isSubmitting ? (
                     <Spinner
@@ -199,30 +223,31 @@ function SignupHostForm() {
                       <span className="visually-hidden">Loading...</span>
                     </Spinner>
                   ) : (
-                    'Sign up'
+                    'Sign in'
                   )}
                 </button>
               </form>
 
-              <div className="text-xs flex flex-row gap-1">
-                <div>Already have an account?</div>
-                <Link
-                  href="/auth/login/tenant"
-                  className="font-semibold text-[#263C94] no-underline"
-                >
-                  Sign in here
-                </Link>
+              <div className="flex justify-between">
+                <div className="text-xs flex flex-row gap-1">
+                  <div>Don't have account?</div>
+                  <Link
+                    href="/auth/signup/user"
+                    className="font-semibold text-[#263C94] no-underline"
+                  >
+                    Register here
+                  </Link>
+                </div>
+                <div className="text-xs flex flex-row gap-1">
+                  <Link
+                    href="/auth/passwordreset"
+                    className="font-semibold text-[#263C94] no-underline"
+                  >
+                    Forgot password?
+                  </Link>
+                </div>
               </div>
             </div>
-          </div>
-
-          {/* BANNER */}
-          <div className="h-full w-2/5 mx-8 lg:flex justify-center sm:hidden md:hidden">
-            <img
-              src="https://i.ibb.co.com/GsGmwmP/photo-1526057565006-20beab8dd2ed-1-1.png"
-              alt=""
-              className="h-screen object-cover lg:flex sm:hidden md:hidden"
-            />
           </div>
         </div>
       </div>
@@ -230,24 +255,24 @@ function SignupHostForm() {
       {/* Mobile View */}
       <div className="lg:hidden flex flex-col items-center justify-center w-full">
         {/* HEADER SECTION */}
-        <div className=" mb-3 flex items-center justify-center flex-col">
+        <div className="mb-3 flex items-center justify-center flex-col">
           <Link href="/">
             <img
               src="https://i.ibb.co.com/QPvYKBk/1.png"
               alt=""
-              className="w-24 "
+              className="w-24"
             />
           </Link>
-          <h2 className="font-bold">Ready to become a property host?</h2>
+          <h2 className="font-bold">Welcome back</h2>
           <div className="text-zinc-400">
-            Sign up now to rent out your property with ease!
+            Sign in to continue browsing properties
           </div>
         </div>
 
         {/* login google */}
         <div>
           <button
-            className="btn btn-outline-dark w-full "
+            className="btn btn-outline-dark w-full"
             type="button"
             onClick={handleGoogleSignIn}
           >
@@ -259,7 +284,6 @@ function SignupHostForm() {
                   alt=""
                 />
               </div>
-
               <div className="font-semibold">Login with Google</div>
             </div>
           </button>
@@ -281,7 +305,7 @@ function SignupHostForm() {
             <div className="form-floating w-full">
               <input
                 type="email"
-                className="form-control mb-3"
+                className="form-control mb-2"
                 id="floatingInput"
                 placeholder="name@example.com"
                 {...formik.getFieldProps('email')}
@@ -294,26 +318,26 @@ function SignupHostForm() {
               </div>
             ) : null}
 
-            {/* // TERMS AND CONDITION */}
-            <div className="flex flex-row gap-2 items-center">
+            <div className="form-floating w-full">
               <input
-                type="checkbox"
-                className="checkbox"
-                checked={isChecked}
-                onChange={() => setIsChecked(!isChecked)}
+                type="password"
+                className="form-control mb-2"
+                id="floatingPassword"
+                placeholder="•••••••"
+                {...formik.getFieldProps('password')}
               />
-              <div className="text-xs">
-                I agree to
-                <span className="font-semibold text-[#263C94] cursor-pointer">
-                  {' '}
-                  Terms & Privacy Policy
-                </span>
-              </div>
+              <label htmlFor="floatingPassword">Password</label>
             </div>
+            {formik.touched.password && formik.errors.password ? (
+              <div className="text-red-700 text-xs mb-3">
+                {formik.errors.password}
+              </div>
+            ) : null}
+
             <button
               className="btn bsb-btn-xl btn-dark w-full my-3"
               type="submit"
-              disabled={isSubmitDisabled || isSubmitting}
+              disabled={!formik.isValid || isSubmitting}
             >
               {isSubmitting ? (
                 <Spinner
@@ -325,24 +349,34 @@ function SignupHostForm() {
                   <span className="visually-hidden">Loading...</span>
                 </Spinner>
               ) : (
-                'Sign up'
+                'Sign in'
               )}
             </button>
           </form>
 
-          <div className="text-xs flex flex-row gap-1">
-            <div>Already have an account?</div>
-            <Link
-              href="/auth/login/tenant"
-              className="font-semibold text-[#263C94] no-underline"
-            >
-              Sign in here
-            </Link>
+          <div className="flex flex-col gap-2 justify-between">
+            <div className="text-xs flex flex-row gap-1">
+              <div>Don't have account?</div>
+              <Link
+                href="/auth/signup/user"
+                className="font-semibold text-[#263C94] no-underline"
+              >
+                Register here
+              </Link>
+            </div>
+            <div className="text-xs flex flex-row gap-1">
+              <Link
+                href="/auth/passwordreset"
+                className="font-semibold text-[#263C94] no-underline"
+              >
+                Forgot password?
+              </Link>
+            </div>
           </div>
         </div>
       </div>
     </div>
   );
-}
+};
 
-export default SignupHostForm;
+export default LoginForm;
