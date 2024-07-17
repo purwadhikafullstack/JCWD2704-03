@@ -130,6 +130,8 @@ function FormPaymentProofComponent({ order }: { order: Order }) {
       setMessage('Failed to upload payment proof. Please try again.');
     }
   };
+
+  const statusExpired = order.status === 'cancelled';
   return (
     <form onSubmit={handleSubmit}>
       <div className="flex flex-col gap-4 md:flex-row">
@@ -145,7 +147,10 @@ function FormPaymentProofComponent({ order }: { order: Order }) {
         <div>
           <button
             className="btn btn-dark"
-            disabled={dayjs(order.createdAt).add(5, 'minute').diff(dayjs()) < 0}
+            disabled={
+              dayjs(order.createdAt).add(5, 'minute').diff(dayjs()) < 0 &&
+              statusExpired
+            }
           >
             Submit
           </button>

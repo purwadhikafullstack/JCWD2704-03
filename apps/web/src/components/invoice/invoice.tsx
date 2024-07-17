@@ -132,7 +132,7 @@ async function Invoice({ id }: { id: string }) {
                 </div>
                 <div className="flex flex-row items-center gap-2">
                   <IoLocationOutline /> {order?.property.address},{' '}
-                  {order?.property.city_id.city}
+                  {order?.property.city}
                 </div>
               </div>
             </div>

@@ -1,10 +1,11 @@
 'use client';
+import React, { useEffect, useState } from 'react';
+import { useAppSelector } from '@/app/hooks';
 import { axiosInstance } from '@/libs/axios.config';
 import { Order } from '@/models/reservation.model';
 import { Room } from '@/models/room.model';
-import { useParams } from 'next/navigation';
-import { useRouter } from 'next/navigation';
-import React, { useEffect, useState } from 'react';
+import { TUser } from '@/models/user.model';
+import { useParams, useRouter } from 'next/navigation';
 
 function Reservation() {
   const router = useRouter();
@@ -17,6 +18,9 @@ function Reservation() {
   const [checkInDate, setCheckInDate] = useState('');
   const [checkOutDate, setCheckOutDate] = useState('');
   const total_room = roomCount;
+  const buyer = useAppSelector((state) => state.auth) as TUser;
+  const buyerId = buyer.id;
+
   useEffect(() => {
     const fetchRoom = async () => {
       try {
@@ -25,7 +29,7 @@ function Reservation() {
         );
         const { data } = response.data;
         setRooms(data);
-        console.log(data); // Assuming data is an array of Room objects
+        console.log(data);
       } catch (error) {
         console.error('Error fetching rooms:', error);
       }
@@ -33,6 +37,7 @@ function Reservation() {
 
     fetchRoom();
   }, [id]);
+
   const handleIncrement = () => {
     if (roomCount < 3) {
       setRoomCount(roomCount + 1);
@@ -44,21 +49,50 @@ function Reservation() {
       setRoomCount(roomCount - 1);
     }
   };
+
   const handlePaymentMethodChange = (
     e: React.ChangeEvent<HTMLSelectElement>,
   ) => {
     setPaymentMethod(e.target.value);
   };
+
+  const handleCheckInDateChange = (date: string) => {
+    const today = new Date();
+    const selectedDate = new Date(date);
+    if (selectedDate < today) {
+      alert('Check-in date cannot be in the past');
+      setCheckInDate('');
+    } else {
+      setCheckInDate(date);
+    }
+  };
+
+  const handleCheckOutDateChange = (date: string) => {
+    const selectedCheckInDate = new Date(checkInDate);
+    const selectedCheckOutDate = new Date(date);
+    if (selectedCheckOutDate.getTime() === selectedCheckInDate.getTime()) {
+      alert('Check-out date cannot be the same as check-in date');
+      setCheckOutDate('');
+    } else if (selectedCheckOutDate.getTime() < selectedCheckInDate.getTime()) {
+      alert('Check-out date cannot be earlier than check-in date');
+      setCheckOutDate('');
+    } else {
+      setCheckOutDate(date);
+    }
+  };
+
   const checkIn = new Date(checkInDate);
   const checkOut = new Date(checkOutDate);
   const diff = Math.abs(checkOut.getTime() - checkIn.getTime());
-  // Calculate the duration in days
-  const durationInDays = Math.ceil(diff / (1000 * 3600 * 24));
+  const durationInDays = !isNaN(diff)
+    ? Math.ceil(diff / (1000 * 3600 * 24))
+    : 0;
   const price = rooms?.peak_price ? rooms.peak_price : rooms?.price;
   const totalPrice = (price || 0) * roomCount * durationInDays;
+
   const handlePay = async () => {
     const data = {
-      user_id: 'cly9wnpqn0008zgag7m5r2b3i',
+      user_id: buyerId,
       property_id: rooms?.property_id,
       room_id: id,
       checkIn_date: checkInDate,
@@ -83,42 +117,19 @@ function Reservation() {
       console.error('Error placing order:', error);
     }
   };
-  const handleCheckInDateChange = (date: string) => {
-    const today = new Date();
-    const selectedDate = new Date(date);
-    if (selectedDate < today) {
-      // Prevent selecting past dates
-      alert('Check-in date cannot be in the past');
-      setCheckInDate('');
-    } else {
-      setCheckInDate(date);
-    }
-  };
-
-  const handleCheckOutDateChange = (date: string) => {
-    const selectedCheckInDate = new Date(checkInDate);
-    const selectedCheckOutDate = new Date(date);
-    if (selectedCheckOutDate.getTime() === selectedCheckInDate.getTime()) {
-      alert('Check-out date cannot be the same as check-in date');
-      setCheckOutDate('');
-    } else if (selectedCheckOutDate.getTime() < selectedCheckInDate.getTime()) {
-      alert('Check-out date cannot be earlier than check-in date');
-      setCheckOutDate('');
-    } else {
-      setCheckOutDate(date);
-    }
-  };
+  const isPayDisabled = !checkInDate || !checkOutDate || !paymentMethod;
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="max-w-7xl m-auto h-screen w-screen">
       <div>
-        <h1 className="text-2xl font-bold">Detail Reservation</h1>
+        <h1 className="text-2xl md:text-3xl font-bold md:py-6 p-6">
+          Detail Reservation
+        </h1>
       </div>
       <div className="flex flex-col gap-3 md:justify-between md:flex-row">
         <div className="flex flex-col">
-          {/* checkin checkOut */}
           <div>
-            <div className="flex flex-col md:flex-row gap-6 p-6 rounded-xl shadow">
+            <div className="relative flex flex-col md:flex-row space-y-3 md:space-y-0 rounded-xl shadow-sm p-3 max-w-xs md:max-w-3xl mx-auto border border-white bg-white">
               <div className="flex flex-col w-[320px]">
                 <div className="relative">
                   <label className="py-2 text-sm font-bold">Check In</label>
@@ -147,9 +158,8 @@ function Reservation() {
               </div>
             </div>
           </div>
-          {/* Room and prop detail */}
           <div className="flex flex-col pt-3 ">
-            <div className="relative flex flex-col md:flex-row md:space-x-5 space-y-3 md:space-y-0 rounded-xl shadow-lg p-3 max-w-xs md:max-w-3xl mx-auto border border-white bg-white">
+            <div className="relative flex flex-col md:flex-row md:space-x-5 space-y-3 md:space-y-0 rounded-xl shadow-sm p-3 max-w-xs md:max-w-3xl mx-auto border border-white bg-white">
               <div className="w-full md:w-1/3 bg-white grid place-items-center">
                 <img
                   src="https://images.pexels.com/photos/4381392/pexels-photo-4381392.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500"
@@ -187,27 +197,28 @@ function Reservation() {
           </div>
         </div>
 
-        {/* order summary */}
         <div className="md:w-1/3">
-          <div className="relative flex-row md:space-x-5 space-y-3 md:space-y-0 rounded-xl shadow-lg p-3 max-w-xs md:max-w-3xl mx-auto border border-white bg-white">
+          <div className="relative flex-row md:space-x-5 space-y-3 md:space-y-0 rounded-xl shadow-sm p-3 max-w-xs md:max-w-3xl mx-auto border border-white bg-white">
             <div className="font-semibold text-xl">Order summary</div>
             <div className="flex justify-between">
               <div>Price Room</div>
-              <div>Rp. {price?.toLocaleString()}</div>
+              <div>Rp. {price?.toLocaleString() || 'N/A'}</div>
             </div>
             <div className="border-b my-2" />
             <div className="flex justify-between font-semibold">
               <div>Total {total_room} room</div>
             </div>
             <div className="flex justify-between text-[#ED777B]">
-              <div>{durationInDays} night</div>
+              <div>{!isNaN(durationInDays) ? durationInDays : 'N/A'} night</div>
               <div className="text-black font-semibold">
-                Rp. {totalPrice.toLocaleString()}
+                Rp. {!isNaN(totalPrice) ? totalPrice.toLocaleString() : 'N/A'}
               </div>
             </div>
             <div className="flex justify-between font-semibold">
               <div>Subtotal</div>
-              <div>Rp. {totalPrice.toLocaleString()}</div>
+              <div>
+                Rp. {!isNaN(totalPrice) ? totalPrice.toLocaleString() : 'N/A'}
+              </div>
             </div>
             <div>
               <label htmlFor="paymentMethod" className="block font-medium">
@@ -229,7 +240,10 @@ function Reservation() {
             <div>
               <button
                 onClick={handlePay}
-                className="w-full py-2 px-4 bg-black text-white rounded-lg font-semibold hover:bg-gray-800"
+                disabled={isPayDisabled}
+                className={`w-full py-2 px-4 bg-black text-white rounded-lg font-semibold hover:bg-gray-800 ${
+                  isPayDisabled ? 'opacity-50 cursor-not-allowed' : ''
+                }`}
               >
                 Pay Now
               </button>
