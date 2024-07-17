@@ -2,6 +2,7 @@
 import store from '@/libs/redux/store';
 import { Provider } from 'react-redux';
 import AuthProvider from './auth.provider';
+import CheckInOutProvider from './checkInOut.provider';
 
 export const StoreProvider = ({
   children,
@@ -10,7 +11,9 @@ export const StoreProvider = ({
 }>) => {
   return (
     <Provider store={store}>
-      <AuthProvider> {children} </AuthProvider>
+      <AuthProvider>
+        <CheckInOutProvider>{children}</CheckInOutProvider>
+      </AuthProvider>
     </Provider>
   );
 };

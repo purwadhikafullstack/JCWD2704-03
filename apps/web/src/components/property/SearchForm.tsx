@@ -8,6 +8,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import { FaSearch } from 'react-icons/fa';
 import { Libraries, useLoadScript } from '@react-google-maps/api';
 import Spinner from 'react-bootstrap/Spinner';
+import { axiosInstance } from '@/libs/axios.config';
 
 const libraries: Libraries = ['places'];
 
@@ -46,18 +47,18 @@ const SearchForm: React.FC = () => {
 
   const handleSearchSubmit = async (values: any) => {
     try {
-      const response = await fetch(
-        `/api/properties/v1/search?city=${values.city}&checkIn=${values.checkIn}&checkOut=${values.checkOut}`,
-      );
-      if (!response.ok) {
-        throw new Error('Failed to fetch');
-      }
-      const properties = await response.json();
+      const response = await axiosInstance().get(`/api/properties/search`, {
+        params: {
+          city: values.city,
+          checkIn: values.checkIn,
+          checkOut: values.checkOut,
+        },
+      });
+
+      const properties = response.data;
       console.log('Properties:', properties);
-      // Display properties in UI
     } catch (error) {
       console.error('Error:', error);
-      // Handle error display or logging
     }
   };
 

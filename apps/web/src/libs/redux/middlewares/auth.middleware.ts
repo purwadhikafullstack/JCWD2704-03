@@ -1,15 +1,14 @@
 import { Dispatch } from '@reduxjs/toolkit';
 import { axiosInstance } from '../../axios.config';
 import { login } from '../slices/user.slice';
-import { TUser } from '@/models/user.model';
-import { setAuthCookie } from '@/libs/cookie';
+import { UserLoginPayload, User } from '@/models/user.model';
 import { deleteCookie, getCookie } from 'cookies-next';
 import { jwtDecode } from 'jwt-decode';
 
-export const userLogin = ({ email, password }: TUser) => {
+export const userLogin = ({ email, password }: UserLoginPayload) => {
   return async (dispatch: Dispatch) => {
     try {
-      await axiosInstance().post(
+      const response = await axiosInstance().post(
         'api/users/v6',
         {
           email,
@@ -23,16 +22,20 @@ export const userLogin = ({ email, password }: TUser) => {
       const access_token = getCookie('access-token') || '';
       console.log(access_token);
 
-      // if (access_token) {
-      //   const user: TUser = jwtDecode(access_token);
-      //   dispatch(login(user));
-      // }
-      // return;
+      if (response.data) {
+        const { role, url } = response.data;
+
+        if (access_token) {
+          const user: User = jwtDecode(access_token); // Cast to JwtPayload
+          dispatch(login(user));
+        }
+
+        return { role, url };
+      }
     } catch (err) {
       if (err instanceof Error) {
         console.log(err.message);
-
-        deleteCookie('access_token');
+        deleteCookie('access-token');
         alert('Wrong email/password');
       }
     }

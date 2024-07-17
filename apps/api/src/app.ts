@@ -12,7 +12,7 @@ import cors from 'cors';
 import { PORT, corsOptions } from './configs/config';
 import { UserRouter } from './routers/user.router';
 // import { SampleRouter } from './routers/sample.router';
-import reservationsRouter from './routers/reservation.router';
+// import reservationsRouter from './routers/reservation.router';
 import { PropertyRouter } from './routers/property.router';
 // import propertyRouter from './routers/property.router';
 
@@ -75,7 +75,7 @@ export default class App {
 
     this.app.use('/api/users', userRouter.getRouter());
     this.app.use('/api/properties', propertyRouter.getRouter());
-    this.app.use('/api/reservations', reservationsRouter.getRouter());
+    // this.app.use('/api/reservations', reservationsRouter.getRouter());
   }
 
   private configure(): void {

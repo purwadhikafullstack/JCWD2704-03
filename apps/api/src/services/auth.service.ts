@@ -10,6 +10,7 @@ import { join } from 'path';
 import { render } from 'mustache';
 import { prisma } from '../libs/prisma';
 import type { Prisma } from '@prisma/client';
+import userServices from './user.services';
 
 class AuthService {
   async userGoogleLogin(req: Request) {
@@ -106,62 +107,132 @@ class AuthService {
     }
   }
 
-  //   async userLogin(req: Request) {
-  //     const { email, password } = req.body;
+  async userLogin(req: Request) {
+    const { email, password } = req.body;
 
-  //     const where: Prisma.UserWhereUniqueInput = {
-  //       email: email,
-  //     };
+    const where: Prisma.UserWhereUniqueInput = {
+      email: email,
+    };
 
-  //     const select: Prisma.UserSelectScalar = {
-  //       id: true,
-  //       email: true,
-  //       first_name: true,
-  //       last_name: true,
-  //       social_id: true,
-  //       image: true,
-  //       isVerified: true,
-  //       password: true,
-  //       role: true,
-  //     };
+    const select: Prisma.UserSelectScalar = {
+      id: true,
+      email: true,
+      first_name: true,
+      last_name: true,
+      social_id: true,
+      image: true,
+      isVerified: true,
+      password: true,
+      role: true,
+    };
 
-  //     const data = await prisma.user.findFirst({
-  //       select,
-  //       where,
-  //     });
+    const data = await prisma.user.findFirst({
+      select,
+      where,
+    });
 
-  //     if (!data) throw new Error('Wrong e-mail!');
-  //     if (!data.password) throw new Error('Wrong e-mail!');
+    if (!data) throw new Error('Wrong e-mail!');
+    if (!data.password) throw new Error('Wrong e-mail!');
 
-  //     const checkUser = await comparePassword(data.password, password);
-  //     if (!checkUser) throw new Error('Wrong password!');
+    const checkUser = await comparePassword(data.password, password);
+    if (!checkUser) throw new Error('Wrong password!');
 
-  //     // Ensure data conforms to TUser type
-  //     const userData: TUser = {
-  //       id: data.id,
-  //       email: data.email,
-  //       first_name: data.first_name,
-  //       last_name: data.last_name,
-  //       social_id: data.social_id,
-  //       image: data.image,
-  //       isVerified: data.isVerified,
-  //       role: data.role,
-  //       password: data.password, // Note that this can be null
-  //       createdAt: data.createdAt,
-  //       updatedAt: data.updatedAt,
-  //     };
+    const userData: TUser = {
+      id: data.id,
+      email: data.email,
+      first_name: data.first_name,
+      last_name: data.last_name,
+      social_id: data.social_id,
+      image: data.image,
+      isVerified: data.isVerified,
+      role: data.role,
+      password: data.password,
+      createdAt: data.createdAt,
+      updatedAt: data.updatedAt,
+    };
 
-  //     delete userData.password; // Assuming you don't want to return the password
+    delete userData.password;
 
-  //     const accessToken = createToken(userData, '1hr');
-  //     const refreshToken = createToken({ id: userData.id }, '1hr');
+    const accessToken = createToken(userData, '1hr');
+    const refreshToken = createToken({ id: userData.id }, '1hr');
 
-  //     return {
-  //       accessToken,
-  //       refreshToken,
-  //       role: userData.role,
-  //     };
-  //   }
+    return {
+      accessToken,
+      refreshToken,
+      role: userData.role,
+    };
+  }
+
+  async sendChangePasswordLink(req: Request) {
+    const { email } = req.body;
+    const select: Prisma.UserSelectScalar = {
+      id: true,
+      first_name: true,
+    };
+    const data = await prisma.user.findUnique({
+      select,
+      where: {
+        email: email,
+      },
+    });
+    if (data === null) {
+      return false;
+    } else {
+      let sendEmailResult = await userServices.sendingEmail(
+        data.id,
+        email,
+        '/../templates/resetpassword.html',
+        'We received request to change your password on Atcasa',
+        'auth/changePassword',
+      );
+      return sendEmailResult;
+    }
+  }
+
+  async verifyChangePass(req: Request) {
+    try {
+      const { token, newPassword } = req.body;
+      const user = verify(token, SECRET_KEY) as TUser;
+      if (!user || !user.id) {
+        throw new Error('invalid token');
+      }
+      const hashPass = await hashPassword(newPassword);
+      await prisma.user.update({
+        where: {
+          id: user.id,
+        },
+        data: {
+          password: hashPass,
+        },
+      });
+      return 'Password has changed succesfully!';
+    } catch (error) {
+      return 'Failed to change password from our API';
+    }
+  }
+
+  async validate(req: Request) {
+    const select: Prisma.UserSelectScalar = {
+      id: true,
+      email: true,
+      first_name: true,
+      last_name: true,
+      image: true,
+      isVerified: true,
+      role: true,
+    };
+
+    const data = await prisma.user.findUnique({
+      select,
+      where: {
+        id: req.user?.id,
+      },
+    });
+
+    const access_token = createToken(data, '1hr');
+
+    return { access_token, isVerified: data?.isVerified };
+  }
 }
 
 export default new AuthService();

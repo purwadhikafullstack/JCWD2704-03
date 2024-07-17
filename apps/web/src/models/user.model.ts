@@ -9,3 +9,8 @@ export interface User {
   image: string;
   isVerified: string;
 }
+
+export interface UserLoginPayload {
+  email: string;
+  password: string;
+}
