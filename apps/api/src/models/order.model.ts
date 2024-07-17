@@ -1,7 +1,8 @@
 import { Status, User } from '@prisma/client';
 import { TProperty } from './property.model';
-import { TRoom } from './room.model';
+import { TRoomCategory } from './roomCat.model';
 import { TUser } from './user.model';
+import { TRoom } from './room.model';
 
 export type TOrder = {
   id: string;
