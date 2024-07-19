@@ -137,29 +137,29 @@ model Room {
 }
 
 model Order {
-  id             String    @id @default(cuid())
-  user_id        String
-  property_id    String
-  room_id        String
-  checkIn_date   DateTime
-  checkOut_date  DateTime
-  total_room     Int
-  total_price    Float
-  payment_method Payment
-  payment_proof  Bytes?    @db.LongBlob
-  payment_date   DateTime?
-  cancel_date    DateTime?
-  status         Status
-  invoice_id     String?
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  id              String    @id @default(cuid())
+  user_id         String
+  property_id     String
+  room_id         String
+  roomCategory_id String
+  checkIn_date    DateTime
+  checkOut_date   DateTime
+  total_room      Int
+  total_price     Float
+  payment_method  Payment
+  payment_proof   Bytes?    @db.LongBlob
+  payment_date    DateTime?
+  cancel_date     DateTime?
+  status          Status
+  invoice_id      String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
-  user           User          @relation(fields: [user_id], references: [id])
-  property       Property      @relation(fields: [property_id], references: [id])
-  room           Room          @relation(fields: [room_id], references: [id])
-  Review         Review[]
-  RoomCategory   RoomCategory? @relation(fields: [roomCategoryId], references: [id])
-  roomCategoryId String?
+  user         User          @relation(fields: [user_id], references: [id])
+  property     Property      @relation(fields: [property_id], references: [id])
+  room         Room          @relation(fields: [room_id], references: [id])
+  Review       Review[]
+  RoomCategory RoomCategory? @relation(fields: [roomCategory_id], references: [id])
 
   @@map("orders")
 }

@@ -1,5 +1,5 @@
 import { Property } from './property.model';
-import { Room } from './room.model';
+import { RoomCategory } from './roomCategory.model';
 import { User } from './user.model';
 
 export interface Order {
@@ -7,6 +7,7 @@ export interface Order {
   user_id: string;
   property_id: string;
   room_id: string;
+  roomCategory_id: string;
   checkIn_date: string;
   checkOut_date: string;
   total_room: number;
@@ -18,7 +19,7 @@ export interface Order {
   createdAt: string;
   updatedAt: string;
   invoice_id: string;
-  room: Room;
+  roomCategory: RoomCategory;
   property: Property;
   user: User;
 }

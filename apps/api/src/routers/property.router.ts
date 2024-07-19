@@ -1,6 +1,8 @@
 import { Router } from 'express';
 import { verifyUser } from '../middlewares/auth.middleware';
 import { PropertyController } from '@/controllers/property.controller';
+import { blobUploader } from '../libs/multer';
+import { verifyTenant } from '@/middlewares/role.middleware';
 
 export class PropertyRouter {
   private router: Router;
@@ -13,17 +15,28 @@ export class PropertyRouter {
   }
 
   private initializeRoutes(): void {
-    this.router.get('/v1', this.propertyController.getRoomAvailability);
+    // this.router.get('/v1', this.propertyController.getRoomAvailability);
     this.router.get('/search', this.propertyController.searchProperties);
-    this.router.get('/:Id', this.propertyController.getAllRoom);
+    this.router.get('/:name', this.propertyController.getPropertyDetail);
     this.router.get('/room/:id', this.propertyController.getRoomById);
-    this.router.get(
-      '/image/:propertyId',
-      this.propertyController.renderPicProp,
+    this.router.get('/image/:id', this.propertyController.renderPicProp);
+    // this.router.get(
+    //   '/room/image/:roomId',
+    //   this.propertyController.renderPicRoom,
+    // );
+    this.router.post(
+      '/',
+      verifyUser,
+      verifyTenant,
+      blobUploader().single('pic'),
+      this.propertyController.createProperty,
     );
-    this.router.get(
-      '/room/image/:roomId',
-      this.propertyController.renderPicRoom,
+    this.router.patch(
+      '/:propertyId',
+      verifyUser,
+      verifyTenant,
+      blobUploader().single('pic'),
+      this.propertyController.updateProperty,
     );
   }
 

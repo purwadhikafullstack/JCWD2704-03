@@ -3,6 +3,7 @@ import { prisma } from '../libs/prisma';
 import { generateInvoice } from '@/utils/invoice';
 import sharp from 'sharp';
 import moment from 'moment-timezone';
+import { connect } from 'ngrok';
 class ReservationService {
   async getAllOrder(req: Request) {
     try {
@@ -67,95 +68,55 @@ class ReservationService {
     const {
       user_id,
       property_id,
-      roomCategory_id,
       room_id,
       checkIn_date,
       checkOut_date,
       total_room = 1,
       payment_method,
       total_price,
+      roomCategory_id,
       status = 'pending_payment',
     } = req.body;
+    const parsedTotalRoom = parseInt(total_room, 10);
 
+    const room = await prisma.room.findFirst({
+      where: { id: room_id },
+      select: {
+        roomCategory: true,
+      },
+    });
+    if (!room) {
+      throw new Error('Room not found');
+    }
     const checkIn = new Date(checkIn_date);
     const checkOut = new Date(checkOut_date);
     const diff = Math.abs(checkOut.getTime() - checkIn.getTime());
+    // Calculate the duration in days
     const durationInDays = Math.ceil(diff / (1000 * 3600 * 24));
 
+    console.log(durationInDays);
     if (checkIn > checkOut) {
-      throw new Error('Check-out date must be after check-in date!');
+      console.error('Check-out date must be after check-in date!');
     }
-
-    // Ambil informasi harga kamar
-    const roomCategory = await prisma.roomCategory.findUnique({
-      where: { id: room_id },
-    });
-
-    if (!roomCategory) {
-      throw new Error('Room category not found.');
-    }
-    console.log(roomCategory);
-
-    const rooms = await prisma.room.findMany({
-      where: { id: room_id },
-      select: {
-        id: true,
-        roomCategory_id: true,
-      },
-    });
-    console.log(rooms);
-
-    // Check room availability
-    const conflictingOrders = await prisma.order.findMany({
-      where: {
-        room_id: {
-          in: rooms.map((room) => room.id),
-        },
-        AND: [
-          {
-            checkIn_date: {
-              lte: checkOut_date,
-            },
-          },
-          {
-            checkOut_date: {
-              gte: checkIn_date,
-            },
-          },
-        ],
-      },
-    }); // ini ngecheck kalau misal udah ada kamar yg di order di tanggal checkIn sama checkOut
-
-    console.log(conflictingOrders);
-
-    // Dapatkan ID kamar yang tersedia untuk kategori yang diberikan
-    const availableRooms = await prisma.room.findFirst({
-      where: {
-        roomCategory: { id: roomCategory.id },
-        id: {
-          notIn: conflictingOrders.map((order) => order.room_id),
-        },
-      },
-      take: total_room,
-    });
-
     let adjustedTotalPrice;
-    if (roomCategory.peak_price) {
+    if (room.roomCategory.peak_price) {
       adjustedTotalPrice =
-        durationInDays * total_room * roomCategory.peak_price;
+        durationInDays * parsedTotalRoom * room.roomCategory.peak_price;
     } else {
-      adjustedTotalPrice = durationInDays * total_room * roomCategory.price;
+      adjustedTotalPrice =
+        durationInDays * parsedTotalRoom * room.roomCategory.price;
     }
 
     const order = await prisma.order.create({
       data: {
         user: { connect: { id: user_id } },
         property: { connect: { id: property_id } },
-        room: { connect: { id: availableRooms?.id } },
-        checkIn_date: checkIn,
-        checkOut_date: checkOut,
-        total_price: adjustedTotalPrice,
+        room: { connect: { id: room_id } },
+        RoomCategory: { connect: { id: roomCategory_id } },
+        checkIn_date: new Date(checkIn_date),
+        checkOut_date: new Date(checkOut_date),
         total_room,
+        total_price: adjustedTotalPrice,
         payment_method,
         invoice_id: generateInvoice(property_id),
         status,
@@ -163,7 +124,6 @@ class ReservationService {
         updatedAt: new Date(),
       },
     });
-
     setTimeout(
       async () => {
         const expireOrder = await prisma.order.findUnique({
@@ -182,7 +142,11 @@ class ReservationService {
           await prisma.$transaction([
             prisma.order.update({
               where: { id: expireOrder.id },
-              data: { status: 'cancelled' },
+              data: {
+                status: 'cancelled',
+                checkIn_date: new Date('1970-01-01T00:00:00Z'),
+                checkOut_date: new Date('1970-01-01T00:00:00Z'),
+              },
             }),
           ]);
         }

@@ -19,6 +19,8 @@ class StatusService {
       where: { id: orderId },
       data: {
         status: 'cancelled',
+        checkIn_date: new Date('1970-01-01T00:00:00Z'),
+        checkOut_date: new Date('1970-01-01T00:00:00Z'),
       },
     });
     return updateStatus;

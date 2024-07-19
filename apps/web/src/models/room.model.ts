@@ -1,14 +1,14 @@
+import { Property } from './property.model';
+import { Order } from './reservation.model';
+import { RoomCategory } from './roomCategory.model';
+
 export interface Room {
   id: string;
   property_id: string;
-  type: string;
-  price: number;
-  peak_price: number;
-  start_date_peak: string;
-  end_date_peak: string;
-  desc: string;
-  pic: string;
-  availability: number;
+  roomCategory_id: string;
   createdAt: string;
   updatedAt: string;
+  roomCategory: RoomCategory;
+  reservation: Order;
+  property: Property;
 }

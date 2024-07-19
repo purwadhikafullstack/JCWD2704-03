@@ -9,6 +9,7 @@ export type TOrder = {
   user_id: TUser;
   property: TProperty;
   room_id: TRoom;
+  roomCategory: TRoomCategory;
   checkIn_date: Date;
   checkOut_date: Date;
   total_room: number;
