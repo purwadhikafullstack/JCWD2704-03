@@ -18,36 +18,42 @@ class UserService {
     const { email } = req.body;
     console.log('User email:', email);
 
-    const existingUser = await prisma.user.findMany({
-      where: {
-        email,
-      },
-    });
-    console.log('Existing user:', existingUser);
+    try {
+      const existingUser = await prisma.user.findMany({
+        where: {
+          email,
+        },
+      });
+      console.log('Existing user:', existingUser);
 
-    if (existingUser.length) {
-      const error = new Error('Email has already been registered');
-      (error as any).statusCode = 409;
-      throw error;
+      if (existingUser.length) {
+        const error = new Error('Email has already been registered');
+        (error as any).statusCode = 409;
+        throw error;
+      }
+
+      const newUser = await prisma.user.create({
+        data: {
+          email,
+          role: 'user',
+          isVerified: false,
+        },
+      });
+      console.log('New user created:', newUser);
+
+      // TODO: GANTI TEMPLATENYA
+      let sentEmail = await this.sendingEmail(
+        newUser.id,
+        newUser.email,
+        '/../templates/verification.html',
+        'Confirm Your Email Address For Atcasa',
+        'verify',
+      );
+      console.log('Email sent:', sentEmail);
+    } catch (error) {
+      console.error('Error in userRegisterEmail:', error);
+      throw error; // Rethrow the error after logging it
     }
-
-    const newUser = await prisma.user.create({
-      data: {
-        email,
-        role: 'user',
-        isVerified: false,
-      },
-    });
-    console.log('New user created:', newUser);
-
-    // TODO: GANTI TEMPLATENYA
-    let sentEmail = await this.sendingEmail(
-      newUser.id,
-      newUser.email,
-      '/../templates/verification.html',
-      'Confirm Your Email Address For Atcasa',
-      'verify',
-    );
   }
 
   async tenantRegisterEmail(req: Request) {

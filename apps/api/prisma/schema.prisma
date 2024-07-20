@@ -131,6 +131,7 @@ model Room {
   property_id     String
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
+  deletedAt       DateTime?
   roomCategory    RoomCategory @relation(fields: [roomCategory_id], references: [id])
   property        Property     @relation(fields: [property_id], references: [id])
   Order           Order[]

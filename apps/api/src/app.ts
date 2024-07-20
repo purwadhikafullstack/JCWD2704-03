@@ -14,6 +14,7 @@ import { UserRouter } from './routers/user.router';
 // import { SampleRouter } from './routers/sample.router';
 // import reservationsRouter from './routers/reservation.router';
 import { PropertyRouter } from './routers/property.router';
+import { RoomRouter } from './routers/room.router';
 // import propertyRouter from './routers/property.router';
 
 export default class App {
@@ -66,6 +67,7 @@ export default class App {
   private routes(): void {
     const userRouter = new UserRouter();
     const propertyRouter = new PropertyRouter();
+    const roomRouter = new RoomRouter();
 
     this.app.get('/api', (req: Request, res: Response) => {
       res.send(`Hello, Purwadhika Student API!`);
@@ -75,6 +77,8 @@ export default class App {
 
     this.app.use('/api/users', userRouter.getRouter());
     this.app.use('/api/properties', propertyRouter.getRouter());
+    this.app.use('/api/rooms', roomRouter.getRouter());
+
     // this.app.use('/api/reservations', reservationsRouter.getRouter());
   }
 

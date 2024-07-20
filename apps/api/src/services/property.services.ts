@@ -304,15 +304,6 @@ class PropertyService {
     return data?.pic;
   }
 
-  // async renderPicRoom(req: Request) {
-  //   const data = await prisma.room.findUnique({
-  //     where: {
-  //       id: req.params.id,
-  //     },
-  //   });
-  //   return data?.pic;
-  // }
-
   async createProperty(req: Request) {
     const userId = req.user?.id;
     const { file } = req;
@@ -404,10 +395,6 @@ class PropertyService {
       data: updatedData,
     });
   }
-
-  async createRoom(req: Request) {}
-
-  async updateRoom(req: Request) {}
 }
 
 export default new PropertyService();
