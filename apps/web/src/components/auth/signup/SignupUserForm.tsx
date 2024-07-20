@@ -118,23 +118,44 @@ const SignupUserForm = () => {
 
           console.log(session);
 
-          const [first_name, last_name] = full_name.split(' ');
+          if (email && id && full_name) {
+            const [first_name, ...rest] = full_name.split(' ');
+            const last_name = rest.join(' ') || 'Last';
 
-          try {
-            await axiosInstance().post('/api/users/v4', {
-              email,
-              social_id: id,
-              first_name,
-              last_name,
-              role: 'user',
-            });
+            if (first_name && last_name) {
+              try {
+                await axiosInstance().post('/api/users/v4', {
+                  email,
+                  social_id: id,
+                  first_name,
+                  last_name,
+                  role: 'user',
+                });
 
-            setCookie('access_token', session.access_token);
-            setCookie('refresh_token', session.refresh_token);
+                setCookie('access_token', session.access_token ?? '');
+                setCookie('refresh_token', session.refresh_token ?? '');
 
-            dispatch(login({ email, id, first_name, last_name }));
-          } catch (error) {
-            console.error('Error logging in with Google:', error);
+                dispatch(
+                  login({
+                    email,
+                    id,
+                    first_name,
+                    last_name,
+                    password: '', // Provide default value if necessary
+                    social_id: id, // Use social_id from session user
+                    role: 'user',
+                    image: '', // Provide default value if necessary
+                    isVerified: '', // Provide default value if necessary
+                  }),
+                );
+              } catch (error) {
+                console.error('Error logging in with Google:', error);
+              }
+            } else {
+              console.error('Error parsing full name:', full_name);
+            }
+          } else {
+            console.error('Missing required user information');
           }
         }
       });
