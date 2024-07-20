@@ -20,7 +20,8 @@ class ReservationService {
       include: {
         property: true,
         user: true,
-        room: true,
+        RoomCategory: true,
+        OrderRoom: true,
       },
     });
     if (!data) {
@@ -39,8 +40,9 @@ class ReservationService {
       },
       include: {
         property: true,
-        room: true,
         user: true,
+        RoomCategory: true,
+        OrderRoom: true,
       },
     });
     return data;
@@ -54,9 +56,10 @@ class ReservationService {
         },
       },
       include: {
-        user: true,
         property: true,
-        room: true,
+        user: true,
+        RoomCategory: true,
+        OrderRoom: true,
       },
       orderBy: {
         updatedAt: 'desc',
@@ -70,21 +73,26 @@ class ReservationService {
       property_id,
       room_id,
       checkIn_date,
+      room_ids, // Array of room IDs
       checkOut_date,
-      total_room = 1,
       payment_method,
       total_price,
       roomCategory_id,
       status = 'pending_payment',
     } = req.body;
-    const parsedTotalRoom = parseInt(total_room, 10);
+
+    let roomIdsArray = room_ids.split(',');
+    roomIdsArray = [...new Set(roomIdsArray)];
+    console.log('Number of rooms:', roomIdsArray.length);
+    console.log('Room IDs:', roomIdsArray);
 
     const room = await prisma.room.findFirst({
-      where: { id: room_id },
+      where: { id: roomIdsArray[0] },
       select: {
         roomCategory: true,
       },
     });
+
     if (!room) {
       throw new Error('Room not found');
     }
@@ -93,29 +101,28 @@ class ReservationService {
     const diff = Math.abs(checkOut.getTime() - checkIn.getTime());
     // Calculate the duration in days
     const durationInDays = Math.ceil(diff / (1000 * 3600 * 24));
-
     console.log(durationInDays);
     if (checkIn > checkOut) {
       console.error('Check-out date must be after check-in date!');
     }
+
+    // console.log('berapa kamar yang di minta', roomIdsArray.length());
     let adjustedTotalPrice;
     if (room.roomCategory.peak_price) {
       adjustedTotalPrice =
-        durationInDays * parsedTotalRoom * room.roomCategory.peak_price;
+        durationInDays * roomIdsArray.length * room.roomCategory.peak_price;
     } else {
       adjustedTotalPrice =
-        durationInDays * parsedTotalRoom * room.roomCategory.price;
+        durationInDays * roomIdsArray.length * room.roomCategory.price;
     }
 
     const order = await prisma.order.create({
       data: {
         user: { connect: { id: user_id } },
         property: { connect: { id: property_id } },
-        room: { connect: { id: room_id } },
         RoomCategory: { connect: { id: roomCategory_id } },
         checkIn_date: new Date(checkIn_date),
         checkOut_date: new Date(checkOut_date),
-        total_room,
         total_price: adjustedTotalPrice,
         payment_method,
         invoice_id: generateInvoice(property_id),
@@ -123,6 +130,14 @@ class ReservationService {
         createdAt: new Date(),
         updatedAt: new Date(),
       },
+    });
+    const orderRooms = roomIdsArray.map((room_id: string) => ({
+      order_id: order.id,
+      room_id,
+    }));
+
+    await prisma.orderRoom.createMany({
+      data: orderRooms,
     });
     setTimeout(
       async () => {
@@ -162,7 +177,8 @@ class ReservationService {
       where: { id: orderId },
       include: {
         property: true,
-        room: true,
+        OrderRoom: true,
+        RoomCategory: true,
       },
     });
     if (!order) {
