@@ -36,9 +36,10 @@ export class UserController {
 
   async userEntryData(req: Request, res: Response, next: NextFunction) {
     try {
-      await usersServices.userEntryData(req);
+      const updatedUser = await usersServices.userEntryData(req);
       res.status(201).send({
         message: 'User data has been updated',
+        updatedUser,
       });
     } catch (error) {
       next(error);
@@ -137,8 +138,8 @@ export class UserController {
 
   async verifyChangePass(req: Request, res: Response, next: NextFunction) {
     try {
-      let result = await authService.verifyChangePass(req);
-      res.status(200).send({ message: result });
+      const result = await authService.verifyChangePass(req);
+      res.status(200).send(result);
     } catch (error) {
       next(error);
     }

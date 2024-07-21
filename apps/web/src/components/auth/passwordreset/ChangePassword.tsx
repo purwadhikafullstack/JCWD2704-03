@@ -28,10 +28,10 @@ const ChangePassword = () => {
 
   const handleSubmit = async (values: any) => {
     try {
-      await axiosInstance().post(
+      const response = await axiosInstance().post(
         '/api/users/verifyChangePassword',
         {
-          token: token,
+          token,
           newPassword: values.newPassword,
         },
         {
@@ -40,10 +40,21 @@ const ChangePassword = () => {
           },
         },
       );
+
       toast.success(
         'New password has been set. Please login with your new password.',
       );
-      router.push('/auth/login/user');
+
+      const { updatedUser } = response.data; // Extract the updated user data
+      const { role } = updatedUser; // Extract the role from the updated user data
+
+      if (role === 'user') {
+        router.push('/auth/login/user');
+      } else if (role === 'tenant') {
+        router.push('/auth/login/tenant');
+      } else {
+        throw new Error('Invalid role');
+      }
     } catch (error) {
       console.log(error);
       toast.error('Error');

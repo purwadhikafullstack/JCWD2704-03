@@ -147,13 +147,43 @@ class UserService {
     }
   }
 
+  // async userEntryData(req: Request) {
+  //   const { token, password, first_name, last_name } = req.body;
+  //   const decodedToken = verify(token, SECRET_KEY) as { id: string };
+  //   if (!decodedToken || !decodedToken.id) {
+  //     throw new Error('Invalid token');
+  //   }
+  //   const userId = decodedToken.id;
+  //   const hashPass = await hashPassword(password);
+  //   const updatedUser = await prisma.user.update({
+  //     where: { id: userId },
+  //     data: {
+  //       first_name,
+  //       last_name,
+  //       password: hashPass,
+  //     },
+  //   });
+
+  //   return updatedUser;
+  // }
+
   async userEntryData(req: Request) {
     const { token, password, first_name, last_name } = req.body;
     const decodedToken = verify(token, SECRET_KEY) as { id: string };
+
     if (!decodedToken || !decodedToken.id) {
       throw new Error('Invalid token');
     }
+
     const userId = decodedToken.id;
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
     const hashPass = await hashPassword(password);
     const updatedUser = await prisma.user.update({
       where: { id: userId },
@@ -164,7 +194,10 @@ class UserService {
       },
     });
 
-    return updatedUser;
+    console.log('Updated User:', updatedUser); // Log the updated user
+    console.log('User Role:', user.role); // Log the role
+
+    return { ...updatedUser, role: user.role }; // Include the role in the response
   }
 
   async resendVerification(req: Request) {

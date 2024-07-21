@@ -134,6 +134,10 @@ class AuthService {
     if (!data) throw new Error('Wrong e-mail!');
     if (!data.password) throw new Error('Wrong e-mail!');
 
+    if (data.role === 'tenant') {
+      throw new Error('Please log in on the property host login page.');
+    }
+
     const checkUser = await comparePassword(data.password, password);
     if (!checkUser) throw new Error('Wrong password!');
 
@@ -189,15 +193,37 @@ class AuthService {
     }
   }
 
+  // async verifyChangePass(req: Request) {
+  //   try {
+  //     const { token, newPassword } = req.body;
+  //     const user = verify(token, SECRET_KEY) as TUser;
+  //     if (!user || !user.id) {
+  //       throw new Error('invalid token');
+  //     }
+  //     const hashPass = await hashPassword(newPassword);
+  //     await prisma.user.update({
+  //       where: {
+  //         id: user.id,
+  //       },
+  //       data: {
+  //         password: hashPass,
+  //       },
+  //     });
+  //     return 'Password has changed succesfully!';
+  //   } catch (error) {
+  //     return 'Failed to change password from our API';
+  //   }
+  // }
+
   async verifyChangePass(req: Request) {
     try {
       const { token, newPassword } = req.body;
       const user = verify(token, SECRET_KEY) as TUser;
       if (!user || !user.id) {
-        throw new Error('invalid token');
+        throw new Error('Invalid token');
       }
       const hashPass = await hashPassword(newPassword);
-      await prisma.user.update({
+      const updatedUser = await prisma.user.update({
         where: {
           id: user.id,
         },
@@ -205,9 +231,12 @@ class AuthService {
           password: hashPass,
         },
       });
-      return 'Password has changed succesfully!';
+      return {
+        message: 'Password has changed successfully!',
+        updatedUser,
+      };
     } catch (error) {
-      return 'Failed to change password from our API';
+      throw new Error('Failed to change password from our API');
     }
   }
 

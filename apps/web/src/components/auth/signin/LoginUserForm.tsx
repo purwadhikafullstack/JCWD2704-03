@@ -87,7 +87,14 @@ const LoginForm: React.FC = () => {
 
           console.log(session);
 
-          const [first_name, last_name] = full_name.split(' ');
+          if (!email) {
+            console.error('Email is undefined');
+            return;
+          }
+
+          const [first_name, last_name] = full_name
+            ? full_name.split(' ')
+            : ['', ''];
 
           try {
             await axiosInstance().post('/api/users/v4', {
@@ -101,7 +108,16 @@ const LoginForm: React.FC = () => {
             setCookie('access_token', session.access_token);
             setCookie('refresh_token', session.refresh_token);
 
-            dispatch(login({ email, id, first_name, last_name }));
+            dispatch(
+              login({
+                email,
+                id,
+                first_name,
+                last_name,
+                role: 'user',
+                isVerified: 'true', // Assuming the user is verified upon login, adjust accordingly
+              }),
+            );
           } catch (error) {
             console.error('Error logging in with Google:', error);
           }
