@@ -90,34 +90,123 @@ export class UserController {
     }
   }
 
-  async login(req: Request, res: Response, next: NextFunction) {
+  // async login(req: Request, res: Response, next: NextFunction) {
+  //   try {
+  //     const { accessToken, refreshToken, role } =
+  //       await authService.userLogin(req);
+
+  //     if (role === 'tenant') {
+  //       res
+  //         .cookie('access_token', accessToken, {
+  //           secure: process.env.NODE_ENV === 'production', // Use secure cookies in production
+  //         })
+  //         .cookie('refresh_token', refreshToken, {
+  //           secure: process.env.NODE_ENV === 'production', // Use secure cookies in production
+  //         })
+  //         .send({
+  //           message: 'Login as tenant',
+  //           role: 'tenant',
+  //           url: '/dashboard',
+  //         });
+  //     } else if (role === 'user') {
+  //       res.status(400).send({
+  //         error: 'Unauthorized',
+  //         message: 'Please log in on the guest login page.',
+  //       });
+  //     } else {
+  //       res.status(400).send({
+  //         error: 'Invalid role',
+  //         message: 'Role is invalid',
+  //       });
+  //     }
+  //   } catch (error) {
+  //     // Log the error for debugging
+  //     console.error('Login error:', error);
+  //     // Pass the error to the next middleware
+  //     next(error);
+  //   }
+  // }
+
+  async userLogin(req: Request, res: Response, next: NextFunction) {
     try {
       const { accessToken, refreshToken, role } =
         await authService.userLogin(req);
 
-      if (role && role == 'tenant') {
+      if (role === 'user') {
         res
-          .cookie('access_token', accessToken)
-          .cookie('refresh_token', refreshToken)
+          .cookie('access_token', accessToken, {
+            secure: process.env.NODE_ENV === 'production',
+          })
+          .cookie('refresh_token', refreshToken, {
+            secure: process.env.NODE_ENV === 'production',
+          })
           .send({
-            message: 'Login as seller',
-            role: 'seller',
-            url: '/dashboard',
-          });
-      } else if (role && role === 'user') {
-        res
-          .cookie('access_token', accessToken)
-          .cookie('refresh_token', refreshToken)
-          .send({
-            message: 'Login as buyer',
-            role: 'buyer',
+            message: 'Login as user',
+            role: 'user',
             url: '/',
           });
       } else {
-        res.status(400).send('Role is invalid');
+        res.status(400).send({
+          error: 'Invalid role',
+          message: 'Role is invalid',
+        });
       }
     } catch (error) {
-      next(error);
+      console.error('Login error:', error);
+
+      if (error instanceof Error) {
+        res.status(400).send({
+          error: 'Unauthorized',
+          message: error.message,
+        });
+      } else {
+        res.status(500).send({
+          error: 'Unknown Error',
+          message: 'An unexpected error occurred.',
+        });
+      }
+    }
+  }
+
+  async tenantLogin(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { accessToken, refreshToken, role } =
+        await authService.tenantLogin(req);
+
+      if (role === 'tenant') {
+        res
+          .cookie('access_token', accessToken, {
+            secure: process.env.NODE_ENV === 'production',
+          })
+          .cookie('refresh_token', refreshToken, {
+            secure: process.env.NODE_ENV === 'production',
+          })
+          .send({
+            message: 'Login as tenant',
+            role: 'tenant',
+            url: '/dashboard',
+          });
+      } else {
+        res.status(400).send({
+          error: 'Invalid role',
+          message: 'Role is invalid. Please log in with the correct role.',
+        });
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+
+      // Directly return the error message from the service
+      if (error instanceof Error) {
+        res.status(400).send({
+          error: 'Unauthorized',
+          message: error.message,
+        });
+      } else {
+        res.status(500).send({
+          error: 'Unknown Error',
+          message: 'An unexpected error occurred.',
+        });
+      }
     }
   }
 

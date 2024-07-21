@@ -15,6 +15,7 @@ import { login } from '@/libs/redux/slices/user.slice';
 import { useAppDispatch } from '@/app/hooks';
 import { setCookie } from 'cookies-next';
 import { axiosInstance } from '@/libs/axios.config';
+import { tenantLogin } from '@/libs/redux/middlewares/auth.middleware';
 
 const LoginForm: React.FC = () => {
   const router = useRouter();
@@ -39,14 +40,18 @@ const LoginForm: React.FC = () => {
       try {
         console.log('Sign in as tenant starts');
         const result = await dispatch(
-          userLogin({
+          tenantLogin({
             email: values.email,
             password: values.password,
           } as UserLoginPayload),
         );
         formik.resetForm();
         if (result?.role && result?.url) {
-          router.push(result.url);
+          if (result.role === 'tenant') {
+            router.push(result.url);
+          } else {
+            toast.error('Please log in on the guest login page.');
+          }
         }
       } catch (error) {
         console.log(error);
@@ -82,7 +87,8 @@ const LoginForm: React.FC = () => {
       supabase.auth.onAuthStateChange(async (event, session) => {
         if (event === 'SIGNED_IN' && session) {
           const user = session.user;
-          const { email, id } = user;
+          const email = user.email ?? ''; // Provide default empty string if undefined
+          const { id } = user;
           const { full_name } = user.user_metadata;
 
           console.log(session);
@@ -101,7 +107,16 @@ const LoginForm: React.FC = () => {
             setCookie('access_token', session.access_token);
             setCookie('refresh_token', session.refresh_token);
 
-            dispatch(login({ email, id, first_name, last_name }));
+            dispatch(
+              login({
+                email,
+                id,
+                first_name,
+                last_name,
+                role: 'tenant',
+                isVerified: 'true', // Assuming the user is verified upon login, adjust accordingly
+              }),
+            );
           } catch (error) {
             console.error('Error logging in with Google:', error);
           }
@@ -229,7 +244,7 @@ const LoginForm: React.FC = () => {
 
               <div className="flex justify-between">
                 <div className="text-xs flex flex-row gap-1">
-                  <div>Don't have account?</div>
+                  <div>Don't have an account?</div>
                   <Link
                     href="/auth/signup/tenant"
                     className="font-semibold text-[#263C94] no-underline"
@@ -264,7 +279,7 @@ const LoginForm: React.FC = () => {
           </Link>
           <h2 className="font-bold">Welcome back</h2>
           <div className="text-zinc-400">
-            Sign in to continue browsing properties
+            Sign in to continue managing your properties on Atcasa!
           </div>
         </div>
 
@@ -297,10 +312,7 @@ const LoginForm: React.FC = () => {
           </div>
 
           {/* FORM SUBMIT EMAIL */}
-          <form
-            onSubmit={formik.handleSubmit}
-            className="flex flex-col w-60 lg:w-[500px]"
-          >
+          <form onSubmit={formik.handleSubmit} className="flex flex-col w-60">
             <div className="form-floating w-full">
               <input
                 type="email"
@@ -353,9 +365,9 @@ const LoginForm: React.FC = () => {
             </button>
           </form>
 
-          <div className="flex flex-col gap-2 justify-between">
+          <div className="flex justify-between">
             <div className="text-xs flex flex-row gap-1">
-              <div>Don't have account?</div>
+              <div>Don't have an account?</div>
               <Link
                 href="/auth/signup/tenant"
                 className="font-semibold text-[#263C94] no-underline"

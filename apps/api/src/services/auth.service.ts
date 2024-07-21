@@ -107,6 +107,70 @@ class AuthService {
     }
   }
 
+  // async userLogin(req: Request) {
+  //   const { email, password } = req.body;
+
+  //   const where: Prisma.UserWhereUniqueInput = {
+  //     email: email,
+  //   };
+
+  //   const select: Prisma.UserSelectScalar = {
+  //     id: true,
+  //     email: true,
+  //     first_name: true,
+  //     last_name: true,
+  //     social_id: true,
+  //     image: true,
+  //     isVerified: true,
+  //     password: true,
+  //     role: true,
+  //   };
+
+  //   const data = await prisma.user.findFirst({
+  //     select,
+  //     where,
+  //   });
+
+  //   if (!data) throw new Error('Wrong e-mail!');
+  //   if (!data.password) throw new Error('Wrong e-mail!');
+
+  //   if (data.role === 'tenant' && req.body.role !== 'tenant') {
+  //     throw new Error('Please log in on the property host login page.');
+  //   }
+
+  //   if (data.role === 'user' && req.body.role !== 'user') {
+  //     throw new Error('Please log in on the guest login page.');
+  //   }
+
+  //   const checkUser = await comparePassword(data.password, password);
+  //   if (!checkUser) throw new Error('Wrong password!');
+
+  //   const userData: TUser = {
+  //     id: data.id,
+  //     email: data.email,
+  //     first_name: data.first_name,
+  //     last_name: data.last_name,
+  //     social_id: data.social_id,
+  //     image: data.image,
+  //     isVerified: data.isVerified,
+  //     role: data.role,
+  //     password: data.password,
+  //     createdAt: data.createdAt,
+  //     updatedAt: data.updatedAt,
+  //   };
+
+  //   delete userData.password;
+
+  //   const accessToken = createToken(userData, '1hr');
+  //   const refreshToken = createToken({ id: userData.id }, '1hr');
+
+  //   return {
+  //     accessToken,
+  //     refreshToken,
+  //     role: userData.role,
+  //   };
+  // }
+
   async userLogin(req: Request) {
     const { email, password } = req.body;
 
@@ -114,7 +178,7 @@ class AuthService {
       email: email,
     };
 
-    const select: Prisma.UserSelectScalar = {
+    const select: Prisma.UserSelect = {
       id: true,
       email: true,
       first_name: true,
@@ -134,7 +198,7 @@ class AuthService {
     if (!data) throw new Error('Wrong e-mail!');
     if (!data.password) throw new Error('Wrong e-mail!');
 
-    if (data.role === 'tenant') {
+    if (data.role !== 'user') {
       throw new Error('Please log in on the property host login page.');
     }
 
@@ -150,7 +214,64 @@ class AuthService {
       image: data.image,
       isVerified: data.isVerified,
       role: data.role,
-      password: data.password,
+      createdAt: data.createdAt,
+      updatedAt: data.updatedAt,
+    };
+
+    delete userData.password;
+
+    const accessToken = createToken(userData, '1hr');
+    const refreshToken = createToken({ id: userData.id }, '1hr');
+
+    return {
+      accessToken,
+      refreshToken,
+      role: userData.role,
+    };
+  }
+
+  async tenantLogin(req: Request) {
+    const { email, password } = req.body;
+
+    const where: Prisma.UserWhereUniqueInput = {
+      email: email,
+    };
+
+    const select: Prisma.UserSelect = {
+      id: true,
+      email: true,
+      first_name: true,
+      last_name: true,
+      social_id: true,
+      image: true,
+      isVerified: true,
+      password: true,
+      role: true,
+    };
+
+    const data = await prisma.user.findFirst({
+      select,
+      where,
+    });
+    if (!data) throw new Error('Wrong e-mail!');
+    if (!data.password) throw new Error('Wrong e-mail!');
+
+    if (data.role !== 'tenant') {
+      throw new Error('Please log in on the guest login page.');
+    }
+
+    const checkUser = await comparePassword(data.password, password);
+    if (!checkUser) throw new Error('Wrong password!');
+
+    const userData: TUser = {
+      id: data.id,
+      email: data.email,
+      first_name: data.first_name,
+      last_name: data.last_name,
+      social_id: data.social_id,
+      image: data.image,
+      isVerified: data.isVerified,
+      role: data.role,
       createdAt: data.createdAt,
       updatedAt: data.updatedAt,
     };

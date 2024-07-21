@@ -14,3 +14,10 @@ export interface UserLoginPayload {
   email: string;
   password: string;
 }
+
+export interface UserLoginResponse {
+  accessToken: string;
+  refreshToken: string;
+  role: 'user' | 'tenant';
+  url: string;
+}
