@@ -1,5 +1,4 @@
 import OrderTable from '@/components/dashboard/orderTabel';
-import Sidebar from '@/components/Sidebar';
 import React from 'react';
 
 function page() {

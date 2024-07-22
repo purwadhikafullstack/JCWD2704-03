@@ -113,7 +113,7 @@ function OrderTable() {
                 </td>
                 <td className="px-6 py-4 text-center">{order.property.name}</td>
                 <td className="px-6 py-4 text-center">
-                  {order.room.type.toUpperCase()}
+                  {order.RoomCategory.type.toUpperCase()}
                 </td>
                 <td className="px-6 py-4 text-center">{order.total_room}</td>
                 <td className="px-6 py-4 text-center">

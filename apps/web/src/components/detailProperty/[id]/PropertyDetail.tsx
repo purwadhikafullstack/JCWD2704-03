@@ -17,7 +17,10 @@ function PropertyDetail() {
 
   const [property, setProperty] = useState<Property | null>(null);
   const [roomCategories, setRoomCategories] = useState<RoomCategory[]>([]);
-
+  const [roomCounts, setRoomCounts] = useState<{ [key: string]: number }>({});
+  const [selectedRoomIds, setSelectedRoomIds] = useState<{
+    [key: string]: string[];
+  }>({});
   const checkIn = searchParams.get('checkIn') || '';
   const checkOut = searchParams.get('checkOut') || '';
 
@@ -35,9 +38,18 @@ function PropertyDetail() {
         console.log('Property data received:', propertyData);
 
         setProperty(propertyData);
-        const categories = propertyData.RoomCategory || [];
+        const categories: RoomCategory[] = propertyData.RoomCategory || [];
         console.log('Room categories:', categories);
         setRoomCategories(categories);
+        // Initialize room counts and selected room IDs
+        const initialRoomCounts: { [key: string]: number } = {};
+        const initialSelectedRoomIds: { [key: string]: string[] } = {};
+        categories.forEach((category) => {
+          initialRoomCounts[category.id] = 0;
+          initialSelectedRoomIds[category.id] = [];
+        });
+        setRoomCounts(initialRoomCounts);
+        setSelectedRoomIds(initialSelectedRoomIds);
       } catch (error) {
         console.error('Error fetching property details:', error);
       }
@@ -46,12 +58,65 @@ function PropertyDetail() {
     fetchPropertyDetail();
   }, [name, checkIn, checkOut]);
 
-  const handleReserve = (roomId: string) => {
+  const handleReserve = (
+    roomCategoryId: string,
+    totalPrice: number,
+    roomIds: string[],
+  ) => {
+    const roomIdsParam = roomIds.join('-');
     router.push(
-      `/reservation/${roomId}?checkIn=${checkIn}&checkOut=${checkOut}`,
+      `/reservation/${roomCategoryId}?checkIn=${checkIn}&checkOut=${checkOut}&total=${totalPrice}&Ids=${roomIdsParam}`,
     );
   };
 
+  const handleIncrement = (roomCategory: RoomCategory) => {
+    const categoryId = roomCategory.id;
+    if (
+      roomCategory.remainingRooms &&
+      roomCounts[categoryId] < roomCategory.remainingRooms
+    ) {
+      const newRoomIds = roomCategory.Room.slice(
+        0,
+        roomCounts[categoryId] + 1,
+      ).map((room) => room.id);
+      setSelectedRoomIds({
+        ...selectedRoomIds,
+        [categoryId]: newRoomIds,
+      });
+      setRoomCounts({
+        ...roomCounts,
+        [categoryId]: roomCounts[categoryId] + 1,
+      });
+      console.log(
+        `Incremented room count for category ${categoryId}:`,
+        roomCounts[categoryId] + 1,
+      );
+      console.log('New selected room IDs:', newRoomIds);
+    }
+  };
+
+  const handleDecrement = (roomCategory: RoomCategory) => {
+    const categoryId = roomCategory.id;
+    if (roomCounts[categoryId] > 1) {
+      const newRoomIds = selectedRoomIds[categoryId].slice(
+        0,
+        roomCounts[categoryId] - 1,
+      );
+      setSelectedRoomIds({
+        ...selectedRoomIds,
+        [categoryId]: newRoomIds,
+      });
+      setRoomCounts({
+        ...roomCounts,
+        [categoryId]: roomCounts[categoryId] - 1,
+      });
+      console.log(
+        `Decremented room count for category ${categoryId}:`,
+        roomCounts[categoryId] - 1,
+      );
+      console.log('New selected room IDs:', newRoomIds);
+    }
+  };
   return (
     <div>
       <div className="w-full h-80 px-4 relative">
@@ -79,20 +144,46 @@ function PropertyDetail() {
               <p>Price: ${roomCategory.price}</p>
               <p>{roomCategory.desc}</p>
               <p>Remaining Rooms: {roomCategory.remainingRooms}</p>
-              {roomCategory.Room.map((room, index) => {
-                if (index === 0) {
-                  return (
-                    <button
-                      key={index}
-                      className="btn btn-primary"
-                      onClick={() => handleReserve(room.id)}
-                    >
-                      Reserve
-                    </button>
-                  );
-                }
-                return null; // Return null for other indices
-              })}
+              <div className="flex flex-row items-center gap-3 text-lg">
+                <button
+                  className="w-10 btn btn-dark"
+                  onClick={() => handleDecrement(roomCategory)}
+                  disabled={roomCounts[roomCategory.id] <= 1}
+                >
+                  -
+                </button>
+                <div>{roomCounts[roomCategory.id]}</div>
+                <button
+                  className="w-10 btn btn-dark"
+                  onClick={() => handleIncrement(roomCategory)}
+                  disabled={
+                    !roomCategory.remainingRooms ||
+                    roomCounts[roomCategory.id] >=
+                      roomCategory.remainingRooms ||
+                    roomCounts[roomCategory.id] >= 3
+                  }
+                >
+                  +
+                </button>
+                <p>
+                  Total Price: $
+                  {roomCounts[roomCategory.id] * roomCategory.price}
+                </p>
+              </div>
+              {roomCategory.Room.length > 0 && (
+                <button
+                  className="btn btn-primary"
+                  onClick={() =>
+                    handleReserve(
+                      roomCategory.id,
+                      roomCounts[roomCategory.id] * roomCategory.price,
+                      selectedRoomIds[roomCategory.id],
+                    )
+                  }
+                >
+                  Reserve
+                </button>
+              )}
             </div>
           ))
         ) : (

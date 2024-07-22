@@ -4,6 +4,7 @@ import { generateInvoice } from '@/utils/invoice';
 import sharp from 'sharp';
 import moment from 'moment-timezone';
 import { connect } from 'ngrok';
+import { startExpireOrdersCron } from '@/cron/expiredOrder';
 class ReservationService {
   async getAllOrder(req: Request) {
     try {
@@ -31,7 +32,7 @@ class ReservationService {
     return data;
   }
   async getOrderByUserId(req: Request) {
-    const staticUserId = 'cly9wnpqn0008zgag7m5r2b3i';
+    const staticUserId = 'clyvb46sr00013amly571vgjq';
     const data = await prisma.order.findMany({
       // where: { user_id: req.user?.id },
       where: { user_id: staticUserId },
@@ -51,7 +52,7 @@ class ReservationService {
     const data = await prisma.order.findMany({
       where: {
         property: {
-          tenant_id: 'cly9whjqn0000zgagrd8gp3ji',
+          tenant_id: 'clyvb46sq00003amlkg2sh5i4',
           // tenant_id: req.user?.id,
         },
       },
@@ -71,20 +72,44 @@ class ReservationService {
     const {
       user_id,
       property_id,
-      room_id,
-      checkIn_date,
+      roomCategory_id,
       room_ids, // Array of room IDs
+      checkIn_date,
       checkOut_date,
       payment_method,
       total_price,
-      roomCategory_id,
       status = 'pending_payment',
     } = req.body;
 
-    let roomIdsArray = room_ids.split(',');
+    let roomIdsArray = room_ids;
     roomIdsArray = [...new Set(roomIdsArray)];
     console.log('Number of rooms:', roomIdsArray.length);
     console.log('Room IDs:', roomIdsArray);
+    // Cek apakah sudah ada order dengan detail yang sama
+    const existingOrder = await prisma.order.findFirst({
+      where: {
+        user_id: user_id,
+        property_id: property_id,
+        checkIn_date: new Date(checkIn_date),
+        checkOut_date: new Date(checkOut_date),
+        OrderRoom: {
+          some: {
+            room_id: {
+              in: roomIdsArray,
+            },
+          },
+        },
+      },
+      include: {
+        OrderRoom: true,
+      },
+    });
+
+    if (existingOrder) {
+      throw new Error(
+        'Anda sudah memiliki pesanan untuk kamar dan tanggal ini.',
+      );
+    }
 
     const room = await prisma.room.findFirst({
       where: { id: roomIdsArray[0] },
@@ -139,35 +164,34 @@ class ReservationService {
     await prisma.orderRoom.createMany({
       data: orderRooms,
     });
-    setTimeout(
-      async () => {
-        const expireOrder = await prisma.order.findUnique({
-          where: { id: order.id },
-        });
-        if (expireOrder && expireOrder.status === 'pending_payment') {
-          // Fetch current room availability before updating
-          const currentRoom = await prisma.room.findFirst({
-            where: { id: room_id },
-          });
+    // setTimeout(
+    //   async () => {
+    //     const expireOrder = await prisma.order.findUnique({
+    //       where: { id: order.id },
+    //       include: { OrderRoom: true },
+    //     });
+    //     if (expireOrder && expireOrder.status === 'pending_payment') {
+    //       // Cancel the order
+    //       await prisma.$transaction([
+    //         prisma.order.update({
+    //           where: { id: expireOrder.id },
+    //           data: {
+    //             status: 'cancelled',
+    //             checkIn_date: new Date('1970-01-01T00:00:00Z'),
+    //             checkOut_date: new Date('1970-01-01T00:00:00Z'),
+    //           },
+    //         }),
+    //       ]);
+    //     }
+    //   },
+    //   60 * 60 * 1000,
+    // );
+    let cronStarted = false;
+    if (!cronStarted) {
+      startExpireOrdersCron();
+      cronStarted = true;
+    }
 
-          if (!currentRoom) {
-            throw new Error('Room not found during cancellation process');
-          }
-          // Cancel the order
-          await prisma.$transaction([
-            prisma.order.update({
-              where: { id: expireOrder.id },
-              data: {
-                status: 'cancelled',
-                checkIn_date: new Date('1970-01-01T00:00:00Z'),
-                checkOut_date: new Date('1970-01-01T00:00:00Z'),
-              },
-            }),
-          ]);
-        }
-      },
-      60 * 60 * 1000,
-    );
     return order;
   }
   async updateOrder(req: Request) {

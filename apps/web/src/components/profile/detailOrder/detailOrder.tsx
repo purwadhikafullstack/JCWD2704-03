@@ -1,4 +1,5 @@
 'use client';
+import React from 'react';
 import { axiosInstance } from '@/libs/axios.config';
 import { Order } from '@/models/reservation.model';
 import dayjs from 'dayjs';
@@ -6,8 +7,9 @@ import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { FaMoon, FaStar } from 'react-icons/fa';
 import Swal from 'sweetalert2';
+import FormPaymentProofComponent from '@/components/invoice/uploadPayment';
 
-function DeniedOrder() {
+function DetailOrder() {
   const [order, setOrders] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const params = useParams();
@@ -36,21 +38,21 @@ function DeniedOrder() {
       showCancelButton: true,
       confirmButtonColor: '#3085d6',
       cancelButtonColor: '#d33',
-      confirmButtonText: 'Yes, deny it!',
+      confirmButtonText: 'Yes, cancel it!',
     }).then(async (result) => {
       if (result.isConfirmed) {
         try {
           const response = await axiosInstance().patch(
-            `http://localhost:8000/api/reservations/tenant/order/denied/${orderId}`,
+            `http://localhost:8000/api/reservations/user/order/cancelled/${orderId}`,
           );
           console.log(response.data);
 
           Swal.fire({
-            title: 'Deny',
-            text: 'The order has been denied.',
+            title: 'Cancelled',
+            text: 'The order has been cancelled.',
             icon: 'success',
           }).then(() => {
-            router.push('/dashboard');
+            router.push('/profile');
           });
         } catch (error) {
           Swal.fire({
@@ -58,51 +60,12 @@ function DeniedOrder() {
             text: 'There was an error cancelling the order.',
             icon: 'error',
           });
-          console.error('Error denying order:', error);
+          console.error('Error cancelling order:', error);
         }
       }
     });
   };
-  const handleConfirmOrder = () => {
-    Swal.fire({
-      title: 'Are you sure?',
-      text: "You won't be able to revert this!",
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#3085d6',
-      cancelButtonColor: '#d33',
-      confirmButtonText: 'Yes, confirm it!',
-    }).then(async (result) => {
-      if (result.isConfirmed) {
-        try {
-          const response = await axiosInstance().patch(
-            `http://localhost:8000/api/reservations/tenant/order/confirmed/${orderId}`,
-          );
-          console.log(response.data);
-
-          Swal.fire({
-            title: 'Confirm',
-            text: 'The order has been confirmed.',
-            icon: 'success',
-          }).then(() => {
-            router.push('/dashboard');
-          });
-        } catch (error) {
-          Swal.fire({
-            title: 'Error',
-            text: 'There was an error confirm the order.',
-            icon: 'error',
-          });
-          console.error('Error confirm order:', error);
-        }
-      }
-    });
-  };
-  const handleSeeProofment = async () => {
-    window.open(
-      `http://localhost:8000/api/reservations/payment/image/${orderId}`,
-    );
-  };
+  const disableCancel = order?.status === 'success';
   if (!order) return <div>No order found</div>;
   return (
     <>
@@ -142,7 +105,6 @@ function DeniedOrder() {
                 <div className="flex flex-col text-right">
                   <div>Order ID: </div>
                   <div className="text-gray-200 text-sm">
-                    {' '}
                     {order.id.toUpperCase()}
                   </div>
                 </div>
@@ -198,31 +160,30 @@ function DeniedOrder() {
             </div>
           </div>
         </div>
-        <div className="flex flex-col md:flex-row items-center">
+        <div>
           <button
             type="button"
-            className="focus:outline-none w-64 text-white bg-red-700 hover:bg-red-800 focus:ring-4 focus:ring-red-300 font-medium rounded-full text-sm px-5 py-2.5 me-2 mb-2 dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-900"
+            className={`focus:outline-none w-48 text-white font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 ${
+              disableCancel
+                ? 'bg-gray-500 cursor-not-allowed'
+                : 'bg-red-700 hover:bg-red-800 focus:ring-4 focus:ring-red-300 dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-900'
+            }`}
             onClick={handleCancelOrder}
+            disabled={disableCancel}
           >
-            Deny
+            Cancel Order
           </button>
           <button
             type="button"
-            className="text-white bg-green-400 w-64 hover:bg-green-800 focus:outline-none focus:ring-4 focus:ring-green-300 font-medium rounded-full text-sm px-5 py-2.5 text-center me-2 mb-2 dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-800"
-            onClick={handleConfirmOrder}
+            className="focus:outline-none w-48 text-white font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-90"
+            // onClick={handleCancelOrder}
           >
-            Confirm
+            invoice
           </button>
-          <button
-            type="button"
-            className="focus:outline-none text-white w-64 bg-yellow-400 hover:bg-blue-800 focus:ring-4 focus:ring-red-300 font-medium rounded-full text-sm px-5 py-2.5 me-2 mb-2 dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-900"
-            onClick={handleSeeProofment}
-          >
-            See Payment Proof
-          </button>
+          <FormPaymentProofComponent order={order} />
         </div>
       </div>
     </>
   );
 }
-export default DeniedOrder;
+export default DetailOrder;

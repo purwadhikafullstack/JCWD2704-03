@@ -1,10 +1,10 @@
-import DetailProduct from '@/components/detailProperty/[id]/detailProp';
+import DetailOrder from '@/components/profile/detailOrder/detailOrder';
 import React from 'react';
 
 function page() {
   return (
     <>
-      <DetailProduct />
+      <DetailOrder />
     </>
   );
 }

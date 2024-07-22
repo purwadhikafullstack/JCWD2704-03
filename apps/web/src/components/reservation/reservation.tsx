@@ -13,7 +13,7 @@ function Reservation() {
   const router = useRouter();
   const params = useParams();
   const { id } = params;
-  const [rooms, setRooms] = useState<Room | null>(null);
+  const [rooms, setRooms] = useState<RoomCategory | null>(null);
   const [order, setOrder] = useState<Order | null>(null);
   const [roomCount, setRoomCount] = useState(1);
   const [paymentMethod, setPaymentMethod] = useState('');
@@ -24,6 +24,9 @@ function Reservation() {
   const buyerId = buyer.id;
   const checkInDate = searchParams.get('checkIn') || '';
   const checkOutDate = searchParams.get('checkOut') || '';
+  const roomIds = searchParams.get('Ids')?.replace(/-/g, ',').split(',') || [];
+  const total_price = parseFloat(searchParams.get('total') || '0');
+  console.log('ini roomIds', roomIds);
   useEffect(() => {
     const fetchRoom = async () => {
       try {
@@ -41,48 +44,11 @@ function Reservation() {
     fetchRoom();
   }, [id]);
 
-  const handleIncrement = () => {
-    if (roomCount < 3) {
-      setRoomCount(roomCount + 1);
-    }
-  };
-
-  const handleDecrement = () => {
-    if (roomCount > 1) {
-      setRoomCount(roomCount - 1);
-    }
-  };
-
   const handlePaymentMethodChange = (
     e: React.ChangeEvent<HTMLSelectElement>,
   ) => {
     setPaymentMethod(e.target.value);
   };
-
-  // const handleCheckInDateChange = (date: string) => {
-  //   const today = new Date();
-  //   const selectedDate = new Date(date);
-  //   if (selectedDate < today) {
-  //     alert('Check-in date cannot be in the past');
-  //     setCheckInDate('');
-  //   } else {
-  //     setCheckInDate(date);
-  //   }
-  // };
-
-  // const handleCheckOutDateChange = (date: string) => {
-  //   const selectedCheckInDate = new Date(checkInDate);
-  //   const selectedCheckOutDate = new Date(date);
-  //   if (selectedCheckOutDate.getTime() === selectedCheckInDate.getTime()) {
-  //     alert('Check-out date cannot be the same as check-in date');
-  //     setCheckOutDate('');
-  //   } else if (selectedCheckOutDate.getTime() < selectedCheckInDate.getTime()) {
-  //     alert('Check-out date cannot be earlier than check-in date');
-  //     setCheckOutDate('');
-  //   } else {
-  //     setCheckOutDate(date);
-  //   }
-  // };
 
   const checkIn = new Date(checkInDate);
   const checkOut = new Date(checkOutDate);
@@ -90,20 +56,19 @@ function Reservation() {
   const durationInDays = !isNaN(diff)
     ? Math.ceil(diff / (1000 * 3600 * 24))
     : 0;
-  const price = rooms?.roomCategory.peak_price
-    ? rooms.roomCategory.peak_price
-    : rooms?.roomCategory.price;
-  const totalPrice = (price || 0) * roomCount * durationInDays;
+
+  console.log('ini roomss', rooms);
+  const price = rooms?.price ? rooms.price : rooms?.peak_price;
+  const totalPrice = (total_price || 0) * durationInDays;
   console.log('hargaa', rooms);
   const handlePay = async () => {
     const data = {
-      user_id: buyerId,
-      property_id: rooms?.property.id,
-      room_id: id,
-      roomCategory_id: rooms?.roomCategory.id,
+      user_id: 'clyvb46sr00013amly571vgjq',
+      property_id: rooms?.property_id,
+      room_ids: roomIds,
+      roomCategory_id: rooms?.id,
       checkIn_date: checkInDate,
       checkOut_date: checkOutDate,
-      total_room,
       payment_method: paymentMethod,
       total_price: totalPrice,
     };
@@ -134,36 +99,7 @@ function Reservation() {
       </div>
       <div className="flex flex-col gap-3 md:justify-between md:flex-row">
         <div className="flex flex-col">
-          <div>
-            {/* <div className="relative flex flex-col md:flex-row space-y-3 md:space-y-0 rounded-xl shadow-sm p-3 max-w-xs md:max-w-3xl mx-auto border border-white bg-white">
-              <div className="flex flex-col w-[320px]">
-                <div className="relative">
-                  <label className="py-2 text-sm font-bold">Check In</label>
-                  <input
-                    type="date"
-                    name="checkIn"
-                    value={checkInDate}
-                    onChange={(e) => handleCheckInDateChange(e.target.value)}
-                    className="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block"
-                  />
-                  <div className="text-red-600 text-xs"></div>
-                </div>
-              </div>
-              <div className="flex flex-col w-[320px]">
-                <label className="py-2 text-sm font-bold">Check Out</label>
-                <div className="relative">
-                  <input
-                    type="date"
-                    name="checkOut"
-                    value={checkOutDate}
-                    onChange={(e) => handleCheckOutDateChange(e.target.value)}
-                    className="bg.white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block "
-                  />
-                  <div className="text-red-600 text-xs"></div>
-                </div>
-              </div>
-            </div> */}
-          </div>
+          <div></div>
           <div className="flex flex-col pt-3 ">
             <div className="relative flex flex-col md:flex-row md:space-x-5 space-y-3 md:space-y-0 rounded-xl shadow-sm p-3 max-w-xs md:max-w-3xl mx-auto border border-white bg-white">
               <div className="w-full md:w-1/3 bg-white grid place-items-center">
@@ -175,29 +111,11 @@ function Reservation() {
               </div>
               <div className="w-full md:w-2/3 bg-white flex flex-col space-y-2 p-3">
                 <h3 className="font-black text-gray-800 md:text-3xl text-xl">
-                  {rooms?.roomCategory.type} Room
+                  {rooms?.type} Room
                 </h3>
                 <p className="md:text-lg text-gray-500 text-base">
-                  {rooms?.roomCategory.desc}
+                  {rooms?.desc}
                 </p>
-                {/* <p>Select Room</p>
-                <div className="flex flex-row items-center gap-3 text-lg">
-                  <button
-                    className="w-10 btn btn-dark"
-                    onClick={handleDecrement}
-                    disabled={roomCount <= 1}
-                  >
-                    -
-                  </button>
-                  <div>{roomCount}</div>
-                  <button
-                    className="w-10 btn btn-dark"
-                    onClick={handleIncrement}
-                    disabled={roomCount >= 3}
-                  >
-                    +
-                  </button>
-                </div> */}
               </div>
             </div>
           </div>

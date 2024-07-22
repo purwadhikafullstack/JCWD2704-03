@@ -1,8 +1,8 @@
 import { PrismaClient } from '@prisma/client';
 import fs from 'fs';
 import path from 'path';
-import { transporter } from './nodemailer';
 import moment, { locales } from 'moment-timezone';
+import { transporter } from '@/libs/nodemailer';
 const prisma = new PrismaClient();
 
 // Function to send reminder emails

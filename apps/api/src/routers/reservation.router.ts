@@ -27,6 +27,10 @@ class ReservationRouter {
       reservationController.cancelByTenant,
     );
     this.router.patch(
+      '/user/order/cancelled/:orderId',
+      reservationController.cancelByUser,
+    );
+    this.router.patch(
       '/tenant/order/confirmed/:orderId',
       reservationController.orderSuccess,
     );

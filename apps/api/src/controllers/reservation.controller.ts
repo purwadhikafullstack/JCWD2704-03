@@ -87,6 +87,16 @@ class ReservationController {
       next(error);
     }
   }
+  async cancelByUser(req: Request, res: Response, next: NextFunction) {
+    try {
+      await statusService.cancelOrderByUser(req);
+      return res.send({
+        message: 'the user order has been cancelled',
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
   async orderSuccess(req: Request, res: Response, next: NextFunction) {
     try {
       await statusService.confirmOrder(req);

@@ -6,7 +6,7 @@ import { FaHouse } from 'react-icons/fa6';
 import { IoLogOut, IoPerson } from 'react-icons/io5';
 import { RxHamburgerMenu } from 'react-icons/rx';
 
-function Sidebar() {
+function SidebarDash() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
@@ -43,7 +43,7 @@ function Sidebar() {
         <div className="p-2.5 mt-3 flex items-center rounded-md px-4 duration-300 cursor-pointer hover:bg-blue-600 text-white">
           <FaClipboardList />
           <span className="text-[15px] ml-4 text-gray-200 font-bold">
-            Orders
+            Property
           </span>
         </div>
         <div className="p-2.5 mt-3 flex items-center rounded-md px-4 duration-300 cursor-pointer hover:bg-blue-600 text-white">
@@ -65,4 +65,4 @@ function Sidebar() {
   );
 }
 
-export default Sidebar;
+export default SidebarDash;

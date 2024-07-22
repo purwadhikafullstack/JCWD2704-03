@@ -19,7 +19,7 @@ export interface Order {
   createdAt: string;
   updatedAt: string;
   invoice_id: string;
-  roomCategory: RoomCategory;
+  RoomCategory: RoomCategory;
   property: Property;
   user: User;
 }

@@ -101,7 +101,9 @@ function CancelOrder() {
               <div className="flex flex-col gap-4">
                 <div className="flex flex-col text-right">
                   <div>Order ID: </div>
-                  <div className="text-gray-200"> {order.id.toUpperCase()}</div>
+                  <div className="text-gray-200 text-sm">
+                    {order.id.toUpperCase()}
+                  </div>
                 </div>
                 {/* checkIn checkOut */}
                 <div className="flex flex-row gap-6  justify-between  text-gray-400">
@@ -134,9 +136,9 @@ function CancelOrder() {
                   <div className="border border-dashed"></div>
                   <div className="">
                     <div className="font-bold">Room</div>
-                    <div className="flex gap-2 text-gray-400">
+                    <div className="flex text-gray-400">
                       <div>{order.total_room}</div>
-                      <div> {order.room.type} Room</div>
+                      <div> {order.RoomCategory.type} Room</div>
                     </div>
                     <div className="flex gap-2 text-gray-400">
                       <div>Total Price:</div>
@@ -146,7 +148,9 @@ function CancelOrder() {
                   <div className="border border-dashed"></div>
                   <div>
                     <div className="font-bold">Facilities</div>
-                    <div className=" text-gray-400">{order.room.desc}</div>
+                    <div className=" text-gray-400">
+                      {order.RoomCategory.desc}
+                    </div>
                   </div>
                 </div>
               </div>
