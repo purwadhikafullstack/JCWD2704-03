@@ -103,7 +103,6 @@ model RoomCategory {
   bed             Bed
   desc            String    @db.LongText
   pic             Bytes?    @db.LongBlob
-  deleteAt        DateTime?
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
   deletedAt       DateTime?
@@ -132,7 +131,7 @@ model Room {
   id              String       @id @default(cuid())
   roomCategory_id String
   property_id     String
-  deleteAt        DateTime?
+  deletedAt       DateTime?
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
   roomCategory    RoomCategory @relation(fields: [roomCategory_id], references: [id])
