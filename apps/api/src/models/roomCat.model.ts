@@ -33,6 +33,7 @@ export type TRoomCategory = {
   pic?: Buffer;
   createdAt: Date;
   updatedAt: Date;
+  deletedAt?: Date;
   property: {
     id: string;
     name: string;

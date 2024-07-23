@@ -1,3 +1,5 @@
+import { Property } from './property.model';
+import { Order } from './reservation.model';
 import { RoomCategory } from './roomCategory.model';
 
 export interface Room {
@@ -6,6 +8,8 @@ export interface Room {
   property_id: string;
   createdAt: string;
   updatedAt: string;
+  deletedAt?: string;
   roomCategory: RoomCategory;
-  // Add other fields as necessary
+  reservation: Order;
+  property: Property;
 }

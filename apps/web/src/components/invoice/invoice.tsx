@@ -8,7 +8,7 @@ import {
 import { AxiosError } from 'axios';
 import { axiosInstance } from '@/libs/axios.config';
 import { Order } from '@/models/reservation.model';
-import FormPaymentProofComponent, { CountComponent } from './countDown';
+import { CountComponent } from './countDown';
 
 const paymentMethodMap: { [key: string]: string } = {
   MANDIRI: 'MANDIRI Transfer',
@@ -97,7 +97,6 @@ async function Invoice({ id }: { id: string }) {
                 Please attach your payment proof to confirm your payment.
               </div>
               {/* isi form */}
-              <FormPaymentProofComponent order={order} />
             </div>
           </div>
         </div>
@@ -132,7 +131,7 @@ async function Invoice({ id }: { id: string }) {
                 </div>
                 <div className="flex flex-row items-center gap-2">
                   <IoLocationOutline /> {order?.property.address},{' '}
-                  {order?.property.city_id.city}
+                  {order?.property.city}
                 </div>
               </div>
             </div>

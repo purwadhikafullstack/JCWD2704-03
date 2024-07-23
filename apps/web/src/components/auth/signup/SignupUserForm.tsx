@@ -187,7 +187,9 @@ const SignupUserForm = () => {
                 />
               </Link>
               <h2 className="font-bold">Create your account</h2>
-              <div className="text-zinc-400">Let's get started with Atcasa</div>
+              <div className="text-zinc-400">
+                Let&apos;s get started with Atcasa
+              </div>
             </div>
 
             {/* login google */}
@@ -311,7 +313,9 @@ const SignupUserForm = () => {
             />
           </Link>
           <h2 className="font-bold">Create your account</h2>
-          <div className="text-zinc-400">Let's get started with Atcasa</div>
+          <div className="text-zinc-400">
+            Let&apos;s get started with Atcasa
+          </div>
         </div>
 
         {/* login google */}

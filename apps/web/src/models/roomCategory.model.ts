@@ -1,3 +1,6 @@
+import { Property } from './property.model';
+import { Room } from './room.model';
+
 export interface RoomCategory {
   id: string;
   property_id: string;
@@ -16,4 +19,6 @@ export interface RoomCategory {
   createdAt: string; // DateTime as string
   updatedAt: string; // DateTime as string
   remainingRooms?: number;
+  Room: Room[];
+  property: Property;
 }

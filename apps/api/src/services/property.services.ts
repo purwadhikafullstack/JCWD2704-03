@@ -5,44 +5,47 @@ import { TProperty } from '@/models/property.model';
 import sharp from 'sharp';
 
 class PropertyService {
-  // async getRoomAvailability(
-  //   roomId: string,
-  //   checkIn: Date,
-  //   checkOut: Date,
-  // ): Promise<number> {
-  //   const room = await prisma.room.findUnique({
-  //     where: { id: roomId },
-  //     // select: { availability: true },
-  //   });
+  async getRoomAvailability(
+    roomId: string,
+    checkIn: Date,
+    checkOut: Date,
+  ): Promise<number> {
+    // Temukan kamar dengan ID yang diberikan
+    const room = await prisma.room.findUnique({
+      where: { id: roomId },
+    });
 
-  //   if (!room) {
-  //     throw new Error('Room not found');
-  //   }
+    //   if (!room) {
+    //     throw new Error('Room not found');
+    //   }
 
-  //   const bookings = await prisma.order.findMany({
-  //     where: {
-  //       room_id: roomId,
-  //       AND: [
-  //         {
-  //           checkIn_date: { lte: checkOut },
-  //         },
-  //         {
-  //           checkOut_date: { gte: checkIn },
-  //         },
-  //       ],
-  //     },
-  //   });
+    // Temukan semua pesanan yang konflik dengan periode check-in dan check-out
+    const bookings = await prisma.orderRoom.findMany({
+      where: {
+        room_id: roomId,
+        order: {
+          AND: [
+            { checkIn_date: { lte: checkOut } },
+            { checkOut_date: { gte: checkIn } },
+            { status: { not: 'cancelled' } },
+          ],
+        },
+      },
+    });
 
-  //   const bookedRooms = bookings.reduce(
-  //     (total, booking) => total + booking.total_room,
-  //     0,
-  //   );
+    // Hitung total kamar yang dipesan berdasarkan orderRoom yang terkait dengan ID kamar
+    const totalBookedRooms = bookings.length;
 
-  //   const remainingAvailability = room.availability - bookedRooms;
+    // Temukan total kamar berdasarkan roomCategory_id
+    const totalRoomsInCategory = await prisma.room.count({
+      where: { roomCategory_id: room?.roomCategory_id },
+    });
 
-  //   return remainingAvailability;
-  // }
+    // Ketersediaan kamar dihitung sebagai total kamar di kategori - kamar yang dipesan
+    const remainingAvailability = totalRoomsInCategory - totalBookedRooms;
 
+    return remainingAvailability;
+  }
   async searchProperties(
     city: string,
     checkIn: Date,
@@ -87,8 +90,17 @@ class PropertyService {
       throw new Error('Error searching properties');
     }
   }
-
-  async getAllProp() {}
+  async getAllPropByTenantId(req: Request) {
+    const property = await prisma.property.findMany({
+      where: { tenant_id: 'clyvb46sq00003amlkg2sh5i4' },
+      // where: { id: req.user.id },
+      include: {
+        RoomCategory: true,
+      },
+    });
+    console.log(property);
+    return property;
+  }
 
   async getAllRoom(req: Request) {
     const { id } = req.params;
@@ -198,122 +210,17 @@ class PropertyService {
 
   async getRoomByRoomId(req: Request) {
     const { id } = req.params;
-    const room = await prisma.room.findUnique({
+    const room = await prisma.roomCategory.findUnique({
       where: { id },
+      // include: {
+      //   property: true,
+      //   Room: true, // Make sure this relation exists in your Prisma schema
+      //   Order: true, // Make sure this relation exists in your Prisma schema
+      // },
     });
+
     return room;
   }
-
-  async getPropertyDetail(req: Request) {
-    const { name } = req.params;
-    const { checkIn, checkOut } = req.query;
-
-    const formattedName = name.replace(/-/g, ' ');
-
-    if (!formattedName) {
-      throw new Error('Property name is required');
-    }
-
-    let checkInDateObj: Date | null = null;
-    let checkOutDateObj: Date | null = null;
-
-    if (checkIn && checkOut) {
-      const checkInValue = Array.isArray(checkIn) ? checkIn[0] : checkIn;
-      const checkOutValue = Array.isArray(checkOut) ? checkOut[0] : checkOut;
-
-      if (
-        typeof checkInValue !== 'string' ||
-        typeof checkOutValue !== 'string'
-      ) {
-        throw new Error('Invalid check-in or check-out date format');
-      }
-
-      checkInDateObj = new Date(checkInValue);
-      checkOutDateObj = new Date(checkOutValue);
-
-      if (isNaN(checkInDateObj.getTime()) || isNaN(checkOutDateObj.getTime())) {
-        throw new Error('Invalid date format');
-      }
-    }
-
-    const data = await prisma.property.findFirst({
-      where: { name: formattedName },
-      select: {
-        id: true,
-        name: true,
-        desc: true,
-        city: true,
-        category: true,
-        address: true,
-        latitude: true,
-        longitude: true,
-        createdAt: true,
-        updatedAt: true,
-        RoomCategory: {
-          include: {
-            Room: {
-              include: {
-                OrderRoom: {
-                  include: {
-                    order: true,
-                  },
-                },
-              },
-              where: {
-                OrderRoom: {
-                  none: {
-                    order: {
-                      AND: [
-                        {
-                          checkIn_date: { lt: checkOutDateObj || new Date() },
-                          checkOut_date: { gt: checkInDateObj || new Date() },
-                          status: { not: 'cancelled' },
-                        },
-                      ],
-                    },
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
-    });
-
-    if (!data) {
-      throw new Error('Property not found');
-    }
-
-    // Calculate the remaining rooms for each category
-    const roomCategoriesWithAvailableRooms = data.RoomCategory.map(
-      (category) => {
-        const totalRooms = category.Room.length;
-        const bookedRooms = category.Room.filter((room) => {
-          return room.OrderRoom.some((orderRoom) => {
-            const order = orderRoom.order;
-            const orderCheckIn = new Date(order.checkIn_date);
-            const orderCheckOut = new Date(order.checkOut_date);
-            return (
-              orderCheckIn < (checkOutDateObj || new Date()) &&
-              orderCheckOut > (checkInDateObj || new Date()) &&
-              order.status !== 'cancelled'
-            );
-          });
-        }).length;
-
-        return {
-          ...category,
-          remainingRooms: totalRooms - bookedRooms,
-        };
-      },
-    ).filter((category) => category.remainingRooms > 0); // Filter out categories with no remaining rooms
-
-    return {
-      ...data,
-      RoomCategory: roomCategoriesWithAvailableRooms,
-    };
-  }
-
   async getPropertyDetailHost(req: Request) {
     const { propertyId } = req.params;
 
@@ -387,6 +294,109 @@ class PropertyService {
     };
   }
 
+  async getPropertyDetail(req: Request) {
+    const { name } = req.params;
+    const { checkIn, checkOut } = req.query;
+
+    const formattedName = name.replace(/-/g, ' ');
+
+    if (!formattedName || !checkIn || !checkOut) {
+      throw new Error(
+        'Nama properti, tanggal check-in, dan tanggal check-out diperlukan',
+      );
+    }
+
+    // Safely get the checkIn and checkOut values
+    const checkInValue = Array.isArray(checkIn) ? checkIn[0] : checkIn;
+    const checkOutValue = Array.isArray(checkOut) ? checkOut[0] : checkOut;
+
+    // Check if they are strings before creating Date objects
+    if (typeof checkInValue !== 'string' || typeof checkOutValue !== 'string') {
+      throw new Error('Format tanggal check-in atau check-out tidak valid');
+    }
+
+    // Convert to Date objects
+    const checkInDateObj = new Date(checkInValue);
+    const checkOutDateObj = new Date(checkOutValue);
+
+    const data = await prisma.property.findFirst({
+      where: { name: formattedName },
+      select: {
+        id: true,
+        name: true,
+        desc: true,
+        city: true,
+        category: true,
+        address: true,
+        latitude: true,
+        longitude: true,
+        createdAt: true,
+        updatedAt: true,
+        RoomCategory: {
+          include: {
+            Room: {
+              include: {
+                OrderRoom: {
+                  include: {
+                    order: true,
+                  },
+                },
+              },
+              where: {
+                // Hanya sertakan kamar yang tidak memiliki pesanan yang bertentangan
+                OrderRoom: {
+                  none: {
+                    // roomCategory:{},
+                    // property:{},
+                    // room:{},
+                    order: {
+                      OR: [
+                        {
+                          checkIn_date: {
+                            lt: checkOutDateObj,
+                          },
+                          checkOut_date: {
+                            gt: checkInDateObj,
+                          },
+                        },
+                      ],
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    // Hitung sisa kamar untuk setiap kategori
+    const roomCategoriesWithAvailableRooms = data?.RoomCategory.map(
+      (category) => {
+        const totalRooms = category.Room.length;
+        const bookedRooms = category.Room.filter((room) => {
+          return room.OrderRoom.some((orderRoom) => {
+            const orderCheckIn = new Date(orderRoom.order.checkIn_date);
+            const orderCheckOut = new Date(orderRoom.order.checkOut_date);
+            return (
+              orderCheckIn <= checkOutDateObj && orderCheckOut >= checkInDateObj
+            );
+          });
+        }).length;
+
+        return {
+          ...category,
+          remainingRooms: totalRooms - bookedRooms,
+        };
+      },
+    ).filter((category) => category.remainingRooms > 0); // Filter out categories with no remaining rooms
+
+    return {
+      ...data,
+      RoomCategory: roomCategoriesWithAvailableRooms,
+    };
+  }
+
   async renderPicProperty(req: Request) {
     const data = await prisma.property.findUnique({
       where: {
@@ -395,6 +405,15 @@ class PropertyService {
     });
     return data?.pic;
   }
+
+  // async renderPicRoom(req: Request) {
+  //   const data = await prisma.room.findUnique({
+  //     where: {
+  //       id: req.params.id,
+  //     },
+  //   });
+  //   return data?.pic;
+  // }
 
   async createProperty(req: Request) {
     const userId = req.user?.id;
@@ -440,7 +459,7 @@ class PropertyService {
     return createProperty;
   }
 
-  async updateProperty(req: Request) {
+  /* async updateProperty(req: Request) {
     const { propertyId } = req.params;
     const { file } = req;
     const userId = req.user?.id;
@@ -489,6 +508,59 @@ class PropertyService {
       throw new Error('Failed to update property');
     }
   }
+    */
+
+  async updateProperty(req: Request) {
+    const { propertyId } = req.params;
+
+    const { file } = req;
+    const userId = req.user?.id;
+
+    const currentProperty = await prisma.property.findUnique({
+      where: { id: propertyId, tenant_id: userId },
+    });
+
+    if (!currentProperty) {
+      throw new Error('Listing is not found');
+    }
+
+    const { name, category, desc, city, address, latitude, longitude } =
+      req.body as TProperty;
+
+    let buffer;
+    if (file) {
+      buffer = await sharp(file.buffer).png().toBuffer();
+    }
+
+    const parsedLatitude = latitude ? parseFloat(String(latitude)) : undefined;
+    const parsedLongitude = longitude
+      ? parseFloat(String(longitude))
+      : undefined;
+
+    const updatedData: any = {
+      name,
+      category,
+      desc,
+      address,
+      city,
+      latitude: parsedLatitude,
+      longitude: parsedLongitude,
+      pic: buffer,
+    };
+
+    if (buffer) {
+      updatedData.pic = buffer;
+    }
+
+    const updatedProperty = await prisma.property.update({
+      where: { id: propertyId },
+      data: updatedData,
+    });
+  }
+
+  async createRoom(req: Request) {}
+
+  async updateRoom(req: Request) {}
 }
 
 export default new PropertyService();

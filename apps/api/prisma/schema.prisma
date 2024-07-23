@@ -103,6 +103,7 @@ model RoomCategory {
   bed             Bed
   desc            String    @db.LongText
   pic             Bytes?    @db.LongBlob
+  deleteAt        DateTime?
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
   deletedAt       DateTime?
@@ -128,16 +129,15 @@ enum Payment {
 }
 
 model Room {
-  id              String    @id @default(cuid())
+  id              String       @id @default(cuid())
   roomCategory_id String
   property_id     String
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  deletedAt       DateTime?
-
-  roomCategory RoomCategory @relation(fields: [roomCategory_id], references: [id])
-  property     Property     @relation(fields: [property_id], references: [id])
-  OrderRoom    OrderRoom[]
+  deleteAt        DateTime?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  roomCategory    RoomCategory @relation(fields: [roomCategory_id], references: [id])
+  property        Property     @relation(fields: [property_id], references: [id])
+  OrderRoom       OrderRoom[]
 }
 
 model Order {
@@ -166,11 +166,13 @@ model Order {
 }
 
 model OrderRoom {
-  id       String @id @default(uuid())
-  order_id String
-  order    Order  @relation(fields: [order_id], references: [id])
-  room_id  String
-  room     Room   @relation(fields: [room_id], references: [id])
+  id        String   @id @default(uuid())
+  order_id  String
+  order     Order    @relation(fields: [order_id], references: [id])
+  room_id   String
+  room      Room     @relation(fields: [room_id], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Review {

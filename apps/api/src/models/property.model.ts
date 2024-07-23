@@ -3,6 +3,8 @@ import { TUser } from './user.model';
 import { Room, Property as PrismaProperty } from '@prisma/client';
 
 export type TProperty = {
+  name: string;
+  city: string;
   id: string;
   name: string;
   tenant_id: TUser;

@@ -42,6 +42,38 @@ export class PropertyRouter {
       blobUploader().single('pic'),
       this.propertyController.updateProperty,
     );
+    this.router.get('/', this.propertyController.getAllPropertyByTenantId);
+    this.router.get(
+      '/detail/:propertyId',
+      this.propertyController.getPropertyDetailHost,
+    );
+    // this.router.get(
+    //   '/room/image/:roomId',
+    //   this.propertyController.renderPicRoom,
+    // );
+    this.router.post(
+      '/',
+      verifyUser,
+      verifyTenant,
+      blobUploader().single('pic'),
+      this.propertyController.createProperty,
+    );
+    this.router.patch(
+      '/:propertyId',
+      verifyUser,
+      verifyTenant,
+      blobUploader().single('pic'),
+      this.propertyController.updateProperty,
+    );
+    this.router.get(
+      '/getReviewByEventId/:eventId',
+      this.propertyController.getReviewByEventId,
+    );
+    this.router.get(
+      '/getReviewByUserId/:userId',
+      this.propertyController.getReviewByUserId,
+    );
+    this.router.post('/reviewReply/:orderId', this.propertyController.addReply);
   }
 
   getRouter(): Router {
