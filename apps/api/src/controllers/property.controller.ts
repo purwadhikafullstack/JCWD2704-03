@@ -1,5 +1,6 @@
 import { NextFunction, Response, Request } from 'express';
 import propertyServices from '@/services/property.services';
+import reviewService from '@/services/review.service';
 
 export class PropertyController {
   // async getRoomAvailability(req: Request, res: Response, next: NextFunction) {
@@ -68,7 +69,34 @@ export class PropertyController {
   //     next(error);
   //   }
   // }
+  async getAllPropertyByTenantId(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ) {
+    try {
+      const data = await propertyServices.getAllPropByTenantId(req);
+      return res.send({
+        message: 'All Property',
+        data,
+      });
+    } catch (error) {
+      console.log('ga ada room');
 
+      next(error);
+    }
+  }
+  async getPropertyDetailHost(req: Request, res: Response, next: NextFunction) {
+    try {
+      const data = await propertyServices.getPropertyDetailHost(req);
+      return res.send({
+        message: 'Fetching property detail',
+        data,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
   async getRoomById(req: Request, res: Response, next: NextFunction) {
     try {
       const data = await propertyServices.getRoomByRoomId(req);
@@ -131,6 +159,35 @@ export class PropertyController {
       next(error);
     }
   }
+  async getReviewByEventId(req: Request, res: Response, next: NextFunction) {
+    try {
+      const data = await reviewService.getReviewByEventId(req);
+      return res.send({
+        data,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+  async getReviewByUserId(req: Request, res: Response, next: NextFunction) {
+    try {
+      const data = await reviewService.getReviewByUserId(req);
+      return res.send({
+        data,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+  async addReply(req: Request, res: Response, next: NextFunction) {
+    try {
+      const data = await reviewService.addReply(req);
+      return res.send({
+        data,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
 }
-
 export default new PropertyController();

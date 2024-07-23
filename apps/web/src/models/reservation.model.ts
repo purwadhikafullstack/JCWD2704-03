@@ -1,4 +1,5 @@
 import { Property } from './property.model';
+import { Review } from './review.modal';
 import { RoomCategory } from './roomCategory.model';
 import { User } from './user.model';
 
@@ -22,4 +23,5 @@ export interface Order {
   RoomCategory: RoomCategory;
   property: Property;
   user: User;
+  review?: Review;
 }

@@ -112,6 +112,21 @@ class StatusService {
       },
     });
     if (updateStatus) await sendBookingReminders(orderId);
+    const isDataReviewExist = await prisma.review.findFirst({
+      where: { user_id: order.user_id, property_id: order.property_id },
+    });
+
+    if (!isDataReviewExist) {
+      await prisma.review.create({
+        data: {
+          property_id: order.property_id,
+          user_id: order.user_id,
+          order_id: orderId,
+          review: '',
+          rating: 0,
+        },
+      });
+    }
     return updateStatus;
   }
   async renderPaymentProof(req: Request) {

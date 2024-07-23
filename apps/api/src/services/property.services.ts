@@ -89,7 +89,17 @@ class PropertyService {
       throw new Error('Error searching properties');
     }
   }
-  async getAllProp() {}
+  async getAllPropByTenantId(req: Request) {
+    const property = await prisma.property.findMany({
+      where: { tenant_id: 'clyvb46sq00003amlkg2sh5i4' },
+      // where: { id: req.user.id },
+      include: {
+        RoomCategory: true,
+      },
+    });
+    console.log(property);
+    return property;
+  }
 
   async getAllRoom(req: Request) {
     const { id } = req.params;
@@ -210,6 +220,78 @@ class PropertyService {
 
     return room;
   }
+  async getPropertyDetailHost(req: Request) {
+    const { propertyId } = req.params;
+
+    // Check if propertyId is provided
+    if (!propertyId) {
+      throw new Error('Property ID is required');
+    }
+
+    // Fetch property details from the database
+    const data = await prisma.property.findUnique({
+      where: { id: propertyId },
+      select: {
+        id: true,
+        name: true,
+        desc: true,
+        city: true,
+        category: true,
+        address: true,
+        latitude: true,
+        longitude: true,
+        createdAt: true,
+        updatedAt: true,
+        RoomCategory: {
+          include: {
+            Room: {
+              include: {
+                OrderRoom: {
+                  include: {
+                    order: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    // Handle case where property is not found
+    if (!data) {
+      throw new Error('Property not found');
+    }
+
+    // Calculate the remaining rooms for each category
+    const roomCategoriesWithAvailableRooms = data.RoomCategory.map(
+      (category) => {
+        const totalRooms = category.Room.length;
+        const bookedRooms = category.Room.filter((room) => {
+          return room.OrderRoom.some((orderRoom) => {
+            const order = orderRoom.order;
+            const orderCheckIn = new Date(order.checkIn_date);
+            const orderCheckOut = new Date(order.checkOut_date);
+            return (
+              orderCheckIn < new Date() &&
+              orderCheckOut > new Date() &&
+              order.status !== 'cancelled'
+            );
+          });
+        }).length;
+
+        return {
+          ...category,
+          remainingRooms: totalRooms - bookedRooms,
+        };
+      },
+    ).filter((category) => category.remainingRooms > 0); // Filter out categories with no remaining rooms
+
+    return {
+      ...data,
+      RoomCategory: roomCategoriesWithAvailableRooms,
+    };
+  }
 
   async getPropertyDetail(req: Request) {
     const { name } = req.params;
@@ -263,6 +345,9 @@ class PropertyService {
                 // Hanya sertakan kamar yang tidak memiliki pesanan yang bertentangan
                 OrderRoom: {
                   none: {
+                    // roomCategory:{},
+                    // property:{},
+                    // room:{},
                     order: {
                       OR: [
                         {

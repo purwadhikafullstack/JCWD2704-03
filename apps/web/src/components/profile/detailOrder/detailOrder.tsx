@@ -8,10 +8,16 @@ import { useEffect, useState } from 'react';
 import { FaMoon, FaStar } from 'react-icons/fa';
 import Swal from 'sweetalert2';
 import FormPaymentProofComponent from '@/components/invoice/uploadPayment';
+import ReviewModal from '../reviewModal';
 
 function DetailOrder() {
   const [order, setOrders] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [rating, setRating] = useState(0);
+  const [reviewText, setReviewText] = useState('');
+  const [isReviewSubmitted, setIsReviewSubmitted] = useState(false);
+  const [hasReview, setHasReview] = useState(false);
   const params = useParams();
   const router = useRouter();
   const { orderId } = params;
@@ -23,6 +29,11 @@ function DetailOrder() {
         );
         const order: Order = response.data.data;
         setOrders(order);
+        const reviewCheckResponse = await axiosInstance().get(
+          `http://localhost:8000/api/reservations/review/${orderId}`,
+        );
+        setHasReview(reviewCheckResponse.data.hasReview);
+        console.log('isi review', reviewCheckResponse);
       } catch (error) {
         console.error('Error fetching rooms:', error);
       }
@@ -65,8 +76,37 @@ function DetailOrder() {
       }
     });
   };
+  const handleSubmitReview = async () => {
+    try {
+      const request = await axiosInstance().post(
+        'http://localhost:8000/api/reservations/addReview',
+        {
+          order_id: orderId,
+          review: reviewText,
+          rating: rating,
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        },
+      );
+      console.log('Review submitted successfully:', request.data);
+      setIsReviewSubmitted(true);
+      console.log(
+        'Submitting review with rating:',
+        rating,
+        'and text:',
+        reviewText,
+      );
+      // Close the modal after submission
+    } catch (error) {
+      console.error('Error submitting review:', error);
+    }
+  };
   const disableCancel = order?.status === 'success';
   if (!order) return <div>No order found</div>;
+  const showButton = dayjs(order.checkOut_date).isBefore(dayjs());
   return (
     <>
       <div className=" flex flex-col gap-3">
@@ -181,8 +221,39 @@ function DetailOrder() {
             invoice
           </button>
           <FormPaymentProofComponent order={order} />
+          {showButton && !hasReview && (
+            <button
+              type="button"
+              className={`focus:outline-none w-48 text-white font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 ${
+                isReviewSubmitted || hasReview
+                  ? 'bg-gray-500 cursor-not-allowed'
+                  : 'bg-green-700 hover:bg-green-800 focus:ring-4 focus:ring-green-300 dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-90'
+              }`}
+              onClick={() => setShowReviewModal(true)}
+              disabled={isReviewSubmitted || hasReview}
+            >
+              Review
+            </button>
+          )}
         </div>
       </div>
+      {showReviewModal && (
+        <ReviewModal
+          order={order}
+          rating={rating}
+          reviewText={reviewText}
+          onRatingChange={setRating}
+          onReviewTextChange={setReviewText}
+          onClose={() => setShowReviewModal(false)}
+          onSubmit={() => {
+            handleSubmitReview();
+            // Handle the review submission
+
+            console.log('Review submitted:', rating, reviewText);
+            setShowReviewModal(false);
+          }}
+        />
+      )}
     </>
   );
 }

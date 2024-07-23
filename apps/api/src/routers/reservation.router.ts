@@ -38,6 +38,11 @@ class ReservationRouter {
       '/payment/image/:id',
       reservationController.renderPaymentProof,
     );
+    this.router.post('/addReview', reservationController.addReview);
+    this.router.get(
+      '/review/:orderId',
+      reservationController.getReviewByOrderId,
+    );
   }
   getRouter() {
     return this.router;
