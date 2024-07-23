@@ -108,7 +108,9 @@ function UpdateProperty() {
   useEffect(() => {
     const fetchEvent = async () => {
       try {
-        const response = await axiosInstance().get(`/api/properties/${id}`);
+        const response = await axiosInstance().get(
+          `/api/properties/detail/${id}`,
+        );
         const property: Property = response.data.data;
 
         console.log('Fetched property:', property);

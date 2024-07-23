@@ -30,6 +30,16 @@ export const Header = () => {
     router.push('/auth/signup/user');
   };
 
+  const userProfile = (event: React.MouseEvent) => {
+    event.preventDefault();
+    router.push('/profile');
+  };
+
+  const userSettings = (event: React.MouseEvent) => {
+    event.preventDefault();
+    router.push('/profile/settings');
+  };
+
   const tenantRegisterButton = (event: React.MouseEvent) => {
     event.preventDefault();
     router.push('/auth/signup/tenant');
@@ -95,7 +105,7 @@ export const Header = () => {
                     {loggedinUser.first_name ? (
                       <img
                         src={
-                          loggedinUser.image ||
+                          'https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.jpg' ||
                           'https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.jpg'
                         }
                         alt="User Avatar"
@@ -124,11 +134,9 @@ export const Header = () => {
                     {loggedinUser.first_name ? (
                       <>
                         <li>
-                          <a className="justify-between">Profile</a>
+                          <button onClick={userProfile}>Profile</button>
                         </li>
-                        <li>
-                          <a>Settings</a>
-                        </li>
+
                         <li>
                           <button onClick={handleLogout}>Logout</button>
                         </li>
