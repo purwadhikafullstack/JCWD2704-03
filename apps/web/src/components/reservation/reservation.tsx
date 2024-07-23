@@ -63,7 +63,7 @@ function Reservation() {
   console.log('hargaa', rooms);
   const handlePay = async () => {
     const data = {
-      user_id: 'clyvb46sr00013amly571vgjq',
+      user_id: buyerId,
       property_id: rooms?.property_id,
       room_ids: roomIds,
       roomCategory_id: rooms?.id,
@@ -74,6 +74,8 @@ function Reservation() {
     };
     console.log('data to be sent:', data);
     try {
+      console.log(buyerId);
+
       const response = await axiosInstance().post('/api/reservations', data);
       console.log('order successful', response);
       const orderData = response.data.data;

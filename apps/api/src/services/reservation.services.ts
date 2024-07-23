@@ -32,10 +32,10 @@ class ReservationService {
     return data;
   }
   async getOrderByUserId(req: Request) {
-    const staticUserId = 'clyvb46sr00013amly571vgjq';
+    // const staticUserId = 'clyvb46sr00013amly571vgjq';
     const data = await prisma.order.findMany({
       // where: { user_id: req.user?.id },
-      where: { user_id: staticUserId },
+      where: { user_id: req.user?.id },
       orderBy: {
         updatedAt: 'desc',
       },
@@ -52,8 +52,8 @@ class ReservationService {
     const data = await prisma.order.findMany({
       where: {
         property: {
-          tenant_id: 'clyvb46sq00003amlkg2sh5i4',
-          // tenant_id: req.user?.id,
+          // tenant_id: 'clyvb46sq00003amlkg2sh5i4',
+          tenant_id: req.user?.id,
         },
       },
       include: {

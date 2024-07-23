@@ -1,6 +1,8 @@
 import { blobUploader } from '@/libs/multer';
 import reservationController from '../controllers/reservation.controller';
 import { Router } from 'express';
+import { verifyUser } from '@/middlewares/auth.middleware';
+import { verifyBuyer } from '@/middlewares/role.middleware';
 class ReservationRouter {
   private router: Router;
   constructor() {
@@ -12,7 +14,12 @@ class ReservationRouter {
     this.router.get('/:orderId', reservationController.getOrderByOrderId);
     this.router.get('/user/myOrder', reservationController.getOrderByUserId);
     this.router.get('/tenant/order', reservationController.getOrderBySellerId);
-    this.router.post('/', reservationController.createOrder);
+    this.router.post(
+      '/',
+      verifyUser,
+      verifyBuyer,
+      reservationController.createOrder,
+    );
     this.router.patch(
       '/:orderId',
       blobUploader().single('payment_proof'),

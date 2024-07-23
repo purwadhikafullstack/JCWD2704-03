@@ -15,9 +15,9 @@ class PropertyService {
       where: { id: roomId },
     });
 
-    if (!room) {
-      throw new Error('Room not found');
-    }
+    //   if (!room) {
+    //     throw new Error('Room not found');
+    //   }
 
     // Temukan semua pesanan yang konflik dengan periode check-in dan check-out
     const bookings = await prisma.orderRoom.findMany({
@@ -38,7 +38,7 @@ class PropertyService {
 
     // Temukan total kamar berdasarkan roomCategory_id
     const totalRoomsInCategory = await prisma.room.count({
-      where: { roomCategory_id: room.roomCategory_id },
+      where: { roomCategory_id: room?.roomCategory_id },
     });
 
     // Ketersediaan kamar dihitung sebagai total kamar di kategori - kamar yang dipesan
@@ -81,11 +81,12 @@ class PropertyService {
               },
             },
           },
+          tenant: true,
         },
       });
-
       return properties;
     } catch (error) {
+      console.error('Error searching properties:', error);
       throw new Error('Error searching properties');
     }
   }
@@ -457,6 +458,57 @@ class PropertyService {
 
     return createProperty;
   }
+
+  /* async updateProperty(req: Request) {
+    const { propertyId } = req.params;
+    const { file } = req;
+    const userId = req.user?.id;
+
+    const currentProperty = await prisma.property.findUnique({
+      where: { id: propertyId },
+    });
+
+    if (!currentProperty || currentProperty.tenant_id !== userId) {
+      throw new Error('Listing not found or unauthorized');
+    }
+
+    const { name, category, desc, city, address, latitude, longitude } =
+      req.body as Partial<TProperty>;
+
+    let buffer;
+    if (file) {
+      buffer = await sharp(file.buffer).png().toBuffer();
+    }
+
+    const parsedLatitude = latitude ? parseFloat(String(latitude)) : undefined;
+    const parsedLongitude = longitude
+      ? parseFloat(String(longitude))
+      : undefined;
+
+    const updatedData: Prisma.PropertyUpdateInput = {
+      name: name || currentProperty.name,
+      category: category || currentProperty.category,
+      desc: desc || currentProperty.desc,
+      address: address || currentProperty.address,
+      city: city || currentProperty.city,
+      latitude: parsedLatitude ?? currentProperty.latitude,
+      longitude: parsedLongitude ?? currentProperty.longitude,
+      pic: buffer || currentProperty.pic,
+    };
+
+    try {
+      const updatedProperty = await prisma.property.update({
+        where: { id: propertyId },
+        data: updatedData,
+      });
+
+      return updatedProperty;
+    } catch (error) {
+      console.error('Error updating property:', error);
+      throw new Error('Failed to update property');
+    }
+  }
+    */
 
   async updateProperty(req: Request) {
     const { propertyId } = req.params;

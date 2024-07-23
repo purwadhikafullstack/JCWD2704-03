@@ -7,4 +7,5 @@ export type TRoom = {
   roomCategory_id: TRoomCategory;
   createdAt?: Date;
   updatedAt?: Date;
+  deletedAt?: Date;
 };

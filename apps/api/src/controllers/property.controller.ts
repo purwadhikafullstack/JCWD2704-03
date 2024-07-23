@@ -97,6 +97,21 @@ export class PropertyController {
       next(error);
     }
   }
+
+  // async getAllRoom(req: Request, res: Response, next: NextFunction) {
+  //   try {
+  //     const data = await propertyServices.getAllRoom(req);
+  //     return res.send({
+  //       message: 'All room type',
+  //       data,
+  //     });
+  //   } catch (error) {
+  //     console.log('ga ada room');
+
+  //     next(error);
+  //   }
+  // }
+
   async getRoomById(req: Request, res: Response, next: NextFunction) {
     try {
       const data = await propertyServices.getRoomByRoomId(req);

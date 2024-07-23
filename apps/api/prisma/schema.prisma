@@ -63,9 +63,9 @@ model Property {
   address   String
   latitude  Float?
   longitude Float?
-  deleteAt  DateTime?
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
 
   Room   Room[]
   Order  Order[]
@@ -103,9 +103,9 @@ model RoomCategory {
   bed             Bed
   desc            String    @db.LongText
   pic             Bytes?    @db.LongBlob
-  deleteAt        DateTime?
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
+  deletedAt       DateTime?
 
   property Property @relation(fields: [property_id], references: [id])
 
@@ -131,7 +131,7 @@ model Room {
   id              String       @id @default(cuid())
   roomCategory_id String
   property_id     String
-  deleteAt        DateTime?
+  deletedAt       DateTime?
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
   roomCategory    RoomCategory @relation(fields: [roomCategory_id], references: [id])
@@ -153,7 +153,6 @@ model Order {
   cancel_date     DateTime?
   status          Status
   invoice_id      String?
-  deleteAt        DateTime?
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
   user            User          @relation(fields: [user_id], references: [id])

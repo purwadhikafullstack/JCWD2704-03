@@ -1,10 +1,10 @@
-import ChangePassword from '@/components/auth/passwordreset/ChangePassword';
+import EditProfileForm from '@/components/profile/edit/EditProfileForm';
 import React from 'react';
 
 function page() {
   return (
     <div>
-      <ChangePassword />
+      <EditProfileForm />
     </div>
   );
 }
