@@ -18,6 +18,31 @@ class ReservationRouter {
       blobUploader().single('payment_proof'),
       reservationController.updateOrder,
     );
+    this.router.patch(
+      '/tenant/order/denied/:orderId',
+      reservationController.changeStatusOrder,
+    );
+    this.router.patch(
+      '/tenant/order/cancelled/:orderId',
+      reservationController.cancelByTenant,
+    );
+    this.router.patch(
+      '/user/order/cancelled/:orderId',
+      reservationController.cancelByUser,
+    );
+    this.router.patch(
+      '/tenant/order/confirmed/:orderId',
+      reservationController.orderSuccess,
+    );
+    this.router.get(
+      '/payment/image/:id',
+      reservationController.renderPaymentProof,
+    );
+    this.router.post('/addReview', reservationController.addReview);
+    this.router.get(
+      '/review/:orderId',
+      reservationController.getReviewByOrderId,
+    );
   }
   getRouter() {
     return this.router;

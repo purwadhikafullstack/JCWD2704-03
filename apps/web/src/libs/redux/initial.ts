@@ -7,5 +7,5 @@ export const initialUser = {
   first_name: '',
   last_name: '',
   image: '',
-  //   isVerified: '',
+  isVerified: '',
 };

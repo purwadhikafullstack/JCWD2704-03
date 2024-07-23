@@ -4,8 +4,7 @@ import React from 'react';
 function page() {
   return (
     <>
-      <div className="flex flex-col gap-8 px-8">
-        <div className="border-b" />
+      <div className="flex flex-col w-full overflow-x-hidden">
         <OrderTable />
       </div>
     </>
