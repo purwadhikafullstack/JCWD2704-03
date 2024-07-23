@@ -31,6 +31,12 @@ export class RoomRouter {
       blobUploader().single('pic'),
       this.roomController.updateRoom,
     );
+    this.router.delete(
+      '/d/:roomCategoryId',
+      verifyUser,
+      verifyTenant,
+      this.roomController.deleteRoom,
+    );
   }
 
   getRouter(): Router {

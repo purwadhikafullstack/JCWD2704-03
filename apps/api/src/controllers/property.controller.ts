@@ -55,6 +55,18 @@ export class PropertyController {
     }
   }
 
+  async getPropertyDetailHost(req: Request, res: Response, next: NextFunction) {
+    try {
+      const data = await propertyServices.getPropertyDetailHost(req);
+      return res.send({
+        message: 'Fetching property detail',
+        data,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
   // async getAllRoom(req: Request, res: Response, next: NextFunction) {
   //   try {
   //     const data = await propertyServices.getAllRoom(req);

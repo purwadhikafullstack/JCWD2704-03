@@ -219,6 +219,7 @@ class AuthService {
     };
 
     delete userData.password;
+    delete userData.image;
 
     const accessToken = createToken(userData, '1hr');
     const refreshToken = createToken({ id: userData.id }, '1hr');

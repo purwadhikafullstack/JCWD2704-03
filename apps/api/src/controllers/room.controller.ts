@@ -24,6 +24,17 @@ export class RoomController {
       next(error);
     }
   }
+
+  async deleteRoom(req: Request, res: Response, next: NextFunction) {
+    try {
+      await roomService.deleteRoomCategory(req);
+      return res.send({
+        message: 'Room category has been deleted',
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 export default new RoomController();

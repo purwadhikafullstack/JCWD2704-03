@@ -51,29 +51,31 @@ class PropertyService {
     try {
       const properties = await prisma.property.findMany({
         where: {
-          AND: [
-            { city: { contains: city } },
-            {
-              Room: {
-                some: {
-                  Order: {
-                    none: {
-                      AND: [
-                        { checkIn_date: { lte: checkOut } },
-                        { checkOut_date: { gte: checkIn } },
-                        { status: { not: 'cancelled' } },
-                      ],
-                    },
+          city: { contains: city },
+          Room: {
+            some: {
+              OrderRoom: {
+                none: {
+                  order: {
+                    AND: [
+                      { checkIn_date: { lte: checkOut } },
+                      { checkOut_date: { gte: checkIn } },
+                      { status: { not: 'cancelled' } },
+                    ],
                   },
                 },
               },
             },
-          ],
+          },
         },
         include: {
           Room: {
             include: {
-              Order: true,
+              OrderRoom: {
+                include: {
+                  order: true,
+                },
+              },
             },
           },
           tenant: true,
@@ -81,6 +83,7 @@ class PropertyService {
       });
       return properties;
     } catch (error) {
+      console.error('Error searching properties:', error);
       throw new Error('Error searching properties');
     }
   }
@@ -207,24 +210,31 @@ class PropertyService {
 
     const formattedName = name.replace(/-/g, ' ');
 
-    if (!formattedName || !checkIn || !checkOut) {
-      throw new Error(
-        'Property name, check-in, and check-out dates are required',
-      );
+    if (!formattedName) {
+      throw new Error('Property name is required');
     }
 
-    // Safely get the checkIn and checkOut values
-    const checkInValue = Array.isArray(checkIn) ? checkIn[0] : checkIn;
-    const checkOutValue = Array.isArray(checkOut) ? checkOut[0] : checkOut;
+    let checkInDateObj: Date | null = null;
+    let checkOutDateObj: Date | null = null;
 
-    // Check if they are strings before creating Date objects
-    if (typeof checkInValue !== 'string' || typeof checkOutValue !== 'string') {
-      throw new Error('Invalid check-in or check-out date format');
+    if (checkIn && checkOut) {
+      const checkInValue = Array.isArray(checkIn) ? checkIn[0] : checkIn;
+      const checkOutValue = Array.isArray(checkOut) ? checkOut[0] : checkOut;
+
+      if (
+        typeof checkInValue !== 'string' ||
+        typeof checkOutValue !== 'string'
+      ) {
+        throw new Error('Invalid check-in or check-out date format');
+      }
+
+      checkInDateObj = new Date(checkInValue);
+      checkOutDateObj = new Date(checkOutValue);
+
+      if (isNaN(checkInDateObj.getTime()) || isNaN(checkOutDateObj.getTime())) {
+        throw new Error('Invalid date format');
+      }
     }
-
-    // Convert to Date objects
-    const checkInDateObj = new Date(checkInValue);
-    const checkOutDateObj = new Date(checkOutValue);
 
     const data = await prisma.property.findFirst({
       where: { name: formattedName },
@@ -243,22 +253,24 @@ class PropertyService {
           include: {
             Room: {
               include: {
-                Order: true,
+                OrderRoom: {
+                  include: {
+                    order: true,
+                  },
+                },
               },
               where: {
-                // Only include rooms that have no conflicting orders
-                Order: {
+                OrderRoom: {
                   none: {
-                    OR: [
-                      {
-                        checkIn_date: {
-                          lt: checkOutDateObj,
+                    order: {
+                      AND: [
+                        {
+                          checkIn_date: { lt: checkOutDateObj || new Date() },
+                          checkOut_date: { gt: checkInDateObj || new Date() },
+                          status: { not: 'cancelled' },
                         },
-                        checkOut_date: {
-                          gt: checkInDateObj,
-                        },
-                      },
-                    ],
+                      ],
+                    },
                   },
                 },
               },
@@ -268,16 +280,96 @@ class PropertyService {
       },
     });
 
+    if (!data) {
+      throw new Error('Property not found');
+    }
+
     // Calculate the remaining rooms for each category
-    const roomCategoriesWithAvailableRooms = data?.RoomCategory.map(
+    const roomCategoriesWithAvailableRooms = data.RoomCategory.map(
       (category) => {
         const totalRooms = category.Room.length;
         const bookedRooms = category.Room.filter((room) => {
-          return room.Order.some((order) => {
+          return room.OrderRoom.some((orderRoom) => {
+            const order = orderRoom.order;
             const orderCheckIn = new Date(order.checkIn_date);
             const orderCheckOut = new Date(order.checkOut_date);
             return (
-              orderCheckIn <= checkOutDateObj && orderCheckOut >= checkInDateObj
+              orderCheckIn < (checkOutDateObj || new Date()) &&
+              orderCheckOut > (checkInDateObj || new Date()) &&
+              order.status !== 'cancelled'
+            );
+          });
+        }).length;
+
+        return {
+          ...category,
+          remainingRooms: totalRooms - bookedRooms,
+        };
+      },
+    ).filter((category) => category.remainingRooms > 0); // Filter out categories with no remaining rooms
+
+    return {
+      ...data,
+      RoomCategory: roomCategoriesWithAvailableRooms,
+    };
+  }
+
+  async getPropertyDetailHost(req: Request) {
+    const { propertyId } = req.params;
+
+    // Check if propertyId is provided
+    if (!propertyId) {
+      throw new Error('Property ID is required');
+    }
+
+    // Fetch property details from the database
+    const data = await prisma.property.findUnique({
+      where: { id: propertyId },
+      select: {
+        id: true,
+        name: true,
+        desc: true,
+        city: true,
+        category: true,
+        address: true,
+        latitude: true,
+        longitude: true,
+        createdAt: true,
+        updatedAt: true,
+        RoomCategory: {
+          include: {
+            Room: {
+              include: {
+                OrderRoom: {
+                  include: {
+                    order: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    // Handle case where property is not found
+    if (!data) {
+      throw new Error('Property not found');
+    }
+
+    // Calculate the remaining rooms for each category
+    const roomCategoriesWithAvailableRooms = data.RoomCategory.map(
+      (category) => {
+        const totalRooms = category.Room.length;
+        const bookedRooms = category.Room.filter((room) => {
+          return room.OrderRoom.some((orderRoom) => {
+            const order = orderRoom.order;
+            const orderCheckIn = new Date(order.checkIn_date);
+            const orderCheckOut = new Date(order.checkOut_date);
+            return (
+              orderCheckIn < new Date() &&
+              orderCheckOut > new Date() &&
+              order.status !== 'cancelled'
             );
           });
         }).length;
@@ -350,20 +442,19 @@ class PropertyService {
 
   async updateProperty(req: Request) {
     const { propertyId } = req.params;
-
     const { file } = req;
     const userId = req.user?.id;
 
     const currentProperty = await prisma.property.findUnique({
-      where: { id: propertyId, tenant_id: userId },
+      where: { id: propertyId },
     });
 
-    if (!currentProperty) {
-      throw new Error('Listing is not found');
+    if (!currentProperty || currentProperty.tenant_id !== userId) {
+      throw new Error('Listing not found or unauthorized');
     }
 
     const { name, category, desc, city, address, latitude, longitude } =
-      req.body as TProperty;
+      req.body as Partial<TProperty>;
 
     let buffer;
     if (file) {
@@ -375,25 +466,28 @@ class PropertyService {
       ? parseFloat(String(longitude))
       : undefined;
 
-    const updatedData: any = {
-      name,
-      category,
-      desc,
-      address,
-      city,
-      latitude: parsedLatitude,
-      longitude: parsedLongitude,
-      pic: buffer,
+    const updatedData: Prisma.PropertyUpdateInput = {
+      name: name || currentProperty.name,
+      category: category || currentProperty.category,
+      desc: desc || currentProperty.desc,
+      address: address || currentProperty.address,
+      city: city || currentProperty.city,
+      latitude: parsedLatitude ?? currentProperty.latitude,
+      longitude: parsedLongitude ?? currentProperty.longitude,
+      pic: buffer || currentProperty.pic,
     };
 
-    if (buffer) {
-      updatedData.pic = buffer;
-    }
+    try {
+      const updatedProperty = await prisma.property.update({
+        where: { id: propertyId },
+        data: updatedData,
+      });
 
-    const updatedProperty = await prisma.property.update({
-      where: { id: propertyId },
-      data: updatedData,
-    });
+      return updatedProperty;
+    } catch (error) {
+      console.error('Error updating property:', error);
+      throw new Error('Failed to update property');
+    }
   }
 }
 

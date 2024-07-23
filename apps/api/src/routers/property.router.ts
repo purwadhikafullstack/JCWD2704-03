@@ -18,6 +18,10 @@ export class PropertyRouter {
     // this.router.get('/v1', this.propertyController.getRoomAvailability);
     this.router.get('/search', this.propertyController.searchProperties);
     this.router.get('/:name', this.propertyController.getPropertyDetail);
+    this.router.get(
+      '/detail/:propertyId',
+      this.propertyController.getPropertyDetailHost,
+    );
     this.router.get('/room/:id', this.propertyController.getRoomById);
     this.router.get('/image/:id', this.propertyController.renderPicProp);
     // this.router.get(

@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { UserController } from '../controllers/user.controller';
 import { verifyUser } from '../middlewares/auth.middleware';
+import { blobUploader } from '../libs/multer';
 
 export class UserRouter {
   private router: Router;
@@ -36,6 +37,13 @@ export class UserRouter {
       '/verifyChangePassword',
       this.userController.verifyChangePass,
     );
+    this.router.patch(
+      '/edit',
+      verifyUser,
+      blobUploader().single('image'),
+      this.userController.editUserProfile,
+    );
+    this.router.get('/image/:id', this.userController.renderPicUser);
   }
 
   getRouter(): Router {

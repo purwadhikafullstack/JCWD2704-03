@@ -247,4 +247,29 @@ export class UserController {
       next(error);
     }
   }
+
+  async editUserProfile(req: Request, res: Response, next: NextFunction) {
+    try {
+      const updatedUser = await usersServices.editUserProfile(req);
+      res.status(201).send({
+        message: 'User profile data has been updated',
+        updatedUser,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async renderPicUser(req: Request, res: Response, next: NextFunction) {
+    try {
+      const blob = await usersServices.renderPicUser(req);
+      if (!blob) {
+        return res.status(404).send('User profile pic not found');
+      }
+      res.set('Content-Type', 'image/png');
+      res.send(blob);
+    } catch (error) {
+      next(error);
+    }
+  }
 }

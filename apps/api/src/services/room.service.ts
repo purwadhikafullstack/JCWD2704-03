@@ -26,6 +26,7 @@ class RoomService {
     } = req.body as TRoomCategory & { numberOfRooms: number };
     const { file } = req;
 
+    // Check for property and permission
     const property = await prisma.property.findFirst({
       where: { id: propertyId, tenant_id: userId },
     });
@@ -36,6 +37,7 @@ class RoomService {
       );
     }
 
+    // Check for existing room category
     const existingRoomCategory = await prisma.roomCategory.findFirst({
       where: {
         property_id: propertyId,
@@ -44,20 +46,32 @@ class RoomService {
     });
 
     if (existingRoomCategory) {
-      throw new Error(`Room type "${type}" already exists in this property.`);
+      throw new Error(
+        `Room type "${type}" already exists in this property. You can delete the type before making a new one or update the room category.`,
+      );
     }
 
+    // Validate file
     if (!file) {
       throw new Error('No file uploaded');
     }
 
     const buffer = await sharp(file.buffer).png().toBuffer();
 
+    // Parse fields
     const parsedIsBreakfast = Boolean(isBreakfast);
     const parsedIsRefunable = Boolean(isRefunable);
     const parsedIsSmoking = Boolean(isSmoking);
     const parsedPrice = parseFloat(price as unknown as string);
     const parsedGuest = parseInt(String(guest), 10);
+
+    // Validate parsed fields
+    if (isNaN(parsedPrice)) {
+      throw new Error('Invalid price format');
+    }
+    if (isNaN(parsedGuest)) {
+      throw new Error('Invalid guest count format');
+    }
 
     const roomCategoryData: Prisma.RoomCategoryCreateInput = {
       property: { connect: { id: propertyId } },
@@ -71,6 +85,8 @@ class RoomService {
       desc,
       pic: buffer,
     };
+
+    // Optionally add peak price and dates if they are provided
     if (peak_price !== undefined) {
       roomCategoryData.peak_price = parseFloat(peak_price as unknown as string);
     }
@@ -81,10 +97,12 @@ class RoomService {
       roomCategoryData.end_date_peak = new Date(end_date_peak);
     }
 
+    // Create room category
     const roomCategory = await prisma.roomCategory.create({
       data: roomCategoryData,
     });
 
+    // Create rooms
     const roomCreationPromises = [];
     for (let i = 0; i < numberOfRooms; i++) {
       roomCreationPromises.push(
@@ -145,7 +163,6 @@ class RoomService {
     if (file) {
       buffer = await sharp(file.buffer).png().toBuffer();
     }
-
     const parsedIsBreakfast =
       isBreakfast !== undefined
         ? Boolean(isBreakfast)
@@ -164,25 +181,29 @@ class RoomService {
       guest !== undefined ? parseInt(String(guest), 10) : roomCategory.guest;
 
     const roomCategoryData: Prisma.RoomCategoryUpdateInput = {
-      guest: parsedGuest,
+      guest: parsedGuest, // Ensure this is an integer
       price: parsedPrice,
       isBreakfast: parsedIsBreakfast,
       isRefunable: parsedIsRefunable,
       isSmoking: parsedIsSmoking,
-      bed: bed || roomCategory.bed,
-      desc: desc || roomCategory.desc,
-      pic: buffer || roomCategory.pic,
+      bed: bed ?? roomCategory.bed,
+      desc: desc ?? roomCategory.desc,
+      pic: buffer ?? roomCategory.pic,
+      peak_price:
+        peak_price !== undefined
+          ? parseFloat(peak_price as unknown as string)
+          : roomCategory.peak_price,
+      start_date_peak:
+        start_date_peak !== undefined
+          ? new Date(start_date_peak)
+          : roomCategory.start_date_peak,
+      end_date_peak:
+        end_date_peak !== undefined
+          ? new Date(end_date_peak)
+          : roomCategory.end_date_peak,
     };
 
-    if (peak_price !== undefined) {
-      roomCategoryData.peak_price = parseFloat(peak_price as unknown as string);
-    }
-    if (start_date_peak !== undefined) {
-      roomCategoryData.start_date_peak = new Date(start_date_peak);
-    }
-    if (end_date_peak !== undefined) {
-      roomCategoryData.end_date_peak = new Date(end_date_peak);
-    }
+    console.log('Room category data to be updated:', roomCategoryData);
 
     const updatedRoomCategory = await prisma.roomCategory.update({
       where: { id: roomCategoryId },
@@ -193,89 +214,134 @@ class RoomService {
       where: {
         roomCategory_id: roomCategoryId,
         property_id: propertyId,
+        deletedAt: null,
       },
       include: {
-        Order: true,
+        OrderRoom: {
+          include: {
+            order: true,
+          },
+        },
       },
     });
 
-    const currentRoomCount = currentRooms.length;
+    console.log('Current rooms:', currentRooms);
+
+    const today = new Date();
+    const availableRooms = currentRooms.filter((room) => {
+      const hasFutureOrders = room.OrderRoom.some(
+        (orderRoom) => orderRoom.order.checkOut_date >= today,
+      );
+      console.log(`Room ${room.id} has future orders: ${hasFutureOrders}`);
+      return !hasFutureOrders;
+    });
+
+    console.log('Available rooms:', availableRooms);
+
+    const currentRoomCount = availableRooms.length;
+    console.log('Current room count:', currentRoomCount);
 
     if (numberOfRooms !== undefined) {
-      if (numberOfRooms > currentRoomCount) {
-        const roomsToAdd = numberOfRooms - currentRoomCount;
-        const roomCreationPromises = [];
-        for (let i = 0; i < roomsToAdd; i++) {
-          roomCreationPromises.push(
-            prisma.room.create({
-              data: {
-                roomCategory: { connect: { id: roomCategoryId } },
-                property: { connect: { id: propertyId } },
-              },
-            }),
-          );
-        }
-        await Promise.all(roomCreationPromises);
-      } else if (numberOfRooms < currentRoomCount) {
-        const today = new Date();
-        const roomsWithOrders = await prisma.room.findMany({
-          where: {
-            roomCategory_id: roomCategoryId,
-            property_id: propertyId,
-            Order: {
-              some: {
-                checkOut_date: {
-                  gte: today,
-                },
-              },
-            },
-          },
-        });
+      const roomsToRemove = currentRoomCount - numberOfRooms;
+      console.log('Rooms to remove:', roomsToRemove);
 
-        const roomsToRemove = currentRoomCount - numberOfRooms;
-        const roomsWithoutOrders = currentRooms.filter(
+      if (roomsToRemove > 0) {
+        const roomsWithoutOrders = availableRooms.filter(
           (room) =>
-            !roomsWithOrders.find((orderRoom) => orderRoom.id === room.id),
+            !room.OrderRoom.some(
+              (orderRoom) => orderRoom.order.checkOut_date >= today,
+            ),
         );
 
+        console.log('Rooms without orders:', roomsWithoutOrders);
+
         if (roomsToRemove > roomsWithoutOrders.length) {
+          console.error(
+            'Cannot delete the requested number of rooms because some rooms have ongoing or future orders.',
+          );
           throw new Error(
             'Cannot delete the requested number of rooms because some rooms have ongoing or future orders.',
           );
         }
 
-        for (const room of roomsWithoutOrders.slice(0, roomsToRemove)) {
+        const roomsToSoftDelete = roomsWithoutOrders.slice(0, roomsToRemove);
+        console.log('Rooms to soft delete:', roomsToSoftDelete);
+
+        for (const room of roomsToSoftDelete) {
           try {
-            const roomOrders = await prisma.order.findMany({
-              where: {
-                room_id: room.id,
-                checkOut_date: {
-                  gte: today,
-                },
-              },
-            });
-
-            if (roomOrders.length > 0) {
-              throw new Error(
-                `Cannot delete room ${room.id} because it has ongoing orders.`,
-              );
-            }
-
-            await prisma.room.delete({
+            await prisma.room.update({
               where: { id: room.id },
+              data: { deletedAt: new Date() }, // Soft delete by setting deletedAt
             });
           } catch (error) {
-            console.error(`Failed to delete room ${room.id}:`, error);
+            console.error(`Failed to soft delete room ${room.id}:`, error);
             throw new Error(
-              `Error deleting room ${room.id}. Please check if it has any related references.`,
+              `Error soft deleting room ${room.id}. Please check if it has any related references.`,
             );
           }
         }
       }
-      // if numberOfRooms == currentRoomCount, do nothing
     }
 
     return updatedRoomCategory;
+  }
+
+  async deleteRoomCategory(req: Request) {
+    const roomCategoryId = req.params.roomCategoryId;
+
+    // Fetch the room category and associated rooms
+    const roomCategory = await prisma.roomCategory.findUnique({
+      where: { id: roomCategoryId },
+      include: {
+        Room: {
+          include: {
+            OrderRoom: {
+              include: {
+                order: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!roomCategory) {
+      throw new Error('Room category not found.');
+    }
+
+    const today = new Date();
+
+    // Check if any associated rooms have future or ongoing orders
+    const hasFutureOrders = roomCategory.Room.some((room) =>
+      room.OrderRoom.some(
+        (orderRoom) => orderRoom.order.checkOut_date >= today,
+      ),
+    );
+
+    if (hasFutureOrders) {
+      throw new Error(
+        'Cannot delete the room category because it has rooms with future or ongoing orders.',
+      );
+    }
+
+    // Soft delete all rooms associated with the room category
+    await prisma.room.updateMany({
+      where: {
+        roomCategory_id: roomCategoryId,
+      },
+      data: {
+        deletedAt: new Date(),
+      },
+    });
+
+    // Delete the room category
+    await prisma.roomCategory.delete({
+      where: { id: roomCategoryId },
+    });
+
+    return {
+      message: 'Room category and associated rooms successfully deleted.',
+    };
   }
 
   //   async renderPicRoom(req: Request) {
