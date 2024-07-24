@@ -5,13 +5,19 @@ import { FaClipboardList } from 'react-icons/fa';
 import { FaHouse } from 'react-icons/fa6';
 import { IoLogOut, IoPerson } from 'react-icons/io5';
 import { RxHamburgerMenu } from 'react-icons/rx';
+import { useRouter } from 'next/navigation';
 
 function SidebarDash() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-
+  const router = useRouter();
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
-
+  const handleMyproperty = () => {
+    router.push('/dashboard/my-property');
+  };
+  const handleDashboard = () => {
+    router.push('/dashboard');
+  };
   return (
     <div className="flex">
       <span
@@ -36,13 +42,21 @@ function SidebarDash() {
             />
           </div>
         </div>
-        <div className="p-2.5 mt-3 flex items-center rounded-md px-4 duration-300 cursor-pointer hover:bg-blue-600 text-white">
+        <div
+          onClick={handleDashboard}
+          className="p-2.5 mt-3 flex items-center rounded-md px-4 duration-300 cursor-pointer hover:bg-blue-600 text-white"
+        >
           <FaHouse />
-          <span className="text-[15px] ml-4 text-gray-200 font-bold">Home</span>
+          <span className="text-[15px] ml-4 text-gray-200 font-bold">
+            Dashboard
+          </span>
         </div>
         <div className="p-2.5 mt-3 flex items-center rounded-md px-4 duration-300 cursor-pointer hover:bg-blue-600 text-white">
           <FaClipboardList />
-          <span className="text-[15px] ml-4 text-gray-200 font-bold">
+          <span
+            onClick={handleMyproperty}
+            className="text-[15px] ml-4 text-gray-200 font-bold"
+          >
             Property
           </span>
         </div>

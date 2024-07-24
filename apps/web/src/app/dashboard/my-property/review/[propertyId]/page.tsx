@@ -1,9 +1,9 @@
-import MyProperty from '@/components/dashboard/listProp/listProp';
+import PropertyReview from '@/components/review/PropertyReview';
 import React from 'react';
 function page() {
   return (
     <>
-      <MyProperty />
+      <PropertyReview />
     </>
   );
 }

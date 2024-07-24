@@ -42,7 +42,12 @@ export class PropertyRouter {
       blobUploader().single('pic'),
       this.propertyController.updateProperty,
     );
-    this.router.get('/', this.propertyController.getAllPropertyByTenantId);
+    this.router.get(
+      '/',
+      verifyUser,
+      verifyTenant,
+      this.propertyController.getAllPropertyByTenantId,
+    );
     this.router.get(
       '/detail/:propertyId',
       this.propertyController.getPropertyDetailHost,
@@ -66,14 +71,17 @@ export class PropertyRouter {
       this.propertyController.updateProperty,
     );
     this.router.get(
-      '/getReviewByEventId/:eventId',
-      this.propertyController.getReviewByEventId,
+      '/getReviewByPropertyId/:propertyId',
+      this.propertyController.getReviewByPropertyId,
     );
     this.router.get(
       '/getReviewByUserId/:userId',
       this.propertyController.getReviewByUserId,
     );
-    this.router.post('/reviewReply/:orderId', this.propertyController.addReply);
+    this.router.post(
+      '/reviewReply/:reviewId',
+      this.propertyController.addReply,
+    );
   }
 
   getRouter(): Router {

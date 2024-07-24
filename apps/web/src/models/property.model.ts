@@ -1,3 +1,5 @@
+import { RoomCategory } from './roomCategory.model';
+
 export interface Property {
   name: string;
   id: string;
@@ -11,4 +13,5 @@ export interface Property {
   longitude?: number;
   createdAt: string;
   updateAt: string;
+  RoomCategory: RoomCategory;
 }

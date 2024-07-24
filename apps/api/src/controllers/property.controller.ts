@@ -174,9 +174,9 @@ export class PropertyController {
       next(error);
     }
   }
-  async getReviewByEventId(req: Request, res: Response, next: NextFunction) {
+  async getReviewByPropertyId(req: Request, res: Response, next: NextFunction) {
     try {
-      const data = await reviewService.getReviewByEventId(req);
+      const data = await reviewService.getReviewByPropertyId(req);
       return res.send({
         data,
       });

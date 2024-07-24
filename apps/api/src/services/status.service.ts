@@ -113,7 +113,7 @@ class StatusService {
     });
     if (updateStatus) await sendBookingReminders(orderId);
     const isDataReviewExist = await prisma.review.findFirst({
-      where: { user_id: order.user_id, property_id: order.property_id },
+      where: { order_id: order.id, property_id: order.property_id },
     });
 
     if (!isDataReviewExist) {
@@ -127,6 +127,7 @@ class StatusService {
         },
       });
     }
+
     return updateStatus;
   }
   async renderPaymentProof(req: Request) {

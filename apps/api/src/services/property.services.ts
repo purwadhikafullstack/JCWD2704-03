@@ -92,13 +92,14 @@ class PropertyService {
   }
   async getAllPropByTenantId(req: Request) {
     const property = await prisma.property.findMany({
-      where: { tenant_id: 'clyvb46sq00003amlkg2sh5i4' },
-      // where: { id: req.user.id },
+      // where: { tenant_id: 'clyvb46sq00003amlkg2sh5i4' },
+      where: { tenant_id: req.user.id },
       include: {
         RoomCategory: true,
       },
     });
     console.log(property);
+    console.log(req.user.id);
     return property;
   }
 

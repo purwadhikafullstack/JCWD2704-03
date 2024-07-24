@@ -2,7 +2,7 @@ import { prisma } from '../libs/prisma';
 import { Request } from 'express';
 class ReviewService {
   async addReview(req: Request) {
-    const { property_id, review, rating } = req.body;
+    const { property_id, review, rating, order_id } = req.body;
     const findReviewId = await prisma.review.findMany({
       where: {
         property_id: property_id,
@@ -25,9 +25,10 @@ class ReviewService {
     }
   }
   async addReply(req: Request) {
-    const { reply, property_id } = req.body;
-    const findReview = await prisma.review.findFirst({
-      where: { property_id: property_id },
+    const { reply, reviewId } = req.body;
+    const { property_id } = req.params;
+    const findReview = await prisma.review.findUnique({
+      where: { id: reviewId },
     });
     if (!findReview) {
       throw new Error('Review tidak ditemukan untuk property_id tersebut');
@@ -45,7 +46,7 @@ class ReviewService {
       return updateReview;
     }
   }
-  async getReviewByEventId(req: Request) {
+  async getReviewByPropertyId(req: Request) {
     const { propertyId } = req.params;
     const findReviewId = await prisma.review.findMany({
       where: {
@@ -80,17 +81,6 @@ class ReviewService {
     const { orderId } = req.params;
     const findReviewId = await prisma.review.findMany({
       where: { order_id: orderId },
-    });
-    if (findReviewId) {
-      return findReviewId;
-    } else {
-      return 'No one has bought the event so no review yet';
-    }
-  }
-  async getReviewByPropertyId(req: Request) {
-    const { property_id } = req.params;
-    const findReviewId = await prisma.review.findMany({
-      where: { property_id: property_id },
     });
     if (findReviewId) {
       return findReviewId;
