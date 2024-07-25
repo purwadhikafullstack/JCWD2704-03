@@ -1,10 +1,13 @@
-import { Request } from 'express';
+import { Request, Response } from 'express';
 import { prisma } from '../libs/prisma';
 import { generateInvoice } from '@/utils/invoice';
 import sharp from 'sharp';
 import moment from 'moment-timezone';
 import { connect } from 'ngrok';
 import { startExpireOrdersCron } from '@/cron/expiredOrder';
+import { server } from 'typescript';
+
+const midTransClient = require('midtrans-client');
 class ReservationService {
   async getAllOrder(req: Request) {
     try {
@@ -226,6 +229,31 @@ class ReservationService {
     console.log('testttt', moment.tz('Asia/Jakarta').format());
 
     return updatedOrder;
+  }
+  async createSnapMidtrans(req: Request) {
+    const { order_id, total_price } = req.body;
+    let snap = new midTransClient.Snap({
+      isProduction: false,
+      serverKey: process.env.MIDTRANS_SERVER_KEY,
+      clientKey: process.env.MIDTRANS_CLIENT_KEY,
+    });
+    const totalPrice = parseInt(total_price);
+    const payload = {
+      transaction_details: {
+        order_id: order_id,
+        gross_amount: totalPrice,
+      },
+      callbacks: {
+        finish_redirect_url: 'https://localhost:3000/profile',
+        unfinish_redirect_url: `https://localhost:3000/invoice/${order_id}`,
+        error_redirect_url: 'https://localhost:3000/error',
+      },
+    };
+    console.log('tipene totalprice', typeof totalPrice);
+    const token = await snap.createTransactionToken(payload);
+    if (token) {
+      return token;
+    }
   }
 }
 

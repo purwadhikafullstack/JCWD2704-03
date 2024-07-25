@@ -61,6 +61,10 @@ class ReservationRouter {
       '/review/:orderId',
       reservationController.getReviewByOrderId,
     );
+    this.router.post(
+      '/createSnapMidtrans',
+      reservationController.creatingSnapMidtrans,
+    );
   }
   getRouter() {
     return this.router;

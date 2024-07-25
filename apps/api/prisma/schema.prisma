@@ -27,17 +27,19 @@ enum Role {
 }
 
 model User {
-  id         String   @id @default(cuid())
-  email      String   @unique
-  password   String?
-  social_id  String?
-  first_name String?
-  last_name  String?
-  role       Role
-  isVerified Boolean? @default(false)
-  image      Bytes?   @db.LongBlob
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id                      String   @id @default(cuid())
+  email                   String   @unique
+  password                String?
+  social_id               String?
+  first_name              String?
+  last_name               String?
+  role                    Role
+  isVerified              Boolean? @default(false)
+  image                   Bytes?   @db.LongBlob
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+  isRequestingEmailChange Boolean? @default(false)
+  image_name              String?
 
   Property Property[]
   Order    Order[]
@@ -66,6 +68,7 @@ model Property {
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
+  pic_name  String?
 
   Room   Room[]
   Order  Order[]
@@ -106,6 +109,7 @@ model RoomCategory {
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
   deletedAt       DateTime?
+  pic_name        String?
 
   property Property @relation(fields: [property_id], references: [id])
 

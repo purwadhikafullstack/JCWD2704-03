@@ -150,6 +150,17 @@ class ReservationController {
       next(error);
     }
   }
+  async creatingSnapMidtrans(req: Request, res: Response, next: NextFunction) {
+    try {
+      let token = await reservationsServices.createSnapMidtrans(req);
+      return res.send({
+        message: ' snap created',
+        token: token,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 export default new ReservationController();

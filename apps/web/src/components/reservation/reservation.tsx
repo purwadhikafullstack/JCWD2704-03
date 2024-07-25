@@ -20,7 +20,6 @@ function Reservation() {
   const total_room = roomCount;
   const buyer = useAppSelector((state) => state.auth) as User;
   const searchParams = useSearchParams();
-
   const buyerId = buyer.id;
   const checkInDate = searchParams.get('checkIn') || '';
   const checkOutDate = searchParams.get('checkOut') || '';
@@ -85,7 +84,16 @@ function Reservation() {
       setOrder(orderData);
       const orderId = orderData.id;
       console.log('ID from recent order:', orderId);
-      router.push(`/invoice/${orderId}`);
+      const dataMidtrans = {
+        order_id: orderId,
+        total_price: totalPrice,
+      };
+      const createMidtrans = await axiosInstance()
+        .post(`/api/reservations/createSnapMidtrans`, dataMidtrans)
+        .then((res) => res.data)
+        .catch((error) => console.log(error));
+      console.log(createMidtrans);
+      router.push(`/invoice/${orderId}?token=${createMidtrans.token}`);
     } catch (error) {
       console.error('Error placing order:', error);
     }
