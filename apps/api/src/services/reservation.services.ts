@@ -79,7 +79,6 @@ class ReservationService {
       room_ids, // Array of room IDs
       checkIn_date,
       checkOut_date,
-      payment_method,
       total_price,
       status = 'pending_payment',
     } = req.body;
@@ -152,7 +151,6 @@ class ReservationService {
         checkIn_date: new Date(checkIn_date),
         checkOut_date: new Date(checkOut_date),
         total_price: adjustedTotalPrice,
-        payment_method,
         invoice_id: generateInvoice(property_id),
         status,
         createdAt: new Date(),
@@ -243,15 +241,14 @@ class ReservationService {
         order_id: order_id,
         gross_amount: totalPrice,
       },
-      callbacks: {
-        finish_redirect_url: 'https://localhost:3000/profile',
-        unfinish_redirect_url: `https://localhost:3000/invoice/${order_id}`,
-        error_redirect_url: 'https://localhost:3000/error',
-      },
     };
     console.log('tipene totalprice', typeof totalPrice);
     const token = await snap.createTransactionToken(payload);
     if (token) {
+      await prisma.order.update({
+        where: { id: order_id },
+        data: { token_midTrans: token },
+      });
       return token;
     }
   }

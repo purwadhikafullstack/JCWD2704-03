@@ -151,11 +151,12 @@ model Order {
   checkIn_date    DateTime
   checkOut_date   DateTime
   total_price     Float
-  payment_method  Payment
+  payment_method  Payment?
   payment_proof   Bytes?        @db.LongBlob
   payment_date    DateTime?
   cancel_date     DateTime?
   status          Status
+  token_midTrans  String?
   invoice_id      String?
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt

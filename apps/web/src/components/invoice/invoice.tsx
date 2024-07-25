@@ -10,12 +10,12 @@ import { axiosInstance } from '@/libs/axios.config';
 import { Order } from '@/models/reservation.model';
 import { CountComponent } from './countDown';
 import { useEffect, useState } from 'react';
-import { useParams, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 
-const paymentMethodMap: { [key: string]: string } = {
-  MANDIRI: 'MANDIRI Transfer',
-  BCA: 'BCA Transfer',
-};
+// const paymentMethodMap: { [key: string]: string } = {
+//   MANDIRI: 'MANDIRI Transfer',
+//   BCA: 'BCA Transfer',
+// };
 
 interface PaymentMethodDetails {
   method: string;
@@ -23,16 +23,18 @@ interface PaymentMethodDetails {
   imgSrc: string;
 }
 
-const Invoice = ({ id }: { id: string }) => {
+const Invoice = () => {
   const [order, setOrder] = useState<Order | undefined>(undefined);
   const [isShowedSnap, setIsShowedSnap] = useState(false);
-  const [paymentMethodDetails, setPaymentMethodDetails] =
-    useState<PaymentMethodDetails>({
-      method: '',
-      va: '',
-      imgSrc: '',
-    });
   const search = useSearchParams();
+  const id = search.get('order_id');
+  console.log(id);
+  // const [paymentMethodDetails, setPaymentMethodDetails] =
+  //   useState<PaymentMethodDetails>({
+  //     method: '',
+  //     va: '',
+  //     imgSrc: '',
+  //   });
   useEffect(() => {
     const snapScript = 'https://app.sandbox.midtrans.com/snap/snap.js';
     const clientKey = process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY;
@@ -48,29 +50,29 @@ const Invoice = ({ id }: { id: string }) => {
     axiosInstance()
       .get(`/api/reservations/${id}`)
       .then((res) => {
-        const paymentMethodMap: {
-          [key: string]: { method: string; va: string; imgSrc: string };
-        } = {
-          MANDIRI: {
-            method: 'MANDIRI Transfer',
-            va: '8708950875882',
-            imgSrc:
-              'https://d2q79iu7y748jz.cloudfront.net/s/_squarelogo/256x256/494671cedab89e8b66621451cfb2dcba',
-          },
-          BCA: {
-            method: 'BCA Transfer',
-            va: '8900850875882',
-            imgSrc:
-              'https://cdn.iconscout.com/icon/free/png-256/free-bca-225544.png?f=webp',
-          },
-        };
+        // const paymentMethodMap: {
+        //   [key: string]: { method: string; va: string; imgSrc: string };
+        // } = {
+        //   MANDIRI: {
+        //     method: 'MANDIRI Transfer',
+        //     va: '8708950875882',
+        //     imgSrc:
+        //       'https://d2q79iu7y748jz.cloudfront.net/s/_squarelogo/256x256/494671cedab89e8b66621451cfb2dcba',
+        //   },
+        //   BCA: {
+        //     method: 'BCA Transfer',
+        //     va: '8900850875882',
+        //     imgSrc:
+        //       'https://cdn.iconscout.com/icon/free/png-256/free-bca-225544.png?f=webp',
+        //   },
+        // };
 
-        const tempPaymentMethodDetails =
-          paymentMethodMap[
-            res.data.data?.payment_method as keyof typeof paymentMethodMap
-          ] || res.data.data?.payment_method;
+        // const tempPaymentMethodDetails =
+        //   paymentMethodMap[
+        //     res.data.data?.payment_method as keyof typeof paymentMethodMap
+        //   ] || res.data.data?.payment_method;
 
-        setPaymentMethodDetails(tempPaymentMethodDetails);
+        // setPaymentMethodDetails(tempPaymentMethodDetails);
         setOrder(res.data.data);
       })
       .catch((e) => {
@@ -83,34 +85,10 @@ const Invoice = ({ id }: { id: string }) => {
   }, [id]);
 
   const handleLinkPayment = async () => {
-    setIsShowedSnap(true);
-    const token = search.get('token');
-    console.log(token);
-    if (token)
-      window.snap.embed(token, {
-        embedId: 'snap-container',
-        onSuccess: function (result: any) {
-          /* You may add your own implementation here */
-          console.log('success', result);
-        },
-        onPending: function (result: any) {
-          /* You may add your own implementation here */
-          console.log('pending', result);
-        },
-        onError: function (result: any) {
-          /* You may add your own implementation here */
-          console.log('error', result);
-        },
-        onClose: function () {
-          /* You may add your own implementation here */
-          alert('you closed the popup without finishing the payment');
-        },
-      });
-
-    // window.snap.pay(token);
+    const token = order?.token_midTrans;
+    if (token) window.snap.pay(token);
   };
-  if (order === undefined && paymentMethodDetails === undefined)
-    return <h4>Loading fetching order....</h4>;
+  if (order === undefined) return <h4>Loading fetching order....</h4>;
   return (
     <>
       <div className="flex flex-col-reverse gap-4 md:flex-row md:justify-between md:p-8 ">
@@ -128,19 +106,19 @@ const Invoice = ({ id }: { id: string }) => {
                   <div>
                     <div className=" font-normal">Number Virtual Account</div>
                     <div className="font-bold">
-                      {paymentMethodDetails && paymentMethodDetails.va}
+                      {/* {paymentMethodDetails && paymentMethodDetails.va} */}
                     </div>
                   </div>
                   <div className="font-bold flex flex-row gap-2 items-center">
                     <span>
-                      {paymentMethodDetails && order && (
+                      {/* {paymentMethodDetails && order && (
                         <img
                           src={paymentMethodDetails.imgSrc}
                           alt={order.payment_method}
                           width={50}
                           height={50}
                         />
-                      )}
+                      )} */}
                     </span>{' '}
                   </div>
                 </div>
@@ -201,6 +179,23 @@ const Invoice = ({ id }: { id: string }) => {
                   <IoLocationOutline /> {order?.property.address},{' '}
                   {order?.property.city}
                 </div>
+                {/* <div>
+              <label htmlFor="paymentMethod" className="block font-medium">
+                Payment Method
+              </label>
+              <select
+                id="paymentMethod"
+                value={paymentMethod}
+                onChange={handlePaymentMethodChange}
+                className="w-full mt-2 mb-4 p-2 border border-gray-300 rounded"
+              >
+                <option value="" disabled>
+                  Select a payment method*
+                </option>
+                <option value="BCA">BCA</option>
+                <option value="MANDIRI">MANDIRI</option>
+              </select>
+            </div> */}
               </div>
             </div>
           </div>

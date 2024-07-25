@@ -16,7 +16,6 @@ function Reservation() {
   const [rooms, setRooms] = useState<RoomCategory | null>(null);
   const [order, setOrder] = useState<Order | null>(null);
   const [roomCount, setRoomCount] = useState(1);
-  const [paymentMethod, setPaymentMethod] = useState('');
   const total_room = roomCount;
   const buyer = useAppSelector((state) => state.auth) as User;
   const searchParams = useSearchParams();
@@ -43,12 +42,6 @@ function Reservation() {
     fetchRoom();
   }, [id]);
 
-  const handlePaymentMethodChange = (
-    e: React.ChangeEvent<HTMLSelectElement>,
-  ) => {
-    setPaymentMethod(e.target.value);
-  };
-
   const checkIn = new Date(checkInDate);
   const checkOut = new Date(checkOutDate);
   const diff = Math.abs(checkOut.getTime() - checkIn.getTime());
@@ -68,7 +61,6 @@ function Reservation() {
       roomCategory_id: rooms?.id,
       checkIn_date: checkInDate,
       checkOut_date: checkOutDate,
-      payment_method: paymentMethod,
       total_price: totalPrice,
     };
     console.log('data to be sent:', data);
@@ -93,13 +85,12 @@ function Reservation() {
         .then((res) => res.data)
         .catch((error) => console.log(error));
       console.log(createMidtrans);
-      router.push(`/invoice/${orderId}?token=${createMidtrans.token}`);
+      router.push(`/invoice?order_id=${orderId}`);
     } catch (error) {
       console.error('Error placing order:', error);
     }
   };
-  const isPayDisabled = !checkInDate || !checkOutDate || !paymentMethod;
-
+  const isPayDisabled = !checkInDate || !checkOutDate;
   return (
     <div className="max-w-7xl m-auto h-screen w-screen">
       <div>
@@ -152,23 +143,7 @@ function Reservation() {
                 Rp. {!isNaN(totalPrice) ? totalPrice.toLocaleString() : 'N/A'}
               </div>
             </div>
-            <div>
-              <label htmlFor="paymentMethod" className="block font-medium">
-                Payment Method
-              </label>
-              <select
-                id="paymentMethod"
-                value={paymentMethod}
-                onChange={handlePaymentMethodChange}
-                className="w-full mt-2 mb-4 p-2 border border-gray-300 rounded"
-              >
-                <option value="" disabled>
-                  Select a payment method*
-                </option>
-                <option value="BCA">BCA</option>
-                <option value="MANDIRI">MANDIRI</option>
-              </select>
-            </div>
+
             <div>
               <button
                 onClick={handlePay}

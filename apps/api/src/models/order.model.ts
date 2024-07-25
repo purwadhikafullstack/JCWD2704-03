@@ -14,6 +14,7 @@ export type TOrder = {
   checkOut_date: Date;
   total_room: number;
   total_price: number;
+  payment_method?: string;
   payment_proof?: Buffer | null;
   status: Status;
   payment_date?: Date;
