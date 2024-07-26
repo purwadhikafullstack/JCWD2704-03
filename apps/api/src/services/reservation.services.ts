@@ -6,6 +6,7 @@ import moment from 'moment-timezone';
 import { connect } from 'ngrok';
 import { startExpireOrdersCron } from '@/cron/expiredOrder';
 import { server } from 'typescript';
+import crypto from 'crypto';
 
 const midTransClient = require('midtrans-client');
 class ReservationService {
@@ -250,6 +251,134 @@ class ReservationService {
         data: { token_midTrans: token },
       });
       return token;
+    }
+  }
+
+  async updateStatusBasedOnMidtransResponse(order_id: string, data: any) {
+    console.log('coba update midtrans');
+    const hash = crypto
+      .createHash('sha512')
+      .update(
+        `${order_id}${data.status_code}${data.gross_amount}${process.env.MIDTRANS_SERVER_KEY}`,
+      )
+      .digest('hex');
+    if (data.signature_key !== hash) {
+      console.log('masuk error decode hash');
+      return {
+        status: 'error',
+        message: 'Invalid Signature key',
+      };
+    }
+    let responseData = null;
+    let transactionStatus = data.transaction_status;
+    let fraudStatus = data.fraud_status;
+
+    if (transactionStatus == 'capture') {
+      console.log('masuk capture');
+      if (fraudStatus == 'accept') {
+        const transaction = await prisma.order.update({
+          where: { id: order_id },
+          data: {
+            payment_date: moment.tz('Asia/Jakarta').format(),
+            status: 'success',
+            updatedAt: new Date(),
+            payment_method: 'MANDIRI',
+          },
+        });
+        responseData = transaction;
+      }
+    } else if (transactionStatus == 'settlement') {
+      console.log('masuk settlement');
+      const transaction = await prisma.order.update({
+        where: { id: order_id },
+        data: {
+          payment_date: moment.tz('Asia/Jakarta').format(),
+          status: 'success',
+          updatedAt: new Date(),
+          payment_method: 'MANDIRI',
+        },
+      });
+      responseData = transaction;
+    } else if (
+      transactionStatus == 'cancel' ||
+      transactionStatus == 'deny' ||
+      transactionStatus == 'expire'
+    ) {
+      const transaction = await prisma.order.update({
+        where: { id: order_id },
+        data: {
+          payment_date: moment.tz('Asia/Jakarta').format(),
+          status: 'cancelled',
+          updatedAt: new Date(),
+          payment_method: 'MANDIRI',
+        },
+      });
+      responseData = transaction;
+    } else if (transactionStatus == 'pending') {
+      const transaction = await prisma.order.update({
+        where: { id: order_id },
+        data: {
+          payment_date: moment.tz('Asia/Jakarta').format(),
+          status: 'pending_payment',
+          updatedAt: new Date(),
+          payment_method: 'MANDIRI',
+        },
+      });
+      responseData = transaction;
+    }
+    if (
+      transactionStatus.status === 'settlement' ||
+      transactionStatus.status === 'capture'
+    ) {
+      const order = await prisma.order.findUnique({
+        where: { id: order_id },
+      });
+      if (!order) {
+        return console.log('order tidak ditemukan');
+      }
+      const isDataReviewExist = await prisma.review.findFirst({
+        where: {
+          order_id: order_id,
+          property_id: order.property_id,
+        },
+      });
+
+      if (!isDataReviewExist) {
+        await prisma.review.create({
+          data: {
+            property_id: order.property_id,
+            user_id: order.user_id,
+            order_id: order_id,
+            review: '',
+            rating: 0,
+          },
+        });
+      }
+    }
+    return {
+      status: 'success',
+      data: responseData,
+    };
+  }
+
+  // update transaction status
+  async transferNotif(req: Request) {
+    console.log('transfernotif');
+    const { order_id, status, payment_method } = req.body;
+    const transactionDetail = await prisma.order.findUnique({
+      where: { id: order_id },
+      include: {
+        property: true,
+        user: true,
+        RoomCategory: true,
+        OrderRoom: true,
+      },
+    });
+    if (transactionDetail) {
+      this.updateStatusBasedOnMidtransResponse(
+        transactionDetail.id,
+        req.body,
+      ).then((result) => console.log('transaction notif midtrans', result));
     }
   }
 }

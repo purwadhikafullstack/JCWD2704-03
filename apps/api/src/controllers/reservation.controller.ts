@@ -161,6 +161,19 @@ class ReservationController {
       next(error);
     }
   }
+
+  async transferNotif(req: Request, res: Response, next: NextFunction) {
+    console.log('transferNotif masuk');
+    try {
+      await reservationsServices.transferNotif(req);
+      return res.status(200).json({
+        status: 'success',
+        message: 'OK',
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 export default new ReservationController();

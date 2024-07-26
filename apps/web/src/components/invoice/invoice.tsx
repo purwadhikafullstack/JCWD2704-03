@@ -26,15 +26,11 @@ interface PaymentMethodDetails {
 const Invoice = () => {
   const [order, setOrder] = useState<Order | undefined>(undefined);
   const [isShowedSnap, setIsShowedSnap] = useState(false);
+
   const search = useSearchParams();
   const id = search.get('order_id');
-  console.log(id);
-  // const [paymentMethodDetails, setPaymentMethodDetails] =
-  //   useState<PaymentMethodDetails>({
-  //     method: '',
-  //     va: '',
-  //     imgSrc: '',
-  //   });
+  const statusCode = search.get('status_code');
+
   useEffect(() => {
     const snapScript = 'https://app.sandbox.midtrans.com/snap/snap.js';
     const clientKey = process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY;
@@ -50,29 +46,6 @@ const Invoice = () => {
     axiosInstance()
       .get(`/api/reservations/${id}`)
       .then((res) => {
-        // const paymentMethodMap: {
-        //   [key: string]: { method: string; va: string; imgSrc: string };
-        // } = {
-        //   MANDIRI: {
-        //     method: 'MANDIRI Transfer',
-        //     va: '8708950875882',
-        //     imgSrc:
-        //       'https://d2q79iu7y748jz.cloudfront.net/s/_squarelogo/256x256/494671cedab89e8b66621451cfb2dcba',
-        //   },
-        //   BCA: {
-        //     method: 'BCA Transfer',
-        //     va: '8900850875882',
-        //     imgSrc:
-        //       'https://cdn.iconscout.com/icon/free/png-256/free-bca-225544.png?f=webp',
-        //   },
-        // };
-
-        // const tempPaymentMethodDetails =
-        //   paymentMethodMap[
-        //     res.data.data?.payment_method as keyof typeof paymentMethodMap
-        //   ] || res.data.data?.payment_method;
-
-        // setPaymentMethodDetails(tempPaymentMethodDetails);
         setOrder(res.data.data);
       })
       .catch((e) => {
@@ -84,10 +57,11 @@ const Invoice = () => {
     };
   }, [id]);
 
-  const handleLinkPayment = async () => {
+  const handleLinkPayment = () => {
     const token = order?.token_midTrans;
     if (token) window.snap.pay(token);
   };
+
   if (order === undefined) return <h4>Loading fetching order....</h4>;
   return (
     <>
@@ -97,7 +71,9 @@ const Invoice = () => {
           <div className="relative flex flex-col md:flex-row md:max-w-3xl gap-4 space-y-3 rounded-xl shadow-lg p-3 max-w-xs  mx-auto border border-white bg-white">
             <div>
               <div className="flex flex-col border p-3 text-md gap-3 rounded-lg w-full">
-                <div>{order && <CountComponent order={order} />}</div>
+                {order.status === 'success' ? null : (
+                  <div>{order && <CountComponent order={order} />}</div>
+                )}
                 <div>
                   <div>Invoice number</div>
                   <div className="uppercase font-bold">{order?.invoice_id}</div>
@@ -142,7 +118,9 @@ const Invoice = () => {
                 Please attach your payment proof to confirm your payment.
               </div>
               {/* isi form */}
-              <button onClick={handleLinkPayment}>Link Payment</button>
+              {order.status !== 'succcess' && statusCode ? (
+                <button onClick={handleLinkPayment}>Link Payment</button>
+              ) : null}
             </div>
           </div>
         </div>
@@ -179,6 +157,7 @@ const Invoice = () => {
                   <IoLocationOutline /> {order?.property.address},{' '}
                   {order?.property.city}
                 </div>
+                {/* { !statusCode && 
                 {/* <div>
               <label htmlFor="paymentMethod" className="block font-medium">
                 Payment Method

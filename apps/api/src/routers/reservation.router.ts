@@ -65,6 +65,10 @@ class ReservationRouter {
       '/createSnapMidtrans',
       reservationController.creatingSnapMidtrans,
     );
+    this.router.post(
+      '/updateTransaction/',
+      reservationController.transferNotif,
+    );
   }
   getRouter() {
     return this.router;

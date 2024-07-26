@@ -16,7 +16,7 @@ import reservationRouter from './routers/reservation.router';
 import { PropertyRouter } from './routers/property.router';
 import { RoomRouter } from './routers/room.router';
 // import propertyRouter from './routers/property.router';
-
+const ngrok = require('ngrok');
 export default class App {
   private app: Express;
 

@@ -129,6 +129,8 @@ enum Status {
 enum Payment {
   BCA
   MANDIRI
+  gopay
+  qris
 }
 
 model Room {
