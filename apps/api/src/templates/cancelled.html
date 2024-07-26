@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta http-equiv="x-ua-compatible" content="ie=edge" />
-    <title>Booking Reminder</title>
+    <title>Booking Canceled</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <style type="text/css">
       @media screen {
@@ -73,6 +73,14 @@
         border: 0;
         outline: none;
       }
+      .email-header {
+        background-color: #e9ecef;
+        padding: 20px;
+        text-align: center;
+      }
+      .email-header h1 {
+        color: #1a82e2; /* Set title color to blue */
+      }
     </style>
   </head>
   <body style="background-color: #ffffff">
@@ -90,7 +98,7 @@
         opacity: 0;
       "
     >
-      Reminder: Your booking at {propertyName} is tomorrow.
+      Your booking at {propertyName} has been canceled.
     </div>
     <!-- end preheader -->
 
@@ -143,7 +151,7 @@
                     line-height: 48px;
                   "
                 >
-                  Booking Reminder
+                  Booking Canceled
                 </h1>
               </td>
             </tr>
@@ -175,41 +183,24 @@
                 "
               >
                 <p style="margin: 0">
-                  Ini adalah pengingat bahwa pemesanan Anda di
-                  <b>{propertyName}</b> dijadwalkan untuk besok,
-                  <b>{checkInDate}</b>. Harap persiapkan segala kebutuhan untuk
-                  menginap.
-                </p>
-                <p style="margin: 0; margin-top: 16px">
-                  Detail Pemesanan Anda:
+                  Your booking at <b>{propertyName}</b> has been canceled due to
+                  one of the following reasons:
                 </p>
                 <ul>
-                  <li>Nama Properti: {propertyName}</li>
-                  <li>Tanggal Check-in: {checkInDate}</li>
-                  <li>Tanggal Check-out: {checkOutDate}</li>
-                  <li>Total Harga: {totalPrice}</li>
+                  <li>Tenant's policy</li>
+                  <li>Failed to upload payment proof within 1 hour</li>
+                  <li>
+                    Uploaded payment proof did not match the required criteria
+                  </li>
                 </ul>
-                <p style="margin: 0; margin-top: 16px">
-                  Harap perhatikan tata cara penggunaan dan aturan dalam
-                  penggunaan properti berikut:
+                <p style="margin: 0">
+                  We apologize for any inconvenience caused. Please contact our
+                  support team if you have any questions or need further
+                  assistance.
                 </p>
-                <ol>
-                  <li>
-                    Check-in dimulai pukul {checkInTime} dan check-out maksimal
-                    pukul {checkOutTime}.
-                  </li>
-                  <li>
-                    Harap membawa identitas diri yang valid saat check-in.
-                  </li>
-                  <li>Tidak diperbolehkan merokok di dalam kamar.</li>
-                  <li>
-                    Harap menjaga kebersihan dan ketenangan selama menginap.
-                  </li>
-                  <li>
-                    Jika ada kerusakan pada properti, segera laporkan ke pihak
-                    pengelola.
-                  </li>
-                </ol>
+                <ul>
+                  <li><b>Room Type:</b> {roomType}</li>
+                </ul>
               </td>
             </tr>
             <!-- end copy -->
@@ -263,9 +254,9 @@
                 "
               >
                 <p style="margin: 0">
-                  Anda menerima email ini karena Anda memiliki pemesanan di
-                  <b>Atcasa</b>. Jika Anda tidak melakukan pemesanan ini, harap
-                  hubungi dukungan kami.
+                  You received this email because you made a booking at
+                  <b>Atcasa</b>. If you did not make this booking, please
+                  contact our support.
                 </p>
               </td>
             </tr>
