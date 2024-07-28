@@ -70,18 +70,6 @@ export class PropertyRouter {
       blobUploader().single('pic'),
       this.propertyController.updateProperty,
     );
-    this.router.get(
-      '/getReviewByPropertyId/:propertyId',
-      this.propertyController.getReviewByPropertyId,
-    );
-    this.router.get(
-      '/getReviewByUserId/:userId',
-      this.propertyController.getReviewByUserId,
-    );
-    this.router.post(
-      '/reviewReply/:reviewId',
-      this.propertyController.addReply,
-    );
   }
 
   getRouter(): Router {

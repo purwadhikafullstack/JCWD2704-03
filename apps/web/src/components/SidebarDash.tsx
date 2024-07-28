@@ -4,6 +4,7 @@ import { IoMdClose } from 'react-icons/io';
 import { FaClipboardList } from 'react-icons/fa';
 import { FaHouse } from 'react-icons/fa6';
 import { IoLogOut, IoPerson } from 'react-icons/io5';
+import { VscGraph } from 'react-icons/vsc';
 import { RxHamburgerMenu } from 'react-icons/rx';
 import { useRouter } from 'next/navigation';
 
@@ -17,6 +18,9 @@ function SidebarDash() {
   };
   const handleDashboard = () => {
     router.push('/dashboard');
+  };
+  const handleReport = () => {
+    router.push('/dashboard/report');
   };
   return (
     <div className="flex">
@@ -64,6 +68,15 @@ function SidebarDash() {
           <IoPerson />
           <span className="text-[15px] ml-4 text-gray-200 font-bold">
             Profile
+          </span>
+        </div>
+        <div
+          className="p-2.5 mt-3 flex items-center rounded-md px-4 duration-300 cursor-pointer hover:bg-blue-600 text-white"
+          onClick={handleReport}
+        >
+          <VscGraph />
+          <span className="text-[15px] ml-4 text-gray-200 font-bold">
+            Report
           </span>
         </div>
         <div className="my-4 bg-gray-600 h-[1px]"></div>

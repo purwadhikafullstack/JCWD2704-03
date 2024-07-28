@@ -24,7 +24,7 @@ const PropertyReview = () => {
     const fetchEventData = async () => {
       try {
         const reviewResponse = await axiosInstance().get(
-          `api/properties/getReviewByPropertyId/${propertyId}`,
+          `api/reviews/getReviewByPropertyId/${propertyId}`,
         );
         const { data } = reviewResponse.data; // Adjust based on your API response structure
         console.log(data);
@@ -55,6 +55,7 @@ const PropertyReview = () => {
 
     fetchEventData();
   }, [propertyId]);
+  console.log('isiiii', reviews);
   const handleReplyChange = (reviewId: string, text: string) => {
     setReplyInput((prev) => ({
       ...prev,
@@ -63,7 +64,7 @@ const PropertyReview = () => {
   };
   const handleReplySubmit = async (reviewId: string) => {
     try {
-      await axiosInstance().post(`/api/properties/reviewReply/${reviewId}`, {
+      await axiosInstance().post(`/api/reviews/reviewReply/${reviewId}`, {
         reviewId: reviewId,
         reply: replyInput[reviewId],
         propertyId: propertyId,

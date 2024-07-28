@@ -120,36 +120,7 @@ class ReservationController {
       next(error);
     }
   }
-  async addReview(req: Request, res: Response, next: NextFunction) {
-    try {
-      const data = await reviewService.addReview(req);
-      return res.send({
-        data,
-      });
-    } catch (error) {
-      next(error);
-    }
-  }
-  async getReviewByOrderId(req: Request, res: Response, next: NextFunction) {
-    try {
-      const data = await reviewService.getReviewByOrderId(req);
-      return res.send({
-        data,
-      });
-    } catch (error) {
-      next(error);
-    }
-  }
-  async getReviewByPropertyId(req: Request, res: Response, next: NextFunction) {
-    try {
-      const data = await reviewService.getReviewByOrderId(req);
-      return res.send({
-        data,
-      });
-    } catch (error) {
-      next(error);
-    }
-  }
+
   async creatingSnapMidtrans(req: Request, res: Response, next: NextFunction) {
     try {
       let token = await reservationsServices.createSnapMidtrans(req);

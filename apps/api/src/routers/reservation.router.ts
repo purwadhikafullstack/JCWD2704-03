@@ -56,11 +56,6 @@ class ReservationRouter {
       '/payment/image/:id',
       reservationController.renderPaymentProof,
     );
-    this.router.post('/addReview/', reservationController.addReview);
-    this.router.get(
-      '/review/:orderId',
-      reservationController.getReviewByOrderId,
-    );
     this.router.post(
       '/createSnapMidtrans',
       reservationController.creatingSnapMidtrans,

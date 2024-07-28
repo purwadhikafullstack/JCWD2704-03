@@ -30,7 +30,7 @@ function DetailOrder() {
         const order: Order = response.data.data;
         setOrders(order);
         const reviewCheckResponse = await axiosInstance().get(
-          `http://localhost:8000/api/reservations/review/${orderId}`,
+          `http://localhost:8000/api/reviews/review/${orderId}`,
         );
         setHasReview(reviewCheckResponse.data.hasReview);
         console.log('isi review', reviewCheckResponse);
@@ -79,7 +79,7 @@ function DetailOrder() {
   const handleSubmitReview = async () => {
     try {
       const request = await axiosInstance().post(
-        'http://localhost:8000/api/reservations/addReview',
+        'http://localhost:8000/api/reviews/addReview',
         {
           order_id: orderId,
           review: reviewText,
