@@ -3,6 +3,7 @@ import { prisma } from '../libs/prisma';
 import { Request } from 'express';
 import { TProperty } from '@/models/property.model';
 import sharp from 'sharp';
+import shortid from 'shortid';
 
 class PropertyService {
   async getRoomAvailability(
@@ -90,16 +91,37 @@ class PropertyService {
       throw new Error('Error searching properties');
     }
   }
+
   async getAllPropByTenantId(req: Request) {
-    const property = await prisma.property.findMany({
-      where: { tenant_id: 'clyvb46sq00003amlkg2sh5i4' },
-      // where: { id: req.user.id },
-      include: {
-        RoomCategory: true,
-      },
-    });
-    console.log(property);
-    return property;
+    try {
+      // Check if req.user and req.user.id are defined
+      if (!req.user || !req.user.id) {
+        throw new Error('User or User ID is undefined');
+      }
+
+      // Log tenant ID for debugging purposes
+      console.log('Fetching properties for tenant ID:', req.user.id);
+
+      // Fetch properties associated with the tenant ID
+      const properties = await prisma.property.findMany({
+        where: { tenant_id: req.user.id }, // Filter by tenant ID
+        include: {
+          RoomCategory: true, // Include RoomCategory, but it should not filter out properties without RoomCategory
+        },
+      });
+
+      // Log the retrieved properties for debugging
+      console.log('Retrieved properties:', properties);
+
+      // Return the properties
+      return properties;
+    } catch (error) {
+      // Log any errors that occur during the fetch
+      console.error('Error fetching properties:', error);
+
+      // Rethrow the error to be handled by the calling function
+      throw error;
+    }
   }
 
   async getAllRoom(req: Request) {
@@ -243,6 +265,8 @@ class PropertyService {
         longitude: true,
         createdAt: true,
         updatedAt: true,
+        pic_name: true,
+        deletedAt: true,
         RoomCategory: {
           include: {
             Room: {
@@ -331,7 +355,9 @@ class PropertyService {
         latitude: true,
         longitude: true,
         createdAt: true,
+        pic_name: true,
         updatedAt: true,
+        deletedAt: true,
         RoomCategory: {
           include: {
             Room: {
@@ -397,13 +423,15 @@ class PropertyService {
     };
   }
 
-  async renderPicProperty(req: Request) {
-    const data = await prisma.property.findUnique({
+  async renderPicProperty(req: Request): Promise<Buffer | null> {
+    const picName = req.params.picName;
+    const property = await prisma.property.findUnique({
       where: {
-        id: req.params.id,
+        pic_name: picName,
       },
     });
-    return data?.pic;
+
+    return property?.pic || null;
   }
 
   // async renderPicRoom(req: Request) {
@@ -438,6 +466,8 @@ class PropertyService {
       ? parseFloat(String(longitude))
       : undefined;
 
+    const picName = shortid.generate();
+
     const createProperty = await prisma.property.create({
       data: {
         tenant: {
@@ -446,6 +476,7 @@ class PropertyService {
           },
         },
         pic: buffer,
+        pic_name: picName,
         name,
         category,
         desc,
@@ -458,57 +489,6 @@ class PropertyService {
 
     return createProperty;
   }
-
-  /* async updateProperty(req: Request) {
-    const { propertyId } = req.params;
-    const { file } = req;
-    const userId = req.user?.id;
-
-    const currentProperty = await prisma.property.findUnique({
-      where: { id: propertyId },
-    });
-
-    if (!currentProperty || currentProperty.tenant_id !== userId) {
-      throw new Error('Listing not found or unauthorized');
-    }
-
-    const { name, category, desc, city, address, latitude, longitude } =
-      req.body as Partial<TProperty>;
-
-    let buffer;
-    if (file) {
-      buffer = await sharp(file.buffer).png().toBuffer();
-    }
-
-    const parsedLatitude = latitude ? parseFloat(String(latitude)) : undefined;
-    const parsedLongitude = longitude
-      ? parseFloat(String(longitude))
-      : undefined;
-
-    const updatedData: Prisma.PropertyUpdateInput = {
-      name: name || currentProperty.name,
-      category: category || currentProperty.category,
-      desc: desc || currentProperty.desc,
-      address: address || currentProperty.address,
-      city: city || currentProperty.city,
-      latitude: parsedLatitude ?? currentProperty.latitude,
-      longitude: parsedLongitude ?? currentProperty.longitude,
-      pic: buffer || currentProperty.pic,
-    };
-
-    try {
-      const updatedProperty = await prisma.property.update({
-        where: { id: propertyId },
-        data: updatedData,
-      });
-
-      return updatedProperty;
-    } catch (error) {
-      console.error('Error updating property:', error);
-      throw new Error('Failed to update property');
-    }
-  }
-    */
 
   async updateProperty(req: Request) {
     const { propertyId } = req.params;
@@ -537,6 +517,8 @@ class PropertyService {
       ? parseFloat(String(longitude))
       : undefined;
 
+    const picName = shortid.generate();
+
     const updatedData: any = {
       name,
       category,
@@ -546,6 +528,7 @@ class PropertyService {
       latitude: parsedLatitude,
       longitude: parsedLongitude,
       pic: buffer,
+      pic_name: picName,
     };
 
     if (buffer) {
@@ -557,10 +540,6 @@ class PropertyService {
       data: updatedData,
     });
   }
-
-  async createRoom(req: Request) {}
-
-  async updateRoom(req: Request) {}
 }
 
 export default new PropertyService();

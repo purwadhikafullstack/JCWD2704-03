@@ -10,9 +10,17 @@ import { useParams, useRouter } from 'next/navigation';
 import { useFormik } from 'formik';
 import { Libraries, useLoadScript } from '@react-google-maps/api';
 import { Property } from '@/models/property.model';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import Spinner from 'react-bootstrap/Spinner';
+import Swal from 'sweetalert2';
 
 const libraries: Libraries = ['places'];
-
+type City = {
+  name: string;
+  lat: number;
+  lng: number;
+};
 function UpdateProperty() {
   const router = useRouter();
   const { id } = useParams();
@@ -22,6 +30,15 @@ function UpdateProperty() {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [initialCategory, setInitialCategory] = useState<string>('');
   const [loading, setLoading] = useState(false);
+  const cityInputRef = useRef<HTMLInputElement>(null);
+  const addressInputRef = useRef<HTMLInputElement>(null);
+  const [selectedCity, setSelectedCity] = useState<City | null>(null);
+  const [navigate, setNavigate] = useState(false);
+
+  const [cityLatLng, setCityLatLng] = useState<{
+    latitude: number;
+    longitude: number;
+  } | null>(null);
 
   const initialValues = {
     pic: '',
@@ -43,8 +60,7 @@ function UpdateProperty() {
       desc: Yup.string(),
       city: Yup.string().required('City is required'),
       address: Yup.string().required('Address is required'),
-      category: Yup.string().required('Category is required'), // Add validation for category
-      //   pic: Yup.mixed().required('Picture is required'), // Add validation for pic
+      category: Yup.string().required('Category is required'),
     }),
     onSubmit: async (values) => {
       setLoading(true);
@@ -56,7 +72,6 @@ function UpdateProperty() {
         formData.append('address', values.address);
         formData.append('latitude', values.latitude?.toString() || '');
         formData.append('longitude', values.longitude?.toString() || '');
-        // formData.append('category', values.category);
 
         if (values.pic) {
           formData.append('pic', values.pic);
@@ -67,10 +82,15 @@ function UpdateProperty() {
         }
 
         await axiosInstance().patch(`/api/properties/${id}`, formData);
-        router.push('/dashboard/my-listing');
+
+        // setNavigate(true);
       } catch (error) {
         if (error instanceof AxiosError) {
-          alert(error.response?.data.message);
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: error.response?.data.message || 'An error occurred',
+          });
         }
       } finally {
         setLoading(false);
@@ -78,15 +98,53 @@ function UpdateProperty() {
     },
   });
 
+  // useEffect(() => {
+  //   if (navigate) {
+
+  //   }
+  // }, [navigate]);
+
+  const handleCancel = () => {
+    Swal.fire({
+      title: 'Are you sure?',
+      text: 'Do you want to discard your changes?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, discard it!',
+      cancelButtonText: 'No, keep it',
+    }).then((result) => {
+      if (result.isConfirmed) {
+        formik.resetForm();
+        router.push(`/dashboard/my-property/${id}`);
+      }
+    });
+  };
+
+  const handleUpdate = () => {
+    Swal.fire({
+      title: 'Are you sure?',
+      text: 'Do you want to update your property?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, update it!',
+      cancelButtonText: 'No, cancel',
+    }).then((result) => {
+      if (result.isConfirmed) {
+        formik.handleSubmit();
+        router.push('/dashboard/my-property');
+      }
+    });
+  };
+
   const { isLoaded } = useLoadScript({
     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '',
     libraries,
   });
 
   useEffect(() => {
-    if (isLoaded && autocompleteInputRef.current) {
+    if (isLoaded && cityInputRef.current) {
       const autocomplete = new window.google.maps.places.Autocomplete(
-        autocompleteInputRef.current,
+        cityInputRef.current,
         { types: ['(cities)'], componentRestrictions: { country: 'ID' } },
       );
 
@@ -97,29 +155,54 @@ function UpdateProperty() {
           const latitude = place.geometry.location.lat();
           const longitude = place.geometry.location.lng();
 
+          setCityLatLng({ latitude, longitude });
           formik.setFieldValue('city', city);
           formik.setFieldValue('latitude', latitude);
           formik.setFieldValue('longitude', longitude);
         }
       });
     }
-  }, [isLoaded]);
+
+    if (isLoaded && addressInputRef.current && cityLatLng) {
+      const { latitude, longitude } = cityLatLng;
+      const bounds = new window.google.maps.LatLngBounds(
+        new window.google.maps.LatLng(latitude - 0.1, longitude - 0.1),
+        new window.google.maps.LatLng(latitude + 0.1, longitude + 0.1),
+      );
+      const addressAutocompleteService =
+        new window.google.maps.places.Autocomplete(addressInputRef.current, {
+          types: ['address'],
+          bounds,
+          componentRestrictions: { country: 'ID' },
+          strictBounds: true,
+        });
+
+      addressAutocompleteService.addListener('place_changed', () => {
+        const place = addressAutocompleteService.getPlace();
+        if (place.geometry && place.geometry.location) {
+          formik.setFieldValue('address', place.formatted_address || '');
+          formik.setFieldValue('latitude', place.geometry.location.lat());
+          formik.setFieldValue('longitude', place.geometry.location.lng());
+        }
+      });
+    }
+  }, [isLoaded, cityLatLng]);
 
   useEffect(() => {
     const fetchEvent = async () => {
       try {
         const response = await axiosInstance().get(
-          `/api/properties/detail/${id}`,
+          `/api/properties/myDetail/${id}`,
         );
         const property: Property = response.data.data;
 
         console.log('Fetched property:', property);
 
-        const imgSrc = `http://localhost:8000/api/properties/image/${property.id}`;
+        const imgSrc = `http://localhost:8000/api/properties/image/${property.pic_name}`;
 
         if (property.id) {
           formik.setValues({
-            pic: imgSrc, // Start as null
+            pic: imgSrc,
             name: property.name,
             desc: property.desc,
             category: property.category,
@@ -129,6 +212,10 @@ function UpdateProperty() {
             longitude: property.longitude || null,
           });
           setInitialCategory(property.category || '');
+          setCityLatLng({
+            latitude: property.latitude || 0,
+            longitude: property.longitude || 0,
+          });
         }
 
         setImagePreview(imgSrc);
@@ -143,23 +230,23 @@ function UpdateProperty() {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.currentTarget.files && e.currentTarget.files[0];
     if (file) {
-      formik.setFieldValue('pic', file); // Update Formik state
+      formik.setFieldValue('pic', file);
       const tempUrl = URL.createObjectURL(file);
-      setImagePreview(tempUrl); // Update image preview
+      setImagePreview(tempUrl);
     }
   };
 
   useEffect(() => {
     if (initialCategory) {
-      formik.setFieldValue('category', initialCategory); // Pre-fill category if available
+      formik.setFieldValue('category', initialCategory);
     }
   }, [initialCategory]);
 
   return (
     <>
-      <div className="w-screen tracking-tighter px-10">
+      <div className="tracking-tighter lg:px-10">
         <div className="flex justify-center items-center">
-          <div className="lg:max-w-[1000px]">
+          <div className="w-full">
             <div className="py-4">
               <img
                 src="https://i.ibb.co.com/brDL8tH/3.png"
@@ -168,12 +255,20 @@ function UpdateProperty() {
               />
             </div>
 
-            <form onSubmit={formik.handleSubmit} className="lg:max-w-[1000px]">
+            <form
+              onSubmit={formik.handleSubmit}
+              className="w-full"
+              onKeyPress={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                }
+              }}
+            >
               <div className="flex justify-center flex-col gap-6">
                 {/* NAME */}
                 <div className="flex flex-col">
                   <div className="font-semibold text-2xl mb-2">
-                    Create a new listing
+                    Update my property
                   </div>
                   <div className="form-floating w-full">
                     <input
@@ -200,7 +295,6 @@ function UpdateProperty() {
                   <div className="font-semibold text-xl">
                     Which of these best describes your place?
                   </div>
-
                   <div className="flex flex-row gap-2 text-sm">
                     {['Hotel', 'Apartment', 'Guest House'].map((cat) => (
                       <div
@@ -225,75 +319,91 @@ function UpdateProperty() {
                       </div>
                     ))}
                   </div>
-                  {formik.errors.category && (
-                    <div className="text-red-600 text-xs">
-                      {formik.errors.category}
-                    </div>
-                  )}
                 </div>
 
-                {/* LOCATION */}
+                {/* CITY */}
                 <div className="flex flex-col">
-                  <div className="font-semibold text-xl">Location details</div>
-                  <div className="text-zinc-500 mb-2">
-                    Please detailed address of your property
+                  <div className="font-semibold text-xl">
+                    Where is your property located?
                   </div>
+                  <div className="text-zinc-500 mb-2">
+                    More about the area of your property
+                  </div>
+
                   <div className="form-floating w-full">
                     <input
                       type="text"
                       name="city"
                       className="form-control mb-2"
-                      id="floatingInput"
+                      id="floatingCityInput"
                       placeholder="City"
-                      ref={autocompleteInputRef}
-                      onChange={formik.handleChange}
+                      ref={cityInputRef}
+                      onChange={(e) => {
+                        formik.handleChange(e);
+                        setSelectedCity(null); // Clear selected city when city input changes
+                      }}
                       onBlur={formik.handleBlur}
                       value={formik.values.city}
                     />
-                    <label htmlFor="floatingInput">City</label>
+                    <label htmlFor="floatingCityInput">City</label>
                   </div>
                   {formik.errors.city && (
-                    <div className="text-red-600 text-xs mb-3">
+                    <div className="text-red-600 text-xs">
                       {formik.errors.city}
                     </div>
                   )}
+                </div>
 
-                  <div className="form-floating w-full">
+                {/* ADDRESS */}
+                <div className="flex flex-col">
+                  <div className="font-semibold text-xl">
+                    Where exactly in the city?
+                  </div>
+                  <div className="text-zinc-500 mb-2">
+                    Address details within the city
+                  </div>
+                  <div className="form-floating w-full mt-2">
                     <input
                       type="text"
-                      className="form-control mb-2"
-                      id="floatingInput"
                       name="address"
+                      className="form-control mb-2"
+                      id="floatingAddressInput"
                       placeholder="Address"
+                      ref={addressInputRef}
                       onChange={formik.handleChange}
                       onBlur={formik.handleBlur}
                       value={formik.values.address}
                     />
-                    <label htmlFor="floatingInput">Address</label>
+                    <label htmlFor="floatingAddressInput">
+                      Address details
+                    </label>
                   </div>
                   {formik.errors.address && (
-                    <div className="text-red-600 text-xs mb-3">
+                    <div className="text-red-600 text-xs">
                       {formik.errors.address}
                     </div>
                   )}
                 </div>
 
                 {/* DESCRIPTION */}
-                <div className="flex flex-col ">
-                  <div className="font-semibold text-xl mb-2">Description</div>
-                  <div className="form-floating w-full">
+                <div className="flex flex-col">
+                  <div className="font-semibold text-xl">
+                    Tell guests what your place has to offer
+                  </div>
+                  <div className="text-zinc-500 mb-2">
+                    More about amenities your place offers
+                  </div>
+                  <div className="w-full">
                     <textarea
-                      className="form-control"
-                      id="floatingInput"
+                      className="form-control mb-2"
+                      id="exampleFormControlTextarea1"
                       name="desc"
-                      placeholder="Description"
+                      placeholder="Overall appeal and features of your property: the location, environment, view, amenities, ..."
+                      rows={3}
                       onChange={formik.handleChange}
                       onBlur={formik.handleBlur}
                       value={formik.values.desc}
                     />
-                    <label htmlFor="floatingInput">
-                      Describe your property
-                    </label>
                   </div>
                 </div>
 
@@ -311,7 +421,7 @@ function UpdateProperty() {
                       <img
                         src={imagePreview}
                         alt="Property picture"
-                        className="rounded-xl w-full"
+                        className="rounded-xl w-full h-80 object-cover"
                         onClick={() => imageRef.current?.click()}
                       />
                     </div>
@@ -334,20 +444,24 @@ function UpdateProperty() {
                 </div>
 
                 {/* SUBMIT */}
-                <div className="mb-5">
+                <div className="flex flex-row justify-center gap-3">
+                  <button
+                    type="button"
+                    onClick={handleCancel}
+                    className="btn btn-danger w-28"
+                  >
+                    Cancel
+                  </button>
                   <button
                     type="submit"
-                    className="btn btn-dark w-full"
-                    disabled={loading}
+                    className="btn btn-dark w-28"
+                    disabled={!formik.isValid || formik.isSubmitting}
+                    onClick={handleUpdate}
                   >
-                    {loading ? (
-                      <span
-                        className="spinner-border spinner-border-sm"
-                        role="status"
-                        aria-hidden="true"
-                      ></span>
+                    {formik.isSubmitting ? (
+                      <Spinner animation="border" size="sm" />
                     ) : (
-                      'Update my listing'
+                      'Update'
                     )}
                   </button>
                 </div>

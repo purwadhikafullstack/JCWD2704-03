@@ -10,5 +10,7 @@ export interface Property {
   latitude?: number;
   longitude?: number;
   createdAt: string;
-  updateAt: string;
+  updatedAt: string;
+  pic_name: string;
+  deleteedAt: string;
 }

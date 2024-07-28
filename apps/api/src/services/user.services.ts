@@ -137,6 +137,14 @@ class UserService {
         throw new Error('Invalid token/user');
       }
 
+      const existingUser = await prisma.user.findUnique({
+        where: { id: user.id },
+      });
+
+      if (existingUser?.isVerified === true) {
+        return { message: 'User already verified' };
+      }
+
       await prisma.user.update({
         where: { id: user?.id },
         data: { isVerified: true },
