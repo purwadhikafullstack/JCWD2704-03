@@ -174,6 +174,16 @@ export class PropertyController {
       next(error);
     }
   }
+  async deleteProperty(req: Request, res: Response, next: NextFunction) {
+    try {
+      await propertyServices.deleteProperty(req);
+      return res.send({
+        message: 'Your listing has been deleted',
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
   async getReviewByEventId(req: Request, res: Response, next: NextFunction) {
     try {
       const data = await reviewService.getReviewByEventId(req);

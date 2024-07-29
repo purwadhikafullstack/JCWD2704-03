@@ -69,6 +69,12 @@ export class PropertyRouter {
       blobUploader().single('pic'),
       this.propertyController.updateProperty,
     );
+    this.router.patch(
+      '/del/:propertyId',
+      verifyUser,
+      verifyTenant,
+      this.propertyController.deleteProperty,
+    );
     this.router.get(
       '/getReviewByEventId/:eventId',
       this.propertyController.getReviewByEventId,

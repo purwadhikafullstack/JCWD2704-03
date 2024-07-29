@@ -104,7 +104,8 @@ class PropertyService {
 
       // Fetch properties associated with the tenant ID
       const properties = await prisma.property.findMany({
-        where: { tenant_id: req.user.id }, // Filter by tenant ID
+        where: { tenant_id: req.user.id, deletedAt: null },
+        // Filter by tenant ID
         include: {
           RoomCategory: true, // Include RoomCategory, but it should not filter out properties without RoomCategory
         },
@@ -283,34 +284,48 @@ class PropertyService {
       },
     });
 
-    // Handle case where property is not found
-    if (!data) {
-      throw new Error('Property not found');
+    // Handle case where property is not found or is deleted
+    if (!data || data.deletedAt) {
+      throw new Error('Property not found or is deleted');
     }
 
     // Calculate the remaining rooms for each category
     const roomCategoriesWithAvailableRooms = data.RoomCategory.map(
       (category) => {
-        const totalRooms = category.Room.length;
+        // Skip the room category if it is deleted
+        if (category.deletedAt) {
+          return null;
+        }
+
+        const totalRooms = category.Room.filter(
+          (room) => !room.deletedAt,
+        ).length; // Count only non-deleted rooms
         const bookedRooms = category.Room.filter((room) => {
-          return room.OrderRoom.some((orderRoom) => {
-            const order = orderRoom.order;
-            const orderCheckIn = new Date(order.checkIn_date);
-            const orderCheckOut = new Date(order.checkOut_date);
-            return (
-              orderCheckIn < new Date() &&
-              orderCheckOut > new Date() &&
-              order.status !== 'cancelled'
-            );
-          });
+          return (
+            !room.deletedAt &&
+            room.OrderRoom.some((orderRoom) => {
+              const order = orderRoom.order;
+              const orderCheckIn = new Date(order.checkIn_date);
+              const orderCheckOut = new Date(order.checkOut_date);
+              return (
+                orderCheckIn < new Date() &&
+                orderCheckOut > new Date() &&
+                order.status !== 'cancelled'
+              );
+            })
+          );
         }).length;
 
-        return {
-          ...category,
-          remainingRooms: totalRooms - bookedRooms,
-        };
+        return totalRooms > 0
+          ? {
+              // Only include categories with at least one room
+              ...category,
+              roomCount: totalRooms, // Added roomCount
+              remainingRooms: totalRooms - bookedRooms,
+            }
+          : null;
       },
-    ).filter((category) => category.remainingRooms > 0); // Filter out categories with no remaining rooms
+    ).filter((category) => category !== null); // Filter out null categories
 
     return {
       ...data,
@@ -539,6 +554,85 @@ class PropertyService {
       where: { id: propertyId },
       data: updatedData,
     });
+  }
+
+  async deleteProperty(req: Request) {
+    const propertyId = req.params.propertyId;
+
+    const property = await prisma.property.findUnique({
+      where: { id: propertyId },
+      include: {
+        RoomCategory: {
+          include: {
+            Room: {
+              include: {
+                OrderRoom: {
+                  include: {
+                    order: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!property) {
+      throw new Error('Property not found.');
+    }
+
+    const today = new Date();
+
+    // Check if any associated rooms have future or ongoing orders
+    const hasFutureOrders = property.RoomCategory.some((roomCategory) =>
+      roomCategory.Room.some((room) =>
+        room.OrderRoom.some(
+          (orderRoom) => orderRoom.order.checkOut_date >= today,
+        ),
+      ),
+    );
+
+    if (hasFutureOrders) {
+      throw new Error(
+        'Cannot delete the property because it has rooms with future or ongoing orders.',
+      );
+    }
+
+    // Soft delete all rooms associated with the room categories of the property
+    await prisma.room.updateMany({
+      where: {
+        roomCategory: {
+          property_id: propertyId,
+        },
+      },
+      data: {
+        deletedAt: new Date(),
+      },
+    });
+
+    // Soft delete all room categories associated with the property
+    await prisma.roomCategory.updateMany({
+      where: {
+        property_id: propertyId,
+      },
+      data: {
+        deletedAt: new Date(),
+      },
+    });
+
+    // Soft delete the property
+    await prisma.property.update({
+      where: { id: propertyId },
+      data: {
+        deletedAt: new Date(),
+      },
+    });
+
+    return {
+      message:
+        'Property and associated room categories and rooms successfully deleted.',
+    };
   }
 }
 

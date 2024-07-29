@@ -1,13 +1,12 @@
 import { Prisma } from '@prisma/client';
 import { prisma } from '../libs/prisma';
 import { Request } from 'express';
-import { TRoomCategory } from '@/models/roomCat.model';
+import { RoomCategory } from '@/models/roomCat.model';
 import sharp from 'sharp';
+import shortid from 'shortid';
 
 class RoomService {
   async createRoomCategory(req: Request) {
-    console.log(new Date('1970-01-01'));
-
     const userId = req.user?.id;
     const propertyId = req.params.propertyId;
     const {
@@ -23,7 +22,7 @@ class RoomService {
       bed,
       desc,
       numberOfRooms,
-    } = req.body as TRoomCategory & { numberOfRooms: number };
+    } = req.body as RoomCategory & { numberOfRooms: number };
     const { file } = req;
 
     // Check for property and permission
@@ -42,6 +41,7 @@ class RoomService {
       where: {
         property_id: propertyId,
         type,
+        deletedAt: null,
       },
     });
 
@@ -73,6 +73,8 @@ class RoomService {
       throw new Error('Invalid guest count format');
     }
 
+    const picName = shortid.generate();
+
     const roomCategoryData: Prisma.RoomCategoryCreateInput = {
       property: { connect: { id: propertyId } },
       type,
@@ -84,6 +86,7 @@ class RoomService {
       bed,
       desc,
       pic: buffer,
+      pic_name: picName,
     };
 
     // Optionally add peak price and dates if they are provided
@@ -123,6 +126,7 @@ class RoomService {
     const userId = req.user?.id;
     const roomCategoryId = req.params.roomCategoryId;
     const {
+      type,
       guest,
       price,
       peak_price,
@@ -134,7 +138,7 @@ class RoomService {
       bed,
       desc,
       numberOfRooms,
-    } = req.body as Partial<TRoomCategory> & { numberOfRooms: number };
+    } = req.body as Partial<RoomCategory> & { numberOfRooms: number };
     const { file } = req;
 
     const roomCategory = await prisma.roomCategory.findFirst({
@@ -181,6 +185,7 @@ class RoomService {
       guest !== undefined ? parseInt(String(guest), 10) : roomCategory.guest;
 
     const roomCategoryData: Prisma.RoomCategoryUpdateInput = {
+      type: type ?? roomCategory.type,
       guest: parsedGuest, // Ensure this is an integer
       price: parsedPrice,
       isBreakfast: parsedIsBreakfast,
@@ -280,6 +285,26 @@ class RoomService {
             );
           }
         }
+      } else if (roomsToRemove < 0) {
+        const roomsToAdd = Math.abs(roomsToRemove);
+        console.log('Rooms to add:', roomsToAdd);
+
+        for (let i = 0; i < roomsToAdd; i++) {
+          try {
+            await prisma.room.create({
+              data: {
+                roomCategory_id: roomCategoryId,
+                property_id: propertyId,
+                // Set other room properties if needed
+              },
+            });
+          } catch (error) {
+            console.error(`Failed to create new room:`, error);
+            throw new Error(
+              `Error creating new room. Please check the details.`,
+            );
+          }
+        }
       }
     }
 
@@ -334,9 +359,12 @@ class RoomService {
       },
     });
 
-    // Delete the room category
-    await prisma.roomCategory.delete({
+    // Soft delete the room category
+    await prisma.roomCategory.update({
       where: { id: roomCategoryId },
+      data: {
+        deletedAt: new Date(),
+      },
     });
 
     return {
@@ -344,14 +372,82 @@ class RoomService {
     };
   }
 
-  //   async renderPicRoom(req: Request) {
-  //     const data = await prisma.room.findUnique({
-  //       where: {
-  //         id: req.params.id,
-  //       },
-  //     });
-  //     return data?.pic;
-  //   }
+  async renderPicRoom(req: Request): Promise<Buffer | null> {
+    const picName = req.params.picName;
+    const data = await prisma.roomCategory.findUnique({
+      where: {
+        pic_name: picName,
+      },
+    });
+    return data?.pic ?? null;
+  }
+
+  async getRoomCatByRoomCatId(req: Request) {
+    const { id } = req.params;
+
+    // Fetch room category data
+    const roomCategory = await prisma.roomCategory.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        property_id: true,
+        type: true,
+        guest: true,
+        price: true,
+        peak_price: true,
+        start_date_peak: true,
+        end_date_peak: true,
+        isBreakfast: true,
+        isRefunable: true,
+        isSmoking: true,
+        bed: true,
+        desc: true,
+        pic_name: true,
+      },
+    });
+
+    if (!roomCategory) {
+      return null; // Or handle not found case
+    }
+
+    // Count current number of rooms (not in ongoing or future orders, not deleted)
+    const currentNumberOfRooms = await prisma.room.count({
+      where: {
+        roomCategory_id: id,
+        deletedAt: null, // Exclude deleted rooms
+        OrderRoom: {
+          every: {
+            order: {
+              OR: [
+                {
+                  checkOut_date: {
+                    lt: new Date(), // Rooms with checkOut_date in the past
+                  },
+                },
+                {
+                  status: 'success', // Only successful orders
+                },
+              ],
+            },
+          },
+        },
+      },
+    });
+
+    // Count total number of rooms (including those with orders)
+    const allNumberOfRooms = await prisma.room.count({
+      where: {
+        roomCategory_id: id,
+        deletedAt: null, // Exclude deleted rooms
+      },
+    });
+
+    return {
+      ...roomCategory,
+      currentNumberOfRooms,
+      allNumberOfRooms,
+    };
+  }
 }
 
 export default new RoomService();

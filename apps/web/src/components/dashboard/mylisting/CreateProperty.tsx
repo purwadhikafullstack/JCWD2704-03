@@ -69,29 +69,7 @@ function CreateProperty() {
     }),
     onSubmit: async (values) => {
       try {
-        if (!values.latitude || !values.longitude) {
-          if (selectedCity) {
-            values.latitude = selectedCity.lat;
-            values.longitude = selectedCity.lng;
-          }
-        }
-
-        console.log('Form values:', values);
-        const formData = new FormData();
-        formData.append('name', values.name);
-        formData.append('desc', values.desc);
-        formData.append('city', values.city);
-        formData.append('address', values.address);
-        formData.append('latitude', values.latitude?.toString() || '');
-        formData.append('longitude', values.longitude?.toString() || '');
-        formData.append('category', values.category);
-
-        if (values.pic) {
-          formData.append('pic', values.pic);
-        }
-        console.log('Try creating listing:', formData);
-
-        await axiosInstance().post('/api/properties', formData);
+        await handleUpdate(values);
       } catch (error) {
         setLoading(false);
         let errorMessage = 'An unexpected error occurred';
@@ -122,14 +100,12 @@ function CreateProperty() {
     }).then((result) => {
       if (result.isConfirmed) {
         formik.resetForm();
+        router.push('/dashboard/my-property');
       }
     });
   };
 
-  const handleUpdate = async () => {
-    // Clear state or perform necessary actions
-    // ...
-
+  const handleUpdate = async (values: FormValues) => {
     Swal.fire({
       title: 'Are you sure?',
       text: 'Do you want to post this property to your listing?',
@@ -140,8 +116,30 @@ function CreateProperty() {
     }).then(async (result) => {
       if (result.isConfirmed) {
         try {
-          await formik.submitForm(); // Submit the form
-          // Redirect to dashboard
+          if (!values.latitude || !values.longitude) {
+            if (selectedCity) {
+              values.latitude = selectedCity.lat;
+              values.longitude = selectedCity.lng;
+            }
+          }
+
+          console.log('Form values:', values);
+          const formData = new FormData();
+          formData.append('name', values.name);
+          formData.append('desc', values.desc);
+          formData.append('city', values.city);
+          formData.append('address', values.address);
+          formData.append('latitude', values.latitude?.toString() || '');
+          formData.append('longitude', values.longitude?.toString() || '');
+          formData.append('category', values.category);
+
+          if (values.pic) {
+            formData.append('pic', values.pic);
+          }
+          console.log('Try creating listing:', formData);
+
+          await axiosInstance().post('/api/properties', formData);
+
           router.push('/dashboard/my-property');
         } catch (error) {
           console.error('Error during submission:', error);
@@ -325,12 +323,12 @@ function CreateProperty() {
 
                     <div
                       className={`rounded-xl h-18 border cursor-pointer border-zinc-400 p-2 flex justify-center flex-col w-28 hover:border-zinc-600 hover:bg-zinc-200 hover:border-2 ${
-                        formik.values.category === 'Guest House'
+                        formik.values.category === 'Guesthouse'
                           ? 'border-2 border-zinc-600 bg-zinc-200'
                           : ''
                       }`}
                       onClick={() =>
-                        formik.setFieldValue('category', 'Guest House')
+                        formik.setFieldValue('category', 'Guesthouse')
                       }
                     >
                       <div className="text-3xl">
@@ -489,7 +487,6 @@ function CreateProperty() {
                     type="submit"
                     className="btn btn-dark w-28"
                     disabled={!formik.isValid || formik.isSubmitting}
-                    onClick={handleUpdate}
                   >
                     {formik.isSubmitting ? (
                       <Spinner animation="border" size="sm" />

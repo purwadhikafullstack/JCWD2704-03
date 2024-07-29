@@ -17,6 +17,7 @@ import { AiOutlineCalendar } from 'react-icons/ai';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { IoCalendarOutline } from 'react-icons/io5';
+import Spinner from 'react-bootstrap/Spinner';
 
 interface FormValues {
   pic: File | null;
@@ -76,7 +77,7 @@ function CreateRoom() {
     isSmoking: false,
     bed: '',
     desc: '',
-    numberOfRooms: 1,
+    numberOfRooms: 0,
   };
 
   const formik = useFormik({
@@ -87,8 +88,14 @@ function CreateRoom() {
       guest: Yup.number().required('Guest number is required'),
       price: Yup.number()
         .required('Price is required')
-        .positive('Price must be positive'),
-      peak_price: Yup.number().positive('Peak price must be positive'),
+        .positive('Price must be positive')
+        .min(50000, 'Price must be greater than or equal to IDR 50,000')
+        .typeError('Price must be a number'),
+      peak_price: Yup.number()
+        .positive('Peak price must be positive')
+        .nullable()
+        .min(50000, 'Price must be greater than or equal to IDR 50,000')
+        .typeError('Price must be a number'),
       start_date_peak: Yup.date().nullable(),
       end_date_peak: Yup.date().nullable(),
       bed: Yup.string().required('Bed type is required'),
@@ -96,46 +103,13 @@ function CreateRoom() {
       numberOfRooms: Yup.number()
         .typeError('Number of rooms must be a number')
         .required('Number of rooms is required')
-        .positive('Must be greater than 0')
-        .integer('Must be an integer'),
+        .integer('Must be an integer')
+        .positive()
+        .min(0),
     }),
-    onSubmit: async (values) => {
+    onSubmit: async (values: FormValues) => {
       try {
-        const formData = new FormData();
-        formData.append('pic', values.pic as File);
-        formData.append('type', values.type);
-        formData.append('guest', values.guest.toString());
-        formData.append('price', removeCommas(values.price.toString()));
-        if (values.peak_price !== undefined)
-          formData.append('peak_price', values.peak_price.toString());
-        if (values.start_date_peak)
-          formData.append(
-            'start_date_peak',
-            new Date(values.start_date_peak).toISOString(),
-          );
-        if (values.end_date_peak)
-          formData.append(
-            'end_date_peak',
-            new Date(values.end_date_peak).toISOString(),
-          );
-        formData.append('isBreakfast', values.isBreakfast.toString());
-        formData.append('isRefunable', values.isRefunable.toString());
-        formData.append('isSmoking', values.isSmoking.toString());
-        formData.append('bed', values.bed);
-        formData.append('desc', values.desc);
-        formData.append('numberOfRooms', values.numberOfRooms.toString());
-
-        await axiosInstance().post(`/api/rooms/create/${id}`, formData);
-
-        console.log(formData);
-
-        Swal.fire({
-          title: 'Room Created',
-          text: 'Your room has been created successfully!',
-          icon: 'success',
-        }).then(() => {
-          router.push(`/dashboard/my-property/${id}`);
-        });
+        await handleUpdate(values);
       } catch (error) {
         console.error(error);
         if (error instanceof AxiosError) {
@@ -148,6 +122,94 @@ function CreateRoom() {
       }
     },
   });
+
+  const handleCancel = () => {
+    Swal.fire({
+      title: 'Are you sure?',
+      text: 'Do you want to discard your changes?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, discard it!',
+      cancelButtonText: 'No, keep it',
+    }).then((result) => {
+      if (result.isConfirmed) {
+        formik.resetForm();
+        router.push(`/dashboard/my-property/${id}`);
+      }
+    });
+  };
+
+  const handleUpdate = async (values: FormValues) => {
+    Swal.fire({
+      title: 'Are you sure?',
+      text: 'Do you want to add this room to your property?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, add it!',
+      cancelButtonText: 'No, cancel',
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          const formData = new FormData();
+          console.log('Form Values:', values);
+          formData.append('pic', values.pic as File);
+          formData.append('type', values.type);
+          formData.append('guest', values.guest.toString());
+          formData.append('price', removeCommas(values.price.toString()));
+          if (values.peak_price !== undefined)
+            formData.append('peak_price', values.peak_price.toString());
+          if (values.start_date_peak)
+            formData.append(
+              'start_date_peak',
+              new Date(values.start_date_peak).toISOString(),
+            );
+          if (values.end_date_peak)
+            formData.append(
+              'end_date_peak',
+              new Date(values.end_date_peak).toISOString(),
+            );
+          formData.append('isBreakfast', values.isBreakfast.toString());
+          formData.append('isRefunable', values.isRefunable.toString());
+          formData.append('isSmoking', values.isSmoking.toString());
+          formData.append('bed', values.bed);
+          formData.append('desc', values.desc);
+          formData.append('numberOfRooms', values.numberOfRooms.toString());
+
+          await axiosInstance().post(`/api/rooms/create/${id}`, formData);
+
+          Swal.fire({
+            title: 'Room Created',
+            text: 'Your room has been created successfully!',
+            icon: 'success',
+          }).then(() => {
+            router.push(`/dashboard/my-property/${id}`);
+          });
+        } catch (error) {
+          console.error('Error during submission:', error);
+
+          const errorMessage = 'An error occurred while creating the room.';
+
+          if (error instanceof AxiosError) {
+            // Extract the error message from the response if available
+            const apiErrorMessage =
+              error.response?.data?.message || errorMessage;
+            Swal.fire({
+              icon: 'error',
+              title: 'Error',
+              text: apiErrorMessage,
+            });
+          } else {
+            // Fallback if the error is not from Axios
+            Swal.fire({
+              icon: 'error',
+              title: 'Error',
+              text: errorMessage,
+            });
+          }
+        }
+      }
+    });
+  };
 
   const incrementGuest = () => {
     if (formik.values.guest < 4) {
@@ -519,7 +581,7 @@ function CreateRoom() {
                   </div>
 
                   {formik.touched.price && formik.errors.price ? (
-                    <div className="invalid-feedback">
+                    <div className=" text-red-500 text-xs mt-2">
                       {formik.errors.price}
                     </div>
                   ) : null}
@@ -619,7 +681,7 @@ function CreateRoom() {
                     </div>
 
                     {formik.touched.peak_price && formik.errors.peak_price ? (
-                      <div className="invalid-feedback">
+                      <div className=" text-red-500 text-xs mt-2">
                         {formik.errors.peak_price}
                       </div>
                     ) : null}
@@ -640,7 +702,7 @@ function CreateRoom() {
 
                   <div id="date-range-picker" className="flex items-center">
                     <div className="relative">
-                      <div className="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none z-5">
+                      <div className="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none z-10">
                         <IoCalendarOutline />
                       </div>
                       <DatePicker
@@ -658,7 +720,7 @@ function CreateRoom() {
                     </div>
                     <span className="mx-4 text-gray-500">to</span>
                     <div className="relative">
-                      <div className="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none z-5">
+                      <div className="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none z-10">
                         <IoCalendarOutline />
                       </div>
                       <DatePicker
@@ -678,11 +740,27 @@ function CreateRoom() {
                 </div>
               </div>
 
-              <hr />
-
-              <button type="submit" className="btn btn-primary">
-                Create Room
-              </button>
+              {/* SUBMIT */}
+              <div className="flex flex-row justify-center gap-3 mt-6">
+                <button
+                  type="button"
+                  onClick={handleCancel}
+                  className="btn btn-danger w-28"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="btn btn-dark w-28"
+                  disabled={formik.isSubmitting}
+                >
+                  {formik.isSubmitting ? (
+                    <Spinner animation="border" size="sm" />
+                  ) : (
+                    'Create'
+                  )}
+                </button>
+              </div>
             </div>
           </form>
         </div>

@@ -16,9 +16,16 @@ export interface RoomCategory {
   bed: 'king' | 'twin' | 'single'; // Enum values from the schema
   desc: string;
   pic?: string | null; // Optional
+  pic_name?: string;
   createdAt: string; // DateTime as string
   updatedAt: string; // DateTime as string
   remainingRooms?: number;
   Room: Room[];
   property: Property;
+  currentNumberOfRooms?: number;
+  allNumberOfRooms?: number;
+}
+
+export interface RoomCategoryWithCount extends RoomCategory {
+  roomCount: number; // Add this line to include the count
 }

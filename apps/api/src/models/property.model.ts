@@ -3,7 +3,6 @@ import { TUser } from './user.model';
 import { Room, Property as PrismaProperty } from '@prisma/client';
 
 export type TProperty = {
-  name: string;
   city: string;
   id: string;
   name: string;
@@ -11,7 +10,7 @@ export type TProperty = {
   category: Category;
   pic: Buffer | null;
   desc: string;
-  city: string;
+  pic_name: string;
   address: string;
   latitude?: number;
   longitude?: number;

@@ -98,12 +98,6 @@ function UpdateProperty() {
     },
   });
 
-  // useEffect(() => {
-  //   if (navigate) {
-
-  //   }
-  // }, [navigate]);
-
   const handleCancel = () => {
     Swal.fire({
       title: 'Are you sure?',
@@ -296,7 +290,7 @@ function UpdateProperty() {
                     Which of these best describes your place?
                   </div>
                   <div className="flex flex-row gap-2 text-sm">
-                    {['Hotel', 'Apartment', 'Guest House'].map((cat) => (
+                    {['Hotel', 'Apartment', 'Guesthouse'].map((cat) => (
                       <div
                         key={cat}
                         className={`rounded-xl h-18 border cursor-pointer border-zinc-400 p-2 flex justify-center flex-col w-28 hover:border-zinc-600 hover:bg-zinc-200 hover:border-2 ${
@@ -313,7 +307,7 @@ function UpdateProperty() {
                         <div className="text-3xl">
                           {cat === 'Hotel' && <RiHotelLine />}
                           {cat === 'Apartment' && <PiBuildingApartmentBold />}
-                          {cat === 'Guest House' && <PiHouseLineBold />}
+                          {cat === 'Guesthouse' && <PiHouseLineBold />}
                         </div>
                         <div className="font-semibold">{cat}</div>
                       </div>
