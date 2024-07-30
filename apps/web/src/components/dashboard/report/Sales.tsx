@@ -38,15 +38,8 @@ const Sales: React.FC = () => {
     setOrder((prevOrder) => (prevOrder === 'asc' ? 'desc' : 'asc'));
   };
   return (
-    <div className="p-4">
+    <div className="">
       <h1 className="text-2xl font-bold mb-4">Sales Report</h1>
-      <div className="mb-4">
-        <label className="mr-2">Order:</label>
-        <select value={order} onChange={(e) => setOrder(e.target.value)}>
-          <option value="asc">Ascending</option>
-          <option value="desc">Descending</option>
-        </select>
-      </div>
       <div className="mb-4">
         <label className="mr-2">Start Date:</label>
         <input
@@ -67,38 +60,40 @@ const Sales: React.FC = () => {
         onClick={fetchSales}
         className="px-4 py-2 bg-blue-500 text-white rounded"
       >
-        Fetch Sales
+        Search
       </button>
-      <table className="min-w-full mt-4">
-        <thead>
-          <tr>
-            <th className="py-2 px-4 border">No</th>
-            <th className="py-2 px-4 border">User ID</th>
-            <th className="py-2 px-4 border">User First Name</th>
-            <th className="py-2 px-4 border">Property ID</th>
-            <th className="py-2 px-4 border">Property Name</th>
-            <th className="py-2 px-4 border" onClick={handleSortOrder}>
-              Total Price{order === 'asc' ? '↑' : '↓'}
-            </th>
-            <th className="py-2 px-4 border">Created At</th>
-          </tr>
-        </thead>
-        <tbody>
-          {sales.map((sale, index) => (
-            <tr key={index}>
-              <td className="py-2 px-4 border text-center">{index + 1}</td>
-              <td className="py-2 px-4 border">{sale.user_id}</td>
-              <td className="py-2 px-4 border">{sale.user_firstname}</td>
-              <td className="py-2 px-4 border">{sale.property_id}</td>
-              <td className="py-2 px-4 border">{sale.property_name}</td>
-              <td className="py-2 px-4 border">{sale.total_price}</td>
-              <td className="py-2 px-4 border">
-                {new Date(sale.createdAt).toLocaleString()}
-              </td>
+      <div className="overflow-x-auto">
+        <table className=" min-w-full bg-white rounded-lg shadow-md mt-4">
+          <thead>
+            <tr className="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
+              <th className="py-2 px-4 border">No</th>
+              <th className="py-2 px-4 border">User ID</th>
+              <th className="py-2 px-4 border">User First Name</th>
+              <th className="py-2 px-4 border">Property ID</th>
+              <th className="py-2 px-4 border">Property Name</th>
+              <th className="py-2 px-4 border" onClick={handleSortOrder}>
+                Total Price{order === 'asc' ? '↑' : '↓'}
+              </th>
+              <th className="py-2 px-4 border">Created At</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {sales.map((sale, index) => (
+              <tr key={index}>
+                <td className="py-2 px-4 border text-center">{index + 1}</td>
+                <td className="py-2 px-4 border">{sale.user_id}</td>
+                <td className="py-2 px-4 border">{sale.user_firstname}</td>
+                <td className="py-2 px-4 border">{sale.property_id}</td>
+                <td className="py-2 px-4 border">{sale.property_name}</td>
+                <td className="py-2 px-4 border">{sale.total_price}</td>
+                <td className="py-2 px-4 border">
+                  {new Date(sale.createdAt).toLocaleString()}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };

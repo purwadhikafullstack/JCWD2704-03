@@ -16,6 +16,7 @@ function Reservation() {
   const [rooms, setRooms] = useState<RoomCategory | null>(null);
   const [order, setOrder] = useState<Order | null>(null);
   const [roomCount, setRoomCount] = useState(1);
+  const [paymentMethod, setPaymentMethod] = useState<string | null>(null);
   const total_room = roomCount;
   const buyer = useAppSelector((state) => state.auth) as User;
   const searchParams = useSearchParams();
@@ -53,6 +54,7 @@ function Reservation() {
   const price = rooms?.price ? rooms.price : rooms?.peak_price;
   const totalPrice = (total_price || 0) * durationInDays;
   console.log('hargaa', rooms);
+
   const handlePay = async () => {
     const data = {
       user_id: buyerId,
@@ -61,8 +63,10 @@ function Reservation() {
       roomCategory_id: rooms?.id,
       checkIn_date: checkInDate,
       checkOut_date: checkOutDate,
+      payment_method: paymentMethod || null,
       total_price: totalPrice,
     };
+
     console.log('data to be sent:', data);
     try {
       console.log(buyerId);
@@ -88,6 +92,16 @@ function Reservation() {
       router.push(`/invoice?order_id=${orderId}`);
     } catch (error) {
       console.error('Error placing order:', error);
+    }
+  };
+  const handlePaymentMethodChange = (
+    e: React.ChangeEvent<HTMLSelectElement>,
+  ) => {
+    const selectedValue = e.target.value;
+    if (selectedValue === 'Gopay' || selectedValue === 'Qris') {
+      setPaymentMethod(null);
+    } else {
+      setPaymentMethod(selectedValue);
     }
   };
   const isPayDisabled = !checkInDate || !checkOutDate;
@@ -121,7 +135,6 @@ function Reservation() {
             </div>
           </div>
         </div>
-
         <div className="md:w-1/3">
           <div className="relative flex-row md:space-x-5 space-y-3 md:space-y-0 rounded-xl shadow-sm p-3 max-w-xs md:max-w-3xl mx-auto border border-white bg-white">
             <div className="font-semibold text-xl">Order summary</div>
@@ -143,7 +156,25 @@ function Reservation() {
                 Rp. {!isNaN(totalPrice) ? totalPrice.toLocaleString() : 'N/A'}
               </div>
             </div>
-
+            <div>
+              <label htmlFor="paymentMethod" className="block font-medium">
+                Payment Method
+              </label>
+              <select
+                id="paymentMethod"
+                value={paymentMethod ?? ''}
+                onChange={handlePaymentMethodChange}
+                className="w-full mt-2 mb-4 p-2 border border-gray-300 rounded"
+              >
+                <option value="" disabled>
+                  Select a payment method*
+                </option>
+                <option value="BCA">BCA</option>
+                <option value="MANDIRI">MANDIRI</option>
+                <option value={'gopay'}>Gopay</option>
+                <option value={'qris'}>Qris</option>
+              </select>
+            </div>
             <div>
               <button
                 onClick={handlePay}

@@ -81,9 +81,7 @@ const Invoice = () => {
                 <div className="flex flex-row justify-between">
                   <div>
                     <div className=" font-normal">Number Virtual Account</div>
-                    <div className="font-bold">
-                      {/* {paymentMethodDetails && paymentMethodDetails.va} */}
-                    </div>
+                    <div className="font-bold"></div>
                   </div>
                   <div className="font-bold flex flex-row gap-2 items-center">
                     <span>
@@ -118,7 +116,9 @@ const Invoice = () => {
                 Please attach your payment proof to confirm your payment.
               </div>
               {/* isi form */}
-              {order.status !== 'succcess' && statusCode ? (
+              {order.status !== 'success' &&
+              (order.payment_method === 'gopay' ||
+                order.payment_method === 'qris') ? (
                 <button onClick={handleLinkPayment}>Link Payment</button>
               ) : null}
             </div>
@@ -157,24 +157,6 @@ const Invoice = () => {
                   <IoLocationOutline /> {order?.property.address},{' '}
                   {order?.property.city}
                 </div>
-                {/* { !statusCode && 
-                {/* <div>
-              <label htmlFor="paymentMethod" className="block font-medium">
-                Payment Method
-              </label>
-              <select
-                id="paymentMethod"
-                value={paymentMethod}
-                onChange={handlePaymentMethodChange}
-                className="w-full mt-2 mb-4 p-2 border border-gray-300 rounded"
-              >
-                <option value="" disabled>
-                  Select a payment method*
-                </option>
-                <option value="BCA">BCA</option>
-                <option value="MANDIRI">MANDIRI</option>
-              </select>
-            </div> */}
               </div>
             </div>
           </div>

@@ -51,49 +51,54 @@ const UserReport: React.FC = () => {
   };
 
   return (
-    <table className="min-w-full bg-white rounded-lg shadow-md">
-      <thead>
-        <tr className="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
-          <th className="py-3 px-6 text-left">User Name</th>
-          <th className="py-3 px-6 text-left">Property Name</th>
-          <th className="py-3 px-6 text-left">Property ID</th>
-          <th
-            className="py-3 px-6 text-left cursor-pointer"
-            onClick={() => requestSort('total_sales')}
-          >
-            Total Sales
-          </th>
-          <th
-            className="py-3 px-6 text-left cursor-pointer"
-            onClick={() => requestSort('total_orders')}
-          >
-            Total Orders
-          </th>
-        </tr>
-      </thead>
-      <tbody className="text-gray-600 text-sm font-light">
-        {sales.map((sale) =>
-          sale.details.map((detail, index) => (
-            <tr
-              key={`${sale.user_id}-${detail.property_id}`}
-              className="border-b border-gray-200 hover:bg-gray-100"
+    <div className="overflow-x-auto">
+      <h1 className="text-2xl font-bold mb-4">User Report</h1>
+      <table className="min-w-full bg-white rounded-lg shadow-md">
+        <thead>
+          <tr className="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
+            <th className="py-2 px-4 border">No</th>
+            <th className="py-3 px-6 text-left">User Name</th>
+            <th className="py-3 px-6 text-left">Property Name</th>
+            <th className="py-3 px-6 text-left">Property ID</th>
+            <th
+              className="py-3 px-6 text-left cursor-pointer"
+              onClick={() => requestSort('total_sales')}
             >
-              <td className="py-3 px-6 text-left">
-                {index === 0 ? sale.user_name : ''}
-              </td>
-              <td className="py-3 px-6 text-left">
-                {index === 0
-                  ? detail.property_name
-                  : `- ${detail.property_name}`}
-              </td>
-              <td className="py-3 px-6 text-left">{detail.property_id}</td>
-              <td className="py-3 px-6 text-left">{detail.total_sales}</td>
-              <td className="py-3 px-6 text-left">{detail.total_orders}</td>
-            </tr>
-          )),
-        )}
-      </tbody>
-    </table>
+              Total Sales
+            </th>
+            <th
+              className="py-3 px-6 text-left cursor-pointer"
+              onClick={() => requestSort('total_orders')}
+            >
+              Total Orders
+            </th>
+          </tr>
+        </thead>
+        <tbody className="text-gray-600 text-sm font-light">
+          {sales.map((sale) =>
+            sale.details.map((detail, index) => (
+              <tr
+                key={`${sale.user_id}-${detail.property_id}`}
+                className="border-b border-gray-200 hover:bg-gray-100"
+              >
+                <td className="py-2 px-4 border text-center">{index + 1}</td>
+                <td className="py-3 px-6 text-left">
+                  {index === 0 ? sale.user_name : ''}
+                </td>
+                <td className="py-3 px-6 text-left">
+                  {index === 0
+                    ? detail.property_name
+                    : `- ${detail.property_name}`}
+                </td>
+                <td className="py-3 px-6 text-left">{detail.property_id}</td>
+                <td className="py-3 px-6 text-left">{detail.total_sales}</td>
+                <td className="py-3 px-6 text-left">{detail.total_orders}</td>
+              </tr>
+            )),
+          )}
+        </tbody>
+      </table>
+    </div>
   );
 };
 

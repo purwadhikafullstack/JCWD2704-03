@@ -8,11 +8,13 @@ import React from 'react';
 function page() {
   return (
     <>
-      <SalesPage />
-      <Sales />
-      <PropertyReport />
-      <UserReport />
-      <Calendar />
+      <div className="flex flex-col gap-10">
+        <SalesPage />
+        <Sales />
+        <PropertyReport />
+        <UserReport />
+        <Calendar />
+      </div>
     </>
   );
 }

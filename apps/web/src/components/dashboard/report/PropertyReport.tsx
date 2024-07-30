@@ -40,32 +40,28 @@ const PropertyReport: React.FC = () => {
   };
 
   return (
-    <div>
-      <div className="text-lg font-bold">Property Report</div>
+    <div className=" overflow-x-auto">
+      <h1 className="text-2xl font-bold mb-4">Property Report</h1>
       <table className="min-w-full divide-y divide-gray-200">
         <thead>
-          <tr>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ">
-              Property Name
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Room Category ID
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer">
-              Total Orders
-            </th>
+          <tr className="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
+            <th className="py-2 px-4 border">No</th>
+            <th className="py-2 px-4 border ">Property Name</th>
+            <th className="py-2 px-4 border">Room Category ID</th>
+            <th className="py-2 px-4 border">Total Orders</th>
             <th
-              className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+              className="py-2 px-4 border"
               onClick={() => handleSort('total_sales')}
             >
               Total Sales
-              {sortBy === 'total_sales' && (order === 'asc' ? ' ▲' : ' ▼')}
+              {sortBy === 'total_sales' && (order === 'asc' ? '↑' : '↓')}
             </th>
           </tr>
         </thead>
         <tbody className="bg-white divide-y divide-gray-200">
-          {sales.map((sale) => (
+          {sales.map((sale, index) => (
             <tr key={sale.property_id}>
+              <td className="py-2 px-4 border text-center">{index + 1}</td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                 {sale.property_name}
               </td>

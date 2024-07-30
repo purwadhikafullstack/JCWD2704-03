@@ -7,11 +7,14 @@ import { IoLogOut, IoPerson } from 'react-icons/io5';
 import { VscGraph } from 'react-icons/vsc';
 import { RxHamburgerMenu } from 'react-icons/rx';
 import { useRouter } from 'next/navigation';
+import { logout } from '@/libs/redux/slices/user.slice';
+import { useAppDispatch } from '@/app/hooks';
 
 function SidebarDash() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const router = useRouter();
+  const dispatch = useAppDispatch();
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
   const handleMyproperty = () => {
     router.push('/dashboard/my-property');
@@ -21,6 +24,11 @@ function SidebarDash() {
   };
   const handleReport = () => {
     router.push('/dashboard/report');
+  };
+  const handleLogout = () => {
+    dispatch(logout());
+    router.push('/');
+    window.location.reload();
   };
   return (
     <div className="flex">
@@ -81,7 +89,10 @@ function SidebarDash() {
         </div>
         <div className="my-4 bg-gray-600 h-[1px]"></div>
 
-        <div className="p-2.5 mt-3 flex items-center rounded-md px-4 duration-300 cursor-pointer hover:bg-blue-600 text-white">
+        <div
+          className="p-2.5 mt-3 flex items-center rounded-md px-4 duration-300 cursor-pointer hover:bg-blue-600 text-white"
+          onClick={handleLogout}
+        >
           <IoLogOut />
           <span className="text-[15px] ml-4 text-gray-200 font-bold">
             Logout

@@ -53,6 +53,9 @@ class ReservationService {
     return data;
   }
   async getOrderBySellerId(req: Request) {
+    const page = parseInt(req.query.page as string, 10) || 1;
+    const limit = parseInt(req.query.limit as string, 10) || 10;
+    const offset = (page - 1) * limit;
     const data = await prisma.order.findMany({
       where: {
         property: {
@@ -69,8 +72,22 @@ class ReservationService {
       orderBy: {
         updatedAt: 'desc',
       },
+      skip: offset,
+      take: limit,
     });
-    return data;
+    const totalOrders = await prisma.order.count({
+      where: {
+        property: {
+          tenant_id: req.user?.id,
+        },
+      },
+    });
+    return {
+      data,
+      totalOrders,
+      totalPages: Math.ceil(totalOrders / limit),
+      currentPage: page,
+    };
   }
   async createOrder(req: Request) {
     const {
@@ -80,6 +97,7 @@ class ReservationService {
       room_ids, // Array of room IDs
       checkIn_date,
       checkOut_date,
+      payment_method = null,
       total_price,
       status = 'pending_payment',
     } = req.body;
@@ -153,6 +171,7 @@ class ReservationService {
         checkOut_date: new Date(checkOut_date),
         total_price: adjustedTotalPrice,
         invoice_id: generateInvoice(property_id),
+        payment_method,
         status,
         createdAt: new Date(),
         updatedAt: new Date(),

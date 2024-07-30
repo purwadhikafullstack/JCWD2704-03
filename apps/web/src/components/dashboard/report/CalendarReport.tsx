@@ -36,42 +36,49 @@ const Calendar: React.FC = () => {
   const daysInMonth = new Date(year, month, 0).getDate();
 
   return (
-    <div className="p-4">
-      <div className="flex justify-center mb-4">
-        <input
-          type="number"
-          value={year}
-          onChange={(e) => setYear(parseInt(e.target.value))}
-          className="border p-2 mx-2"
-          placeholder="Year"
-        />
-        <input
-          type="number"
-          value={month}
-          onChange={(e) => setMonth(parseInt(e.target.value))}
-          className="border p-2 mx-2"
-          placeholder="Month"
-        />
-        <button
-          onClick={fetchAvailability}
-          className="bg-blue-500 text-white p-2 rounded mx-2"
-        >
-          Search
-        </button>
+    <div className="">
+      <div className="flex flex-col gap-4 md:flex-row mb-4">
+        <div className="flex flex-col gap-2">
+          <div className="text-lg font-semibold">Year</div>
+          <input
+            type="number"
+            value={year}
+            onChange={(e) => setYear(parseInt(e.target.value))}
+            className="border"
+            placeholder="Year"
+          />
+        </div>
+        <div className="flex flex-col gap-2">
+          <div className="text-lg font-semibold">Month</div>
+          <input
+            type="number"
+            value={month}
+            onChange={(e) => setMonth(parseInt(e.target.value))}
+            className="border"
+            placeholder="Month"
+          />
+        </div>
+        <div className="md:mt-6">
+          <button
+            onClick={fetchAvailability}
+            className="bg-blue-500 text-white p-2 "
+          >
+            Search
+          </button>
+        </div>
       </div>
-      <div className="grid grid-cols-7">
+      <div className="grid md:grid-cols-7 grid-cols-3">
         {Array.from({ length: daysInMonth }, (_, i) => i + 1).map((day) => {
           const date = new Date(year, month - 1, day)
             .toISOString()
             .split('T')[0];
           const data = availability[date] || { rooms: [], properties: [] };
-
           return (
             <>
               <div className="">
-                <div key={day} className="border p-4">
+                <div key={day} className="border md:p-4">
                   <div className="font-bold">{day}</div>
-                  <div className="text-sm">
+                  <div className="text-xs md:text-sm">
                     <div>Rooms: {data.rooms.length}</div>
                     <div>Properties: {data.properties.length}</div>
                   </div>
