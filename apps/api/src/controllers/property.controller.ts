@@ -174,35 +174,5 @@ export class PropertyController {
       next(error);
     }
   }
-  async getReviewByEventId(req: Request, res: Response, next: NextFunction) {
-    try {
-      const data = await reviewService.getReviewByEventId(req);
-      return res.send({
-        data,
-      });
-    } catch (error) {
-      next(error);
-    }
-  }
-  async getReviewByUserId(req: Request, res: Response, next: NextFunction) {
-    try {
-      const data = await reviewService.getReviewByUserId(req);
-      return res.send({
-        data,
-      });
-    } catch (error) {
-      next(error);
-    }
-  }
-  async addReply(req: Request, res: Response, next: NextFunction) {
-    try {
-      const data = await reviewService.addReply(req);
-      return res.send({
-        data,
-      });
-    } catch (error) {
-      next(error);
-    }
-  }
 }
 export default new PropertyController();

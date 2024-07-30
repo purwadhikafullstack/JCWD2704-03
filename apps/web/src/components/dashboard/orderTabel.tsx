@@ -3,26 +3,38 @@ import React, { useState, useEffect } from 'react';
 import dayjs from 'dayjs';
 import { Order } from '@/models/reservation.model';
 import { axiosInstance } from '@/libs/axios.config';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 function OrderTable() {
   const [orders, setOrders] = useState<Order[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [limit, setLimit] = useState(10);
   const router = useRouter();
-  const fetchOrderData = async () => {
+  const searchParams = useSearchParams();
+  const fetchOrderData = async (page = 1) => {
     try {
       const response = await axiosInstance().get(
-        '/api/reservations/tenant/order',
+        `/api/reservations/tenant/order?page=${page}&limit=${limit}`,
       );
-      const ordersData: Order[] = response.data.data;
-
-      setOrders(ordersData);
+      const { data, totalPages, currentPage } = response.data.data;
+      setOrders(data);
+      setTotalPages(totalPages);
+      setCurrentPage(currentPage);
     } catch (error) {
       console.error('Error fetching order data:', error);
     }
   };
   useEffect(() => {
-    fetchOrderData();
-  }, []);
+    const page = parseInt(searchParams.get('page') || '1', 10);
+    fetchOrderData(page);
+  }, [searchParams, limit]);
+  const handlePageChange = (newPage: number) => {
+    if (newPage > 0 && newPage <= totalPages) {
+      setCurrentPage(newPage);
+      router.replace(`/dashboard/?page=${newPage}`, undefined);
+    }
+  };
   const handleCancelled = (orderId: string) => {
     router.push(`/dashboard/order/cancel/${orderId}`);
   };
@@ -132,6 +144,23 @@ function OrderTable() {
             ))}
           </tbody>
         </table>
+      </div>
+      <div className="flex justify-between items-center py-4">
+        <button
+          className="px-4 py-2 bg-gray-300 rounded-lg"
+          onClick={() => handlePageChange(currentPage - 1)}
+          disabled={currentPage === 1}
+        >
+          Previous
+        </button>
+        <span className="text-lg">{`Page ${currentPage} of ${totalPages}`}</span>
+        <button
+          className="px-4 py-2 bg-gray-300 rounded-lg"
+          onClick={() => handlePageChange(currentPage + 1)}
+          disabled={currentPage === totalPages}
+        >
+          Next
+        </button>
       </div>
     </div>
   );

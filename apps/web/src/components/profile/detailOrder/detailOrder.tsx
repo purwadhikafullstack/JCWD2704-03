@@ -18,6 +18,7 @@ function DetailOrder() {
   const [reviewText, setReviewText] = useState('');
   const [isReviewSubmitted, setIsReviewSubmitted] = useState(false);
   const [hasReview, setHasReview] = useState(false);
+  const [review, setReview] = useState(true);
   const params = useParams();
   const router = useRouter();
   const { orderId } = params;
@@ -30,10 +31,19 @@ function DetailOrder() {
         const order: Order = response.data.data;
         setOrders(order);
         const reviewCheckResponse = await axiosInstance().get(
-          `http://localhost:8000/api/reservations/review/${orderId}`,
+          `http://localhost:8000/api/reviews/review/${orderId}`,
         );
-        setHasReview(reviewCheckResponse.data.hasReview);
-        console.log('isi review', reviewCheckResponse);
+        const reviewData = reviewCheckResponse.data.data;
+
+        if (reviewData && reviewData.length > 0) {
+          const review = reviewData[0];
+          setHasReview(review.rating > 0);
+          console.log('isi review', review);
+        }
+        if (reviewData.length == 0) {
+          setReview(false);
+        }
+        console.log('isi review', reviewData);
       } catch (error) {
         console.error('Error fetching rooms:', error);
       }
@@ -79,7 +89,7 @@ function DetailOrder() {
   const handleSubmitReview = async () => {
     try {
       const request = await axiosInstance().post(
-        'http://localhost:8000/api/reservations/addReview',
+        'http://localhost:8000/api/reviews/addReview',
         {
           order_id: orderId,
           review: reviewText,
@@ -221,7 +231,7 @@ function DetailOrder() {
             invoice
           </button>
           <FormPaymentProofComponent order={order} />
-          {showButton && !hasReview && (
+          {showButton && !hasReview && review && (
             <button
               type="button"
               className={`focus:outline-none w-48 text-white font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 ${

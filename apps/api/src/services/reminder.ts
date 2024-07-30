@@ -61,7 +61,7 @@ class ReminderService {
       await this.sendReminderEmail(
         order.user,
         order,
-        '/../templates/reminder.html',
+        '/../templates/checkinreminder.html',
       );
     }
   }
