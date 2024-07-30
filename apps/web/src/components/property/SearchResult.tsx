@@ -16,7 +16,11 @@ export type SearchParams = {
 
 async function fetchResults(searchParams: SearchParams) {
   const { city, checkIn, checkOut } = searchParams;
-  const url = `http://localhost:8000/api/properties/search?city=${city}&checkIn=${checkIn}&checkOut=${checkOut}`;
+  const baseUrl =
+    process.env.NEXT_PUBLIC_BASE_API_URL || 'http://localhost:8000/api/';
+
+  // Construct the URL using template literals
+  const url = `${baseUrl}properties/${name}?checkIn=${checkIn}&checkOut=${checkOut}`;
 
   try {
     const response = await axiosInstance().get(url);

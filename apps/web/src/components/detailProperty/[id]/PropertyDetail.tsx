@@ -28,7 +28,11 @@ function PropertyDetail() {
     const fetchPropertyDetail = async () => {
       if (!name || !checkIn || !checkOut) return;
 
-      const url = `http://localhost:8000/api/properties/${name}?checkIn=${checkIn}&checkOut=${checkOut}`;
+      const baseUrl =
+        process.env.NEXT_PUBLIC_BASE_API_URL || 'http://localhost:8000/api/';
+
+      const url = `${baseUrl}properties/${name}?checkIn=${checkIn}&checkOut=${checkOut}`;
+
       console.log(`Fetching property details from: ${url}`);
 
       try {

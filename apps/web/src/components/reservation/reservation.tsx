@@ -31,7 +31,7 @@ function Reservation() {
     const fetchRoom = async () => {
       try {
         const response = await axiosInstance().get(
-          `http://localhost:8000/api/properties/room/${id}`,
+          '/api/properties/room/${id}',
         );
         const { data } = response.data;
         setRooms(data);

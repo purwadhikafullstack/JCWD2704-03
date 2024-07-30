@@ -14,6 +14,7 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Spinner from 'react-bootstrap/Spinner';
 import Swal from 'sweetalert2';
+import { imageSrc, imageSrcRoom } from '@/utils/imagerender';
 
 const libraries: Libraries = ['places'];
 type City = {
@@ -192,7 +193,7 @@ function UpdateProperty() {
 
         console.log('Fetched property:', property);
 
-        const imgSrc = `http://localhost:8000/api/properties/image/${property.pic_name}`;
+        const imgSrc = `${imageSrc}${property.pic_name}`;
 
         if (property.id) {
           formik.setValues({

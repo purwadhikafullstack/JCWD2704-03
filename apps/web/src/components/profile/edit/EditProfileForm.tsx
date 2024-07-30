@@ -15,6 +15,7 @@ import { jwtDecode } from 'jwt-decode';
 import { login } from '@/libs/redux/slices/user.slice';
 import { CustomJwtPayload } from '@/models/user.model';
 import { updateProfile, keepLogin } from '@/libs/redux/slices/user.slice';
+import { imageSrcUser } from '@/utils/imagerender';
 
 function EditProfileForm() {
   const router = useRouter();
@@ -102,7 +103,7 @@ function EditProfileForm() {
       console.log('User object:', user);
 
       const imgSrc = user.image_name
-        ? `http://localhost:8000/api/users/image/${user.image_name}`
+        ? `${imageSrcUser}${user.image_name}`
         : null;
 
       console.log('Image source:', imgSrc);
@@ -150,7 +151,7 @@ function EditProfileForm() {
   };
 
   return (
-    <div className="tracking-tighter">
+    <div className="tracking-tighter max-w-xl">
       {/* HEADER */}
       <div className=" ">
         <div className="py-4">

@@ -5,6 +5,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useAppDispatch, useAppSelector } from '@/app/hooks';
 import { logout } from '@/libs/redux/slices/user.slice';
 import { User } from '@/models/user.model';
+import { imageSrcUser } from '@/utils/imagerender';
 type Props = {};
 
 export const Header = () => {
@@ -68,7 +69,7 @@ export const Header = () => {
 
   return (
     <div>
-      <div className="navbar bg-base-100 ">
+      <div className="navbar bg-base-100 border-b border-zinc-200">
         <div className="flex justify-between w-screen px-3 lg:px-10">
           <a href="/">
             <img
@@ -109,10 +110,7 @@ export const Header = () => {
                   <div className="w-full rounded-full flex items-center justify-center">
                     {loggedinUser.first_name ? (
                       <img
-                        src={
-                          'https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.jpg' ||
-                          'https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.jpg'
-                        }
+                        src={`${imageSrcUser}${loggedinUser.image_name}`}
                         alt="User Avatar"
                         className="w-full h-full object-cover"
                       />
