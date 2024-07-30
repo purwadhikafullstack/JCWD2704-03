@@ -266,11 +266,17 @@ export class UserController {
 
   async editUserProfile(req: Request, res: Response, next: NextFunction) {
     try {
-      const updatedUser = await usersServices.editUserProfile(req);
-      res.status(201).send({
-        message: 'User profile data has been updated',
-        updatedUser,
-      });
+      const result = await usersServices.editUserProfile(req);
+      res
+        .status(200)
+        .json({
+          message: 'User profile data has been updated',
+          user: result.user,
+          token: result.token,
+        })
+        .cookie('access_token', result.token, {
+          secure: process.env.NODE_ENV === 'production',
+        });
     } catch (error) {
       next(error);
     }
@@ -284,6 +290,19 @@ export class UserController {
       }
       res.set('Content-Type', 'image/png');
       res.send(blob);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async getProfileByTenantId(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { id } = req.params;
+      const data = await usersServices.getProfileByTenantId(req);
+      res.status(200).json({
+        data,
+        message: 'Fetching profile successful',
+      });
     } catch (error) {
       next(error);
     }

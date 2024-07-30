@@ -9,7 +9,9 @@ export type TUser = {
   last_name: string | null;
   role: Role;
   isVerified: boolean | null;
+  isRequestingEmailChange?: boolean | null;
   image?: Buffer | null;
+  image_name?: string | null;
   createdAt?: Date;
   updatedAt?: Date;
 };

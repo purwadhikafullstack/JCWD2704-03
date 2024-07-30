@@ -16,12 +16,18 @@ export const userSlice = createSlice({
   initialState: initialUser as User | null,
   reducers: {
     login: (state, action: PayloadAction<User>) => {
-      return { ...state, ...action.payload }; // return the new state directly
+      return { ...state, ...action.payload };
+    },
+    updateProfile: (state, action: PayloadAction<Partial<User>>) => {
+      if (state) {
+        return { ...state, ...action.payload };
+      }
+      return state;
     },
     logout: (state) => {
       deleteCookie('access_token');
       deleteCookie('refresh_token');
-      return initialUser; // return initial state on logout
+      return initialUser;
     },
   },
 });
@@ -31,8 +37,11 @@ export const keepLogin = () => {
     try {
       const token = getCookie('access_token');
       if (token) {
-        dispatch(login(jwtDecode(token)));
+        // dispatch(login(jwtDecode(token)));
+        const decodedToken = jwtDecode<UserLoginPayload>(token);
+        dispatch(login(decodedToken.user)); // Ensure the payload matches your User structure
       }
+
       // const res = await axiosInstance().get("/users", {
       //   params: { username: storage.username },
       // });
@@ -44,11 +53,10 @@ export const keepLogin = () => {
       // return;
     } catch (err: any) {
       deleteCookie('access_token');
-      // window.location.reload();
-      // return err.message;
+      console.error('Error in keepLogin:', err.message);
     }
   };
 };
 
-export const { login, logout } = userSlice.actions;
+export const { login, updateProfile, logout } = userSlice.actions;
 export default userSlice.reducer;

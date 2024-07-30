@@ -188,6 +188,8 @@ class AuthService {
       isVerified: true,
       password: true,
       role: true,
+      image_name: true,
+      isRequestingEmailChange: true,
     };
 
     const data = await prisma.user.findFirst({
@@ -216,6 +218,8 @@ class AuthService {
       role: data.role,
       createdAt: data.createdAt,
       updatedAt: data.updatedAt,
+      image_name: data.image_name,
+      isRequestingEmailChange: data.isRequestingEmailChange,
     };
 
     delete userData.password;
@@ -248,6 +252,8 @@ class AuthService {
       isVerified: true,
       password: true,
       role: true,
+      image_name: true,
+      isRequestingEmailChange: true,
     };
 
     const data = await prisma.user.findFirst({
@@ -275,9 +281,12 @@ class AuthService {
       role: data.role,
       createdAt: data.createdAt,
       updatedAt: data.updatedAt,
+      image_name: data.image_name,
+      isRequestingEmailChange: data.isRequestingEmailChange,
     };
 
     delete userData.password;
+    delete userData.image;
 
     const accessToken = createToken(userData, '1hr');
     const refreshToken = createToken({ id: userData.id }, '1hr');

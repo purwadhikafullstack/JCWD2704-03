@@ -50,11 +50,10 @@ export class PropertyRouter {
       verifyTenant,
       this.propertyController.getAllPropertyByTenantId,
     );
-
-    // this.router.get(
-    //   '/room/image/:roomId',
-    //   this.propertyController.renderPicRoom,
-    // );
+    this.router.get(
+      '/prop/:id',
+      this.propertyController.getProfilePropertyByTenantId,
+    );
     this.router.post(
       '/',
       verifyUser,

@@ -125,6 +125,26 @@ class PropertyService {
     }
   }
 
+  async getProfilePropertyByTenantId(req: Request) {
+    try {
+      const { id } = req.params;
+
+      const properties = await prisma.property.findMany({
+        where: { tenant_id: id, deletedAt: null },
+
+        include: {
+          RoomCategory: true,
+        },
+      });
+
+      console.log('Retrieved properties:', properties);
+      return properties;
+    } catch (error) {
+      console.error('Error fetching properties:', error);
+      throw error;
+    }
+  }
+
   async getAllRoom(req: Request) {
     const { id } = req.params;
     const rooms = await prisma.room.findMany({
@@ -244,6 +264,7 @@ class PropertyService {
 
     return room;
   }
+
   async getPropertyDetailHost(req: Request) {
     const { propertyId } = req.params;
 

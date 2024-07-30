@@ -11,6 +11,7 @@ import { render } from 'mustache';
 import { prisma } from '../libs/prisma';
 import type { Prisma } from '@prisma/client';
 import sharp from 'sharp';
+import shortid from 'shortid';
 
 class UserService {
   async userRegisterEmail(req: Request) {
@@ -246,10 +247,9 @@ class UserService {
     }
 
     const { email, first_name, last_name, password } = req.body;
-    const file = req.file; // Assuming image is sent as a file
+    const file = req.file;
 
     try {
-      // Fetch current user data
       const user = await prisma.user.findUnique({
         where: { id: userId },
       });
@@ -258,22 +258,19 @@ class UserService {
         throw new Error('User not found');
       }
 
-      // Prepare data to update conditionally
       const updatedData: Prisma.UserUpdateInput = {};
-
-      console.log('test 1');
 
       if (email && email !== user.email) {
         console.log('test 2');
 
         updatedData.email = email;
-        updatedData.isVerified = false; // Reset verification status
+        updatedData.isVerified = false;
+        updatedData.isRequestingEmailChange = true;
 
-        // Send verification email
         console.log('Preparing to send verification email to:', email);
         const sentEmail = await this.sendingEmail(
           user.id,
-          email, // Use updated email here
+          email,
           '/../templates/verification.html',
           'Confirm Your Email Address For Atcasa',
           'verify',
@@ -298,20 +295,43 @@ class UserService {
       }
 
       if (file) {
-        // Process and save image using sharp
         const buffer = await sharp(file.buffer).png().toBuffer();
         updatedData.image = buffer;
+        const imageName = shortid.generate();
+        updatedData.image_name = imageName;
         console.log('Image updated');
       }
 
-      // Update user in the database
       const updatedUser = await prisma.user.update({
         where: { id: userId },
         data: updatedData,
       });
 
       console.log('Updated User:', updatedUser);
-      return updatedUser;
+
+      const updatedUserInfo = await prisma.user.findUnique({
+        select: {
+          id: true,
+          email: true,
+          isVerified: true,
+          first_name: true,
+          last_name: true,
+          isRequestingEmailChange: true,
+          image_name: true,
+          role: true,
+        },
+        where: { id: userId },
+      });
+
+      const newToken = createToken(
+        {
+          ...updatedUserInfo,
+          type: 'access-token',
+        },
+        '15m',
+      );
+
+      return { user: updatedUserInfo, token: newToken };
     } catch (error) {
       console.error('Error in editUserProfile:', error);
       throw error;
@@ -319,19 +339,29 @@ class UserService {
   }
 
   async renderPicUser(req: Request) {
+    const imageName = req.params.imageName;
     const data = await prisma.user.findUnique({
       where: {
-        id: req.params.id,
+        image_name: imageName,
       },
     });
+    return data?.image ?? null;
+  }
 
-    // if (!req.user?.id) {
-    //   throw new Error('User ID is missing');
-    // }
+  async getProfileByTenantId(req: Request) {
+    const { id } = req.params;
 
-    console.log(data?.id);
+    const user = await prisma.user.findUnique({
+      where: { id },
+    });
 
-    return data?.image; // Assuming you want to return the user's profile picture
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    delete (user as any).image;
+
+    return user;
   }
 }
 

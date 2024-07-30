@@ -43,7 +43,8 @@ export class UserRouter {
       blobUploader().single('image'),
       this.userController.editUserProfile,
     );
-    this.router.get('/image/:id', this.userController.renderPicUser);
+    this.router.get('/image/:imageName', this.userController.renderPicUser);
+    this.router.get('/pr/:id', this.userController.getProfileByTenantId);
   }
 
   getRouter(): Router {

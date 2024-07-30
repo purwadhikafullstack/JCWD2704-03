@@ -25,6 +25,11 @@ export const Header = () => {
     router.push('/auth/login/user');
   };
 
+  const loginTenantButton = (event: React.MouseEvent) => {
+    event.preventDefault();
+    router.push('/auth/login/tenant');
+  };
+
   const userRegisterButton = (event: React.MouseEvent) => {
     event.preventDefault();
     router.push('/auth/signup/user');
@@ -144,15 +149,24 @@ export const Header = () => {
                     ) : (
                       <>
                         <li>
+                          <button onClick={loginTenantButton}>
+                            Log in as host
+                          </button>
+                        </li>
+
+                        <li>
+                          <button onClick={loginButton} className="">
+                            Log in as guest
+                          </button>
+                        </li>
+
+                        <li>
                           <button
                             onClick={userRegisterButton}
                             className="font-semibold"
                           >
                             Sign up
                           </button>
-                        </li>
-                        <li>
-                          <button onClick={loginButton}>Log in</button>
                         </li>
                       </>
                     )}
