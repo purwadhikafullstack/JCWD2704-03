@@ -15,7 +15,7 @@ export function CountComponent({ order }: { order: Order }) {
   const calculateExpiration = () => {
     if (!order) return '';
     const creationDate = dayjs(order.createdAt);
-    const expirationDate = creationDate.add(5, 'minute');
+    const expirationDate = creationDate.add(60, 'minute');
     return expirationDate.format('h:mm A [on] DD MMMM YYYY');
   };
 
@@ -25,7 +25,7 @@ export function CountComponent({ order }: { order: Order }) {
   useEffect(() => {
     if (order) {
       const createdAt = dayjs(order.createdAt);
-      const expirationTime = createdAt.add(5, 'minute');
+      const expirationTime = createdAt.add(60, 'minute');
       const interval = setInterval(() => {
         const now = dayjs();
         const remainingTime = expirationTime.diff(now);
@@ -48,7 +48,7 @@ export function CountComponent({ order }: { order: Order }) {
   }, [order]);
   return (
     <>
-      {dayjs(order.createdAt).add(5, 'minute').diff(dayjs()) > 0 ? (
+      {dayjs(order.createdAt).add(60, 'minute').diff(dayjs()) > 0 ? (
         <>
           <div>
             Complete your payment before{' '}

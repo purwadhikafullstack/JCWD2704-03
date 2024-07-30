@@ -51,6 +51,11 @@ export const Header = () => {
     router.push('/auth/signup/tenant');
   };
 
+  const handleSettings = (event: React.MouseEvent) => {
+    event.preventDefault();
+    router.push('/profile/settings');
+  };
+
   const handleClickOutside = (event: MouseEvent) => {
     if (
       dropdownRef.current &&
@@ -108,7 +113,7 @@ export const Header = () => {
                   }}
                 >
                   <div className="w-full rounded-full flex items-center justify-center">
-                    {loggedinUser.first_name ? (
+                    {loggedinUser.image_name ? (
                       <img
                         src={`${imageSrcUser}${loggedinUser.image_name}`}
                         alt="User Avatar"
@@ -141,20 +146,23 @@ export const Header = () => {
                         </li>
 
                         <li>
+                          <button onClick={handleSettings}>Settings</button>
+                        </li>
+
+                        <li>
                           <button onClick={handleLogout}>Logout</button>
                         </li>
                       </>
                     ) : (
                       <>
                         <li>
-                          <button onClick={loginTenantButton}>
-                            Log in as host
-                          </button>
-                        </li>
-
-                        <li>
                           <button onClick={loginButton} className="">
                             Log in as guest
+                          </button>
+                        </li>
+                        <li>
+                          <button onClick={loginTenantButton}>
+                            Log in as host
                           </button>
                         </li>
 

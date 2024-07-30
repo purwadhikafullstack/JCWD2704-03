@@ -14,6 +14,10 @@ class PropertyService {
     // Temukan kamar dengan ID yang diberikan
     const room = await prisma.room.findUnique({
       where: { id: roomId },
+      include: {
+        roomCategory: true,
+        property: true,
+      },
     });
 
     //   if (!room) {
@@ -24,12 +28,21 @@ class PropertyService {
     const bookings = await prisma.orderRoom.findMany({
       where: {
         room_id: roomId,
+        room: {
+          deletedAt: null,
+        },
         order: {
           AND: [
             { checkIn_date: { lte: checkOut } },
             { checkOut_date: { gte: checkIn } },
             { status: { not: 'cancelled' } },
           ],
+          property: {
+            deletedAt: null, // Pastikan properti tidak dihapus
+          },
+          RoomCategory: {
+            deletedAt: null, // Pastikan kategori kamar tidak dihapus
+          },
         },
       },
     });
@@ -56,8 +69,13 @@ class PropertyService {
       const properties = await prisma.property.findMany({
         where: {
           city: { contains: city },
+          deletedAt: null,
           Room: {
             some: {
+              deletedAt: null, // Ensure the room is not deleted
+              roomCategory: {
+                deletedAt: null, // Ensure the room category is not deleted
+              },
               OrderRoom: {
                 none: {
                   order: {
@@ -74,6 +92,9 @@ class PropertyService {
         },
         include: {
           Room: {
+            where: {
+              deletedAt: null, // Filter rooms that are not deleted
+            },
             include: {
               OrderRoom: {
                 include: {
@@ -85,6 +106,7 @@ class PropertyService {
           tenant: true,
         },
       });
+
       return properties;
     } catch (error) {
       console.error('Error searching properties:', error);
@@ -380,7 +402,7 @@ class PropertyService {
     const checkOutDateObj = new Date(checkOutValue);
 
     const data = await prisma.property.findFirst({
-      where: { name: formattedName },
+      where: { name: formattedName, deletedAt: null },
       select: {
         id: true,
         name: true,
@@ -405,6 +427,7 @@ class PropertyService {
                 },
               },
               where: {
+                deletedAt: null,
                 // Hanya sertakan kamar yang tidak memiliki pesanan yang bertentangan
                 OrderRoom: {
                   none: {
@@ -428,6 +451,7 @@ class PropertyService {
               },
             },
           },
+          where: { deletedAt: null },
         },
       },
     });

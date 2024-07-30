@@ -31,7 +31,7 @@ function PropertyDetail() {
       const baseUrl =
         process.env.NEXT_PUBLIC_BASE_API_URL || 'http://localhost:8000/api/';
 
-      const url = `${baseUrl}properties/${name}?checkIn=${checkIn}&checkOut=${checkOut}`;
+      const url = `${baseUrl}properties/detail/${name}?checkIn=${checkIn}&checkOut=${checkOut}`;
 
       console.log(`Fetching property details from: ${url}`);
 
@@ -126,7 +126,7 @@ function PropertyDetail() {
       <div className="w-full h-80 px-4 relative">
         {property && (
           <img
-            src={`${imageSrc}${property.id}`}
+            src={`${imageSrc}${property.pic_name}`}
             alt="Property Image"
             className="object-cover w-full h-full rounded-xl"
           />
@@ -176,7 +176,7 @@ function PropertyDetail() {
               </div>
               {roomCategory.Room.length > 0 && (
                 <button
-                  className="btn btn-primary"
+                  className="btn btn-dark"
                   onClick={() =>
                     handleReserve(
                       roomCategory.id,

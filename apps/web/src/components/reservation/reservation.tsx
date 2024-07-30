@@ -16,24 +16,32 @@ function Reservation() {
   const [rooms, setRooms] = useState<RoomCategory | null>(null);
   const [order, setOrder] = useState<Order | null>(null);
   const [roomCount, setRoomCount] = useState(1);
-  const [paymentMethod, setPaymentMethod] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState<string | null>(null);
   const total_room = roomCount;
   const buyer = useAppSelector((state) => state.auth) as User;
   const searchParams = useSearchParams();
-
   const buyerId = buyer.id;
   const checkInDate = searchParams.get('checkIn') || '';
   const checkOutDate = searchParams.get('checkOut') || '';
   const roomIds = searchParams.get('Ids')?.replace(/-/g, ',').split(',') || [];
   const total_price = parseFloat(searchParams.get('total') || '0');
+
+  console.log(checkInDate, checkOutDate);
+
   console.log('ini roomIds', roomIds);
+
   useEffect(() => {
     const fetchRoom = async () => {
       try {
+        console.log(id);
+
         const response = await axiosInstance().get(
-          '/api/properties/room/${id}',
+          `http://localhost:8000/api/properties/room/${id}`,
         );
         const { data } = response.data;
+
+        console.log('Response:', response.data);
+
         setRooms(data);
         console.log(data);
       } catch (error) {
@@ -43,12 +51,6 @@ function Reservation() {
 
     fetchRoom();
   }, [id]);
-
-  const handlePaymentMethodChange = (
-    e: React.ChangeEvent<HTMLSelectElement>,
-  ) => {
-    setPaymentMethod(e.target.value);
-  };
 
   const checkIn = new Date(checkInDate);
   const checkOut = new Date(checkOutDate);
@@ -61,6 +63,7 @@ function Reservation() {
   const price = rooms?.price ? rooms.price : rooms?.peak_price;
   const totalPrice = (total_price || 0) * durationInDays;
   console.log('hargaa', rooms);
+
   const handlePay = async () => {
     const data = {
       user_id: buyerId,
@@ -69,9 +72,10 @@ function Reservation() {
       roomCategory_id: rooms?.id,
       checkIn_date: checkInDate,
       checkOut_date: checkOutDate,
-      payment_method: paymentMethod,
+      payment_method: paymentMethod || null,
       total_price: totalPrice,
     };
+
     console.log('data to be sent:', data);
     try {
       console.log(buyerId);
@@ -85,13 +89,31 @@ function Reservation() {
       setOrder(orderData);
       const orderId = orderData.id;
       console.log('ID from recent order:', orderId);
-      router.push(`/invoice/${orderId}`);
+      const dataMidtrans = {
+        order_id: orderId,
+        total_price: totalPrice,
+      };
+      const createMidtrans = await axiosInstance()
+        .post(`/api/reservations/createSnapMidtrans`, dataMidtrans)
+        .then((res) => res.data)
+        .catch((error) => console.log(error));
+      console.log(createMidtrans);
+      router.push(`/invoice?order_id=${orderId}`);
     } catch (error) {
       console.error('Error placing order:', error);
     }
   };
-  const isPayDisabled = !checkInDate || !checkOutDate || !paymentMethod;
-
+  const handlePaymentMethodChange = (
+    e: React.ChangeEvent<HTMLSelectElement>,
+  ) => {
+    const selectedValue = e.target.value;
+    if (selectedValue === 'Gopay' || selectedValue === 'Qris') {
+      setPaymentMethod(null);
+    } else {
+      setPaymentMethod(selectedValue);
+    }
+  };
+  const isPayDisabled = !checkInDate || !checkOutDate;
   return (
     <div className="max-w-7xl m-auto h-screen w-screen">
       <div>
@@ -122,7 +144,6 @@ function Reservation() {
             </div>
           </div>
         </div>
-
         <div className="md:w-1/3">
           <div className="relative flex-row md:space-x-5 space-y-3 md:space-y-0 rounded-xl shadow-sm p-3 max-w-xs md:max-w-3xl mx-auto border border-white bg-white">
             <div className="font-semibold text-xl">Order summary</div>
@@ -150,7 +171,7 @@ function Reservation() {
               </label>
               <select
                 id="paymentMethod"
-                value={paymentMethod}
+                value={paymentMethod ?? ''}
                 onChange={handlePaymentMethodChange}
                 className="w-full mt-2 mb-4 p-2 border border-gray-300 rounded"
               >
@@ -159,6 +180,8 @@ function Reservation() {
                 </option>
                 <option value="BCA">BCA</option>
                 <option value="MANDIRI">MANDIRI</option>
+                <option value={'gopay'}>Gopay</option>
+                <option value={'qris'}>Qris</option>
               </select>
             </div>
             <div>

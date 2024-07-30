@@ -43,8 +43,6 @@ function MyProperty() {
     }
   };
 
-  if (loading) return <p>Loading...</p>;
-
   return (
     <div>
       <div>

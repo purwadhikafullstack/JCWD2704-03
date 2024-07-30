@@ -20,7 +20,7 @@ async function fetchResults(searchParams: SearchParams) {
     process.env.NEXT_PUBLIC_BASE_API_URL || 'http://localhost:8000/api/';
 
   // Construct the URL using template literals
-  const url = `${baseUrl}properties/${name}?checkIn=${checkIn}&checkOut=${checkOut}`;
+  const url = `http://localhost:8000/api/properties/search?city=${city}&checkIn=${checkIn}&checkOut=${checkOut}`;
 
   try {
     const response = await axiosInstance().get(url);
@@ -41,6 +41,8 @@ function SearchPage({ searchParams }: { searchParams: SearchParams }) {
   const checkOut = searchParams.checkOut || reduxCheckOut;
 
   useEffect(() => {
+    console.log('fetching result starts');
+
     const fetchResultsAndSetState = async () => {
       const finalSearchParams = {
         city: searchParams.city,
@@ -52,6 +54,7 @@ function SearchPage({ searchParams }: { searchParams: SearchParams }) {
     };
 
     fetchResultsAndSetState();
+    console.log('test');
   }, [searchParams, checkIn, checkOut]);
 
   if (!searchParams.city || !checkIn || !checkOut) {
@@ -81,9 +84,9 @@ function SearchPage({ searchParams }: { searchParams: SearchParams }) {
                 className="flex space-y-2 justify-between space-x-4 p-5 border rounded-lg"
               >
                 <img
-                  src={`${imageSrc}${property.id}` || '/placeholder.jpg'}
+                  src={`${imageSrc}${property.pic_name}` || '/placeholder.jpg'}
                   alt="Property Image"
-                  className="h-44 w-44 rounded-lg"
+                  className="h-44 w-44 rounded-lg object-cover"
                 />
 
                 <div className="flex flex-1 space-x-5 justify-between">

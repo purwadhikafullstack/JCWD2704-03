@@ -2,6 +2,10 @@ import { Request } from 'express';
 import { prisma } from '../libs/prisma';
 import sendBookingReminders from '@/cron/reminder';
 import { startExpireDenyOrdersCron } from '@/cron/denyOrder';
+import { transporter } from '@/libs/nodemailer';
+import fs from 'fs';
+import path from 'path';
+import { render } from 'mustache';
 class StatusService {
   async changeStatusOrderByTenant(req: Request) {
     const { orderId } = req.params;
@@ -17,58 +21,32 @@ class StatusService {
       startExpireDenyOrdersCron();
       cronStarted = true;
     }
+    const templatePath = path.join(__dirname, '../templates/deny.html');
+    let htmlTemplate = fs.readFileSync(templatePath, 'utf-8');
+    const orderDetails = await prisma.order.findUnique({
+      where: { id: orderId },
+      include: { user: true, RoomCategory: true, property: true },
+    });
+    if (orderDetails) {
+      const userEmail = orderDetails.user.email;
+      const propertyName = orderDetails.property.name;
+      const roomType = orderDetails.RoomCategory?.type || 'Unknown Room Type';
+      const checkInDate = orderDetails.checkIn_date.toLocaleDateString();
+      const checkOutDate = orderDetails.checkOut_date.toLocaleDateString();
+      const html = htmlTemplate
+        .replace(/{propertyName}/g, propertyName)
+        .replace(/{checkInDate}/g, checkInDate)
+        .replace(/{checkOutDate}/g, checkOutDate)
+        .replace(/{roomType}/g, roomType);
+      const krimEmail = transporter.sendMail({
+        from: 'purwadhika2704@gmail.com',
+        to: userEmail,
+        subject: 'Booking Denied',
+        html,
+      });
+      console.log('kiiriim email', krimEmail);
+    }
 
-    // setTimeout(
-    //   async () => {
-    //     const expireOrder = await prisma.order.findUnique({
-    //       where: { id: orderId },
-    //       include: {
-    //         OrderRoom: {
-    //           // Mengambil relasi OrderRoom
-    //           include: {
-    //             room: true, // Mengambil data Room dari OrderRoom
-    //           },
-    //         },
-    //       },
-    //     });
-    //     if (expireOrder && expireOrder.status === 'pending_payment') {
-    //       // Ambil semua room_id dari OrderRoom
-    //       const room_ids = expireOrder.OrderRoom.map(
-    //         (orderRoom) => orderRoom.room_id,
-    //       );
-
-    //       if (room_ids.length === 0) {
-    //         throw new Error(
-    //           'No rooms found for the order during cancellation process',
-    //         );
-    //       }
-    //       // Fetch rooms emeriksa apakah semua kamar yang terdaftar ditemukan di database.
-    //       const currentRooms = await prisma.room.findMany({
-    //         where: {
-    //           id: { in: room_ids },
-    //         },
-    //       });
-
-    //       if (currentRooms.length !== room_ids.length) {
-    //         throw new Error(
-    //           'One or more rooms not found during cancellation process',
-    //         );
-    //       }
-    //       // Cancel the order
-    //       await prisma.$transaction([
-    //         prisma.order.update({
-    //           where: { id: expireOrder.id },
-    //           data: {
-    //             status: 'cancelled',
-    //             checkIn_date: new Date('1970-01-01T00:00:00Z'),
-    //             checkOut_date: new Date('1970-01-01T00:00:00Z'),
-    //           },
-    //         }),
-    //       ]);
-    //     }
-    //   },
-    //   60 * 60 * 1000,
-    // );
     return updateStatus;
   }
   async cancelOrderByTenant(req: Request) {
@@ -81,6 +59,33 @@ class StatusService {
         checkOut_date: new Date('1970-01-01T00:00:00Z'),
       },
     });
+    const orderDetails = await prisma.order.findUnique({
+      where: { id: orderId },
+      include: {
+        user: true,
+        property: true,
+        RoomCategory: true,
+      },
+    });
+    const templatePath = path.join(__dirname, '../templates/cancelled.html');
+    let htmlTemplate = fs.readFileSync(templatePath, 'utf-8');
+
+    if (orderDetails) {
+      const userEmail = orderDetails.user.email;
+      const propertyName = orderDetails.property.name;
+      const roomType = orderDetails.RoomCategory?.type || 'Unknown Room Type';
+      const html = htmlTemplate
+        .replace(/{propertyName}/g, propertyName)
+        .replace(/{roomType}/g, roomType);
+
+      transporter.sendMail({
+        from: 'purwadhika2704@gmail.com',
+        to: userEmail,
+        subject: 'Booking Cancelled',
+        html,
+      });
+      console.log('kiiriim email', userEmail);
+    }
     return updateStatus;
   }
   async cancelOrderByUser(req: Request) {
@@ -113,7 +118,10 @@ class StatusService {
     });
     if (updateStatus) await sendBookingReminders(orderId);
     const isDataReviewExist = await prisma.review.findFirst({
-      where: { user_id: order.user_id, property_id: order.property_id },
+      where: {
+        user_id: order.user_id,
+        property_id: order.property_id,
+      },
     });
 
     if (!isDataReviewExist) {
@@ -126,6 +134,36 @@ class StatusService {
           rating: 0,
         },
       });
+    }
+    const templatePath = path.join(__dirname, '../templates/confirm.html');
+    let htmlTemplate = fs.readFileSync(templatePath, 'utf-8');
+    const orderDetails = await prisma.order.findUnique({
+      where: { id: orderId },
+      include: {
+        user: true,
+        property: true,
+        RoomCategory: true,
+      },
+    });
+    if (orderDetails) {
+      const userEmail = orderDetails.user.email;
+      const propertyName = orderDetails.property.name;
+      const roomType = orderDetails.RoomCategory?.type || 'Unknown Room Type';
+      const checkInDate = orderDetails.checkIn_date.toLocaleDateString();
+      const checkOutDate = orderDetails.checkOut_date.toLocaleDateString();
+      const html = htmlTemplate
+        .replace(/{propertyName}/g, propertyName)
+        .replace(/{checkInDate}/g, checkInDate)
+        .replace(/{checkOutDate}/g, checkOutDate)
+        .replace(/{roomType}/g, roomType);
+
+      const krimEmail = transporter.sendMail({
+        from: 'purwadhika2704@gmail.com',
+        to: userEmail,
+        subject: 'Booking Confirmation',
+        html,
+      });
+      console.log('kiiriim email', krimEmail);
     }
     return updateStatus;
   }

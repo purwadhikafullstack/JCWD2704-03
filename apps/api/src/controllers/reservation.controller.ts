@@ -120,31 +120,26 @@ class ReservationController {
       next(error);
     }
   }
-  async addReview(req: Request, res: Response, next: NextFunction) {
+
+  async creatingSnapMidtrans(req: Request, res: Response, next: NextFunction) {
     try {
-      const data = await reviewService.addReview(req);
+      let token = await reservationsServices.createSnapMidtrans(req);
       return res.send({
-        data,
+        message: ' snap created',
+        token: token,
       });
     } catch (error) {
       next(error);
     }
   }
-  async getReviewByOrderId(req: Request, res: Response, next: NextFunction) {
+
+  async transferNotif(req: Request, res: Response, next: NextFunction) {
+    console.log('transferNotif masuk');
     try {
-      const data = await reviewService.getReviewByOrderId(req);
-      return res.send({
-        data,
-      });
-    } catch (error) {
-      next(error);
-    }
-  }
-  async getReviewByPropertyId(req: Request, res: Response, next: NextFunction) {
-    try {
-      const data = await reviewService.getReviewByOrderId(req);
-      return res.send({
-        data,
+      await reservationsServices.transferNotif(req);
+      return res.status(200).json({
+        status: 'success',
+        message: 'OK',
       });
     } catch (error) {
       next(error);

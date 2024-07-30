@@ -2,7 +2,8 @@ import { blobUploader } from '@/libs/multer';
 import reservationController from '../controllers/reservation.controller';
 import { Router } from 'express';
 import { verifyUser } from '@/middlewares/auth.middleware';
-import { verifyBuyer } from '@/middlewares/role.middleware';
+import { verifyBuyer, verifyTenant } from '@/middlewares/role.middleware';
+import { verify } from 'jsonwebtoken';
 class ReservationRouter {
   private router: Router;
   constructor() {
@@ -12,8 +13,18 @@ class ReservationRouter {
   initializedRoutes() {
     this.router.get('/', reservationController.getAll);
     this.router.get('/:orderId', reservationController.getOrderByOrderId);
-    this.router.get('/user/myOrder', reservationController.getOrderByUserId);
-    this.router.get('/tenant/order', reservationController.getOrderBySellerId);
+    this.router.get(
+      '/user/myOrder',
+      verifyUser,
+      verifyBuyer,
+      reservationController.getOrderByUserId,
+    );
+    this.router.get(
+      '/tenant/order',
+      verifyUser,
+      verifyTenant,
+      reservationController.getOrderBySellerId,
+    );
     this.router.post(
       '/',
       verifyUser,
@@ -45,10 +56,13 @@ class ReservationRouter {
       '/payment/image/:id',
       reservationController.renderPaymentProof,
     );
-    this.router.post('/addReview', reservationController.addReview);
-    this.router.get(
-      '/review/:orderId',
-      reservationController.getReviewByOrderId,
+    this.router.post(
+      '/createSnapMidtrans',
+      reservationController.creatingSnapMidtrans,
+    );
+    this.router.post(
+      '/updateTransaction/',
+      reservationController.transferNotif,
     );
   }
   getRouter() {

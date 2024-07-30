@@ -12,13 +12,7 @@ ALTER TABLE `OrderRoom` ADD COLUMN `createdAt` DATETIME(3) NOT NULL DEFAULT CURR
 ALTER TABLE `Room` ADD COLUMN `deletedAt` DATETIME(3) NULL;
 
 -- AlterTable
-ALTER TABLE `properties` ADD COLUMN `deletedAt` DATETIME(3) NULL,
-    ADD COLUMN `pic_name` VARCHAR(191) NULL;
+ALTER TABLE `properties` ADD COLUMN `deletedAt` DATETIME(3) NULL;
 
 -- AlterTable
-ALTER TABLE `rooms` ADD COLUMN `deletedAt` DATETIME(3) NULL,
-    ADD COLUMN `pic_name` VARCHAR(191) NULL;
-
--- AlterTable
-ALTER TABLE `users` ADD COLUMN `image_name` VARCHAR(191) NULL,
-    ADD COLUMN `isRequestingEmailChange` BOOLEAN NULL DEFAULT false;
+ALTER TABLE `rooms` ADD COLUMN `deletedAt` DATETIME(3) NULL;

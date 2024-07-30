@@ -5,13 +5,24 @@ import { FaClipboardList } from 'react-icons/fa';
 import { FaHouse } from 'react-icons/fa6';
 import { IoLogOut, IoPerson } from 'react-icons/io5';
 import { RxHamburgerMenu } from 'react-icons/rx';
+import { logout } from '@/libs/redux/slices/user.slice';
+import { useAppDispatch } from '@/app/hooks';
+import { useRouter } from 'next/navigation';
 
 function Sidebar() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-
+  const dispatch = useAppDispatch();
+  const router = useRouter();
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
-
+  const handleLogout = () => {
+    dispatch(logout());
+    router.push('/');
+    window.location.reload();
+  };
+  const handleHome = () => {
+    router.push('/');
+  };
   return (
     <div className="flex">
       <span
@@ -29,6 +40,7 @@ function Sidebar() {
               src="https://i.ibb.co.com/wz56gwV/ATCASA-2.png"
               alt="Logo"
               width={150}
+              onClick={handleHome}
             />
             <IoMdClose
               className="cursor-pointer ml-auto lg:hidden"
@@ -54,7 +66,10 @@ function Sidebar() {
         </div>
         <div className="my-4 bg-gray-600 h-[1px]"></div>
 
-        <div className="p-2.5 mt-3 flex items-center rounded-md px-4 duration-300 cursor-pointer hover:bg-blue-600 text-white">
+        <div
+          className="p-2.5 mt-3 flex items-center rounded-md px-4 duration-300 cursor-pointer hover:bg-blue-600 text-white"
+          onClick={handleLogout}
+        >
           <IoLogOut />
           <span className="text-[15px] ml-4 text-gray-200 font-bold">
             Logout

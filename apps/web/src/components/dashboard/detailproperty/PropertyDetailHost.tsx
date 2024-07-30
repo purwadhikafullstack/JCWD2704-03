@@ -150,6 +150,10 @@ function PropertyDetailHost() {
     }
   };
 
+  const handleReviewProperty = (propertyId: string) => {
+    router.push(`/dashboard/my-property/review/${propertyId}`);
+  };
+
   return (
     <div>
       <div className="w-full h-80 px-4 relative">
@@ -198,6 +202,12 @@ function PropertyDetailHost() {
         </button>
         <button className="btn btn-dark" onClick={handleAddRoomCategory}>
           Add room category
+        </button>
+        <button
+          className="text-blue-500"
+          onClick={() => property?.id && handleReviewProperty(property.id)}
+        >
+          See Reviews
         </button>
       </div>
       {property.RoomCategory && property.RoomCategory.length > 0 ? (
