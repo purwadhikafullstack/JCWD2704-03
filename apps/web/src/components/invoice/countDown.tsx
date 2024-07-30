@@ -15,7 +15,7 @@ export function CountComponent({ order }: { order: Order }) {
   const calculateExpiration = () => {
     if (!order) return '';
     const creationDate = dayjs(order.createdAt);
-    const expirationDate = creationDate.add(5, 'minute');
+    const expirationDate = creationDate.add(60, 'minute');
     return expirationDate.format('h:mm A [on] DD MMMM YYYY');
   };
 
@@ -25,7 +25,7 @@ export function CountComponent({ order }: { order: Order }) {
   useEffect(() => {
     if (order) {
       const createdAt = dayjs(order.createdAt);
-      const expirationTime = createdAt.add(5, 'minute');
+      const expirationTime = createdAt.add(60, 'minute');
       const interval = setInterval(() => {
         const now = dayjs();
         const remainingTime = expirationTime.diff(now);
@@ -48,7 +48,7 @@ export function CountComponent({ order }: { order: Order }) {
   }, [order]);
   return (
     <>
-      {dayjs(order.createdAt).add(5, 'minute').diff(dayjs()) > 0 ? (
+      {dayjs(order.createdAt).add(60, 'minute').diff(dayjs()) > 0 ? (
         <>
           <div>
             Complete your payment before{' '}
@@ -89,70 +89,3 @@ export function CountComponent({ order }: { order: Order }) {
     </>
   );
 }
-
-function FormPaymentProofComponent({ order }: { order: Order }) {
-  const [file, setFile] = useState<File | null>(null);
-  const router = useRouter();
-  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      setFile(e.target.files[0]);
-    }
-  };
-  const [message, setMessage] = useState('');
-  console.log('iddddd', order.id);
-  console.log('test', order.payment_method);
-
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (!file) {
-      await Swal.fire({
-        icon: 'error',
-        title: 'Oops...',
-        text: 'Please select a file to upload',
-      });
-      return;
-    }
-    const formData = new FormData();
-    formData.append('payment_proof', file);
-    try {
-      const response = await axiosInstance().patch(
-        `/api/reservations/${order.id}`,
-        formData,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        },
-      );
-      setMessage(response.data.message);
-      router.push('/success');
-    } catch (error) {
-      setMessage('Failed to upload payment proof. Please try again.');
-    }
-  };
-  return (
-    <form onSubmit={handleSubmit}>
-      <div className="flex flex-col gap-4 md:flex-row">
-        <div>
-          <input
-            type="file"
-            className="file-input file-input-bordered w-full max-w-xs"
-            disabled={dayjs(order.createdAt).add(5, 'minute').diff(dayjs()) < 0}
-            onChange={handleFileChange}
-          />
-        </div>
-
-        <div>
-          <button
-            className="btn btn-dark"
-            disabled={dayjs(order.createdAt).add(5, 'minute').diff(dayjs()) < 0}
-          >
-            Submit
-          </button>
-        </div>
-      </div>
-    </form>
-  );
-}
-
-export default FormPaymentProofComponent;

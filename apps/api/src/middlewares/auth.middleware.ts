@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
 import { verify } from 'jsonwebtoken';
 import { SECRET_KEY } from '../configs/config';
-import { TUser, TDecode } from '../models/users.model';
+import { TUser, TDecode } from '@/models/user.model';
 
 export const verifyUser = (req: Request, res: Response, next: NextFunction) => {
   try {

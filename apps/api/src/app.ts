@@ -12,10 +12,13 @@ import cors from 'cors';
 import { PORT, corsOptions } from './configs/config';
 import { UserRouter } from './routers/user.router';
 // import { SampleRouter } from './routers/sample.router';
-import reservationsRouter from './routers/reservation.router';
+import reservationRouter from './routers/reservation.router';
 import { PropertyRouter } from './routers/property.router';
+import { RoomRouter } from './routers/room.router';
+import { ReviewRouter } from './routers/review.router';
+import { SalesRouter } from './routers/sales.router';
 // import propertyRouter from './routers/property.router';
-
+const ngrok = require('ngrok');
 export default class App {
   private app: Express;
 
@@ -66,6 +69,10 @@ export default class App {
   private routes(): void {
     const userRouter = new UserRouter();
     const propertyRouter = new PropertyRouter();
+    const roomRouter = new RoomRouter();
+    const reviewRouter = new ReviewRouter();
+    const salesRouter = new SalesRouter();
+    // const reservationRouter = new ReservationRouter();
 
     this.app.get('/api', (req: Request, res: Response) => {
       res.send(`Hello, Purwadhika Student API!`);
@@ -75,7 +82,10 @@ export default class App {
 
     this.app.use('/api/users', userRouter.getRouter());
     this.app.use('/api/properties', propertyRouter.getRouter());
-    this.app.use('/api/reservations', reservationsRouter.getRouter());
+    this.app.use('/api/rooms', roomRouter.getRouter());
+    this.app.use('/api/reviews', reviewRouter.getRouter());
+    this.app.use('/api/reservations', reservationRouter.getRouter());
+    this.app.use('/api/sales', salesRouter.getRouter());
   }
 
   private configure(): void {

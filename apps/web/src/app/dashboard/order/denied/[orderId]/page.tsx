@@ -1,10 +1,10 @@
-import DetailProduct from '@/components/detailProperty/[id]/detailProp';
+import DeniedOrder from '@/components/dashboard/orderDenied';
 import React from 'react';
 
 function page() {
   return (
     <>
-      <DetailProduct />
+      <DeniedOrder />
     </>
   );
 }

@@ -6,10 +6,10 @@ interface PageProps {
     id: string;
   };
 }
-function page({ params: { id } }: PageProps) {
+function page() {
   return (
     <>
-      <Invoice id={id} />
+      <Invoice />
     </>
   );
 }

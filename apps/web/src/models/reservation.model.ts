@@ -1,5 +1,6 @@
 import { Property } from './property.model';
-import { Room } from './room.model';
+import { Review } from './review.modal';
+import { RoomCategory } from './roomCategory.model';
 import { User } from './user.model';
 
 export interface Order {
@@ -7,6 +8,7 @@ export interface Order {
   user_id: string;
   property_id: string;
   room_id: string;
+  roomCategory_id: string;
   checkIn_date: string;
   checkOut_date: string;
   total_room: number;
@@ -15,10 +17,12 @@ export interface Order {
   payment_proof: string;
   payment_date: string;
   status: string;
+  token_midTrans: string;
   createdAt: string;
   updatedAt: string;
   invoice_id: string;
-  room: Room;
+  RoomCategory: RoomCategory;
   property: Property;
   user: User;
+  review?: Review;
 }

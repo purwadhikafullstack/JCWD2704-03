@@ -1,19 +1,26 @@
 'use client';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-// import { notFound } from 'next/navigation';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/libs/redux/store';
 import { axiosInstance } from '@/libs/axios.config';
 import { Header } from '../Header';
 import Footer from '../Footer';
+import { imageSrc } from '@/utils/imagerender';
 
 export type SearchParams = {
   city: string;
-  checkIn: string;
-  checkOut: string;
+  checkIn?: string;
+  checkOut?: string;
 };
+
 async function fetchResults(searchParams: SearchParams) {
   const { city, checkIn, checkOut } = searchParams;
-  const url = `http://localhost:8000/api/properties/search?location=${city}&checkIn=${checkIn}&checkOut=${checkOut}`;
+  const baseUrl =
+    process.env.NEXT_PUBLIC_BASE_API_URL || 'http://localhost:8000/api/';
+
+  // Construct the URL using template literals
+  const url = `http://localhost:8000/api/properties/search?city=${city}&checkIn=${checkIn}&checkOut=${checkOut}`;
 
   try {
     const response = await axiosInstance().get(url);
@@ -26,17 +33,31 @@ async function fetchResults(searchParams: SearchParams) {
 
 function SearchPage({ searchParams }: { searchParams: SearchParams }) {
   const [results, setResults] = useState<any>({});
+  const { checkIn: reduxCheckIn, checkOut: reduxCheckOut } = useSelector(
+    (state: RootState) => state.checkInOut,
+  );
+
+  const checkIn = searchParams.checkIn || reduxCheckIn;
+  const checkOut = searchParams.checkOut || reduxCheckOut;
 
   useEffect(() => {
+    console.log('fetching result starts');
+
     const fetchResultsAndSetState = async () => {
-      const fetchedResults = await fetchResults(searchParams);
+      const finalSearchParams = {
+        city: searchParams.city,
+        checkIn,
+        checkOut,
+      };
+      const fetchedResults = await fetchResults(finalSearchParams);
       setResults(fetchedResults || {});
     };
 
     fetchResultsAndSetState();
-  }, [searchParams]);
+    console.log('test');
+  }, [searchParams, checkIn, checkOut]);
 
-  if (!searchParams.city || !searchParams.checkIn || !searchParams.checkOut) {
+  if (!searchParams.city || !checkIn || !checkOut) {
     return 'not found';
   }
 
@@ -50,15 +71,11 @@ function SearchPage({ searchParams }: { searchParams: SearchParams }) {
           <h2 className="pb-3">
             Date:
             <span className="italic ml-2">
-              {searchParams.checkIn} to {searchParams.checkOut}
+              {checkIn} to {checkOut}
             </span>
           </h2>
 
           <hr className="mb-5" />
-
-          {/* <h3 className="font-semibold text-xl">
-            {results.properties?.length || 'No results'}
-          </h3> */}
 
           <div className="space-y-2 mt-5">
             {results.properties?.map((property: any, index: number) => (
@@ -67,15 +84,15 @@ function SearchPage({ searchParams }: { searchParams: SearchParams }) {
                 className="flex space-y-2 justify-between space-x-4 p-5 border rounded-lg"
               >
                 <img
-                  src={property.pic || '/placeholder.jpg'}
+                  src={`${imageSrc}${property.pic_name}` || '/placeholder.jpg'}
                   alt="Property Image"
-                  className="h-44 w-44 rounded-lg"
+                  className="h-44 w-44 rounded-lg object-cover"
                 />
 
                 <div className="flex flex-1 space-x-5 justify-between">
                   <div>
                     <Link
-                      href={`/property/${property.id}`}
+                      href={`/property/${property.name.replace(/\s+/g, '-').toLowerCase()}?checkIn=${checkIn}&checkOut=${checkOut}`}
                       className="font-bold text-blue-500 hover:text-blue-600 hover:underline"
                     >
                       {property.name}
@@ -93,11 +110,11 @@ function SearchPage({ searchParams }: { searchParams: SearchParams }) {
                       </div>
                     </div>
 
-                    {/* <div className="text-right">
+                    <div className="text-right">
                       <p className="text-xs">
                         Created At: {property.createdAt}
                       </p>
-                    </div> */}
+                    </div>
                   </div>
                 </div>
               </div>

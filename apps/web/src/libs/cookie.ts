@@ -1,5 +1,5 @@
+import { User } from '@/models/user.model';
 import { deleteCookie, getCookie, setCookie } from 'cookies-next';
-import { TUser } from '@/models/user.model';
 
 const getAuthCookie = (name: string) => {
   const cookie = getCookie(name);
@@ -10,7 +10,7 @@ const getAuthCookie = (name: string) => {
 export const getValidAuthTokens = () => {
   try {
     const token = getAuthCookie('auth');
-    const data: TUser = JSON.parse(String(token));
+    const data: User = JSON.parse(String(token));
 
     return {
       data,

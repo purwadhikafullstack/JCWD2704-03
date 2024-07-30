@@ -11,6 +11,11 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import Link from 'next/link';
 import { AxiosError } from 'axios';
 import Spinner from 'react-bootstrap/Spinner';
+import { decode as jwtDecode } from 'jsonwebtoken';
+
+interface DecodedToken {
+  id: string;
+}
 
 const EntryData = () => {
   const router = useRouter();
@@ -42,7 +47,7 @@ const EntryData = () => {
 
   useEffect(() => {
     if (!token) {
-      router.push('/auth/login');
+      router.push('/auth/login/user');
     }
   }, [token, router]);
 
@@ -77,10 +82,10 @@ const EntryData = () => {
       try {
         console.log('Entry data starts');
 
-        await axiosInstance().patch(
+        const response = await axiosInstance().patch(
           '/api/users/v3',
           {
-            token: token,
+            token: Array.isArray(token) ? token[0] : token,
             first_name: values.first_name,
             last_name: values.last_name,
             password: values.password,
@@ -92,9 +97,19 @@ const EntryData = () => {
           },
         );
 
-        console.log(values);
+        console.log('Response:', response.data); // Log the response
 
-        router.push(`/auth/login/user`);
+        const { updatedUser } = response.data; // Extract the updated user data
+        const { role } = updatedUser; // Extract the role from the updated user data
+        if (role) {
+          if (role === 'user') {
+            router.push(`/auth/login/user`);
+          } else if (role === 'tenant') {
+            router.push(`/auth/login/tenant`);
+          }
+        } else {
+          throw new Error('Invalid role');
+        }
       } catch (error) {
         console.log(error);
 
