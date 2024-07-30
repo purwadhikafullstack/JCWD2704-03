@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { getCookie } from 'cookies-next';
+
 const baseURL = process.env.NEXT_PUBLIC_API_BASEURL || 'http://localhost:8000';
 
 // const baseURL = 'http://localhost:8000';

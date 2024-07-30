@@ -17,13 +17,15 @@ export class PropertyRouter {
   private initializeRoutes(): void {
     // this.router.get('/v1', this.propertyController.getRoomAvailability);
     this.router.get('/search', this.propertyController.searchProperties);
-    this.router.get('/:name', this.propertyController.getPropertyDetail);
+    this.router.get('/detail/:name', this.propertyController.getPropertyDetail);
     this.router.get(
-      '/detail/:propertyId',
+      '/myDetail/:propertyId',
+      verifyUser,
+      verifyTenant,
       this.propertyController.getPropertyDetailHost,
     );
     this.router.get('/room/:id', this.propertyController.getRoomById);
-    this.router.get('/image/:id', this.propertyController.renderPicProp);
+    this.router.get('/image/:picName', this.propertyController.renderPicProp);
     // this.router.get(
     //   '/room/image/:roomId',
     //   this.propertyController.renderPicRoom,
@@ -43,19 +45,15 @@ export class PropertyRouter {
       this.propertyController.updateProperty,
     );
     this.router.get(
-      '/',
+      '/myProperty',
       verifyUser,
       verifyTenant,
       this.propertyController.getAllPropertyByTenantId,
     );
     this.router.get(
-      '/detail/:propertyId',
-      this.propertyController.getPropertyDetailHost,
+      '/prop/:id',
+      this.propertyController.getProfilePropertyByTenantId,
     );
-    // this.router.get(
-    //   '/room/image/:roomId',
-    //   this.propertyController.renderPicRoom,
-    // );
     this.router.post(
       '/',
       verifyUser,

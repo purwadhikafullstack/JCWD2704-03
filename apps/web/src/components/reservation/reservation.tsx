@@ -25,14 +25,23 @@ function Reservation() {
   const checkOutDate = searchParams.get('checkOut') || '';
   const roomIds = searchParams.get('Ids')?.replace(/-/g, ',').split(',') || [];
   const total_price = parseFloat(searchParams.get('total') || '0');
+
+  console.log(checkInDate, checkOutDate);
+
   console.log('ini roomIds', roomIds);
+
   useEffect(() => {
     const fetchRoom = async () => {
       try {
+        console.log(id);
+
         const response = await axiosInstance().get(
           `http://localhost:8000/api/properties/room/${id}`,
         );
         const { data } = response.data;
+
+        console.log('Response:', response.data);
+
         setRooms(data);
         console.log(data);
       } catch (error) {

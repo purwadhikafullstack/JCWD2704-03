@@ -39,7 +39,7 @@ model User {
   createdAt               DateTime @default(now())
   updatedAt               DateTime @updatedAt
   isRequestingEmailChange Boolean? @default(false)
-  image_name              String?
+  image_name              String?  @unique
 
   Property Property[]
   Order    Order[]
@@ -68,7 +68,7 @@ model Property {
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
-  pic_name  String?
+  pic_name  String?   @unique
 
   Room   Room[]
   Order  Order[]
@@ -109,7 +109,7 @@ model RoomCategory {
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
   deletedAt       DateTime?
-  pic_name        String?
+  pic_name        String?   @unique
 
   property Property @relation(fields: [property_id], references: [id])
 

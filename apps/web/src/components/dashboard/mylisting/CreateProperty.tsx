@@ -1,5 +1,4 @@
 'use client';
-
 import React, { useRef, useEffect, useState } from 'react';
 import { PiBuildingApartmentBold, PiHouseLineBold } from 'react-icons/pi';
 import { RiHotelLine } from 'react-icons/ri';
@@ -10,14 +9,40 @@ import { AxiosError } from 'axios';
 import { useRouter } from 'next/navigation';
 import { useFormik } from 'formik';
 import { Libraries, useLoadScript } from '@react-google-maps/api';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import Spinner from 'react-bootstrap/Spinner';
+import Swal from 'sweetalert2';
 
 const libraries: Libraries = ['places'];
+
+type City = {
+  name: string;
+  lat: number;
+  lng: number;
+};
+
+interface FormValues {
+  pic: File | null;
+  name: string;
+  desc: string;
+  category: string;
+  city: string;
+  address: string;
+  latitude: number | null;
+  longitude: number | null;
+}
 
 function CreateProperty() {
   const router = useRouter();
   const formikRef = useRef<any>(null);
-  const autocompleteInputRef = useRef<HTMLInputElement>(null);
+  const cityInputRef = useRef<HTMLInputElement>(null);
+  const addressInputRef = useRef<HTMLInputElement>(null);
   const imageRef = useRef<HTMLInputElement>(null);
+  const [loading, setLoading] = useState(false);
+
+  const [selectedCity, setSelectedCity] = useState<City | null>(null);
+  const [addressAutocomplete, setAddressAutocomplete] = useState<any>(null);
 
   const initialValues = {
     pic: null,
@@ -30,7 +55,7 @@ function CreateProperty() {
     longitude: null,
   };
 
-  const formik = useFormik({
+  const formik = useFormik<FormValues>({
     initialValues,
     validationSchema: Yup.object().shape({
       pic: Yup.mixed().required('Picture is required'),
@@ -40,34 +65,93 @@ function CreateProperty() {
       desc: Yup.string(),
       city: Yup.string().required('City is required'),
       address: Yup.string().required('Address is required'),
+      category: Yup.string().required('Category is required'),
     }),
     onSubmit: async (values) => {
       try {
-        console.log('Form values:', values);
-        const formData = new FormData();
-        formData.append('name', values.name);
-        formData.append('desc', values.desc);
-        formData.append('city', values.city);
-        formData.append('address', values.address);
-        formData.append('latitude', values.latitude || '');
-        formData.append('longitude', values.longitude || '');
-        formData.append('category', values.category);
-
-        if (values.pic) {
-          formData.append('pic', values.pic);
-        }
-        console.log('Try creating listing:', formData);
-
-        await axiosInstance().post('/api/properties', formData);
-        router.push('/dashboard/my-listing');
+        await handleUpdate(values);
       } catch (error) {
-        console.log(error);
+        setLoading(false);
+        let errorMessage = 'An unexpected error occurred';
+
         if (error instanceof AxiosError) {
-          alert(error.response?.data.message);
+          if (error.response?.data?.message) {
+            errorMessage = error.response.data.message;
+          }
         }
+
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: errorMessage,
+        });
       }
     },
   });
+
+  const handleCancel = () => {
+    Swal.fire({
+      title: 'Are you sure?',
+      text: 'Do you want to discard your changes?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, discard it!',
+      cancelButtonText: 'No, keep it',
+    }).then((result) => {
+      if (result.isConfirmed) {
+        formik.resetForm();
+        router.push('/dashboard/my-property');
+      }
+    });
+  };
+
+  const handleUpdate = async (values: FormValues) => {
+    Swal.fire({
+      title: 'Are you sure?',
+      text: 'Do you want to post this property to your listing?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, post it!',
+      cancelButtonText: 'No, cancel',
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          if (!values.latitude || !values.longitude) {
+            if (selectedCity) {
+              values.latitude = selectedCity.lat;
+              values.longitude = selectedCity.lng;
+            }
+          }
+
+          console.log('Form values:', values);
+          const formData = new FormData();
+          formData.append('name', values.name);
+          formData.append('desc', values.desc);
+          formData.append('city', values.city);
+          formData.append('address', values.address);
+          formData.append('latitude', values.latitude?.toString() || '');
+          formData.append('longitude', values.longitude?.toString() || '');
+          formData.append('category', values.category);
+
+          if (values.pic) {
+            formData.append('pic', values.pic);
+          }
+          console.log('Try creating listing:', formData);
+
+          await axiosInstance().post('/api/properties', formData);
+
+          router.push('/dashboard/my-property');
+        } catch (error) {
+          console.error('Error during submission:', error);
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'An error occurred while creating the property.',
+          });
+        }
+      }
+    });
+  };
 
   const { isLoaded, loadError } = useLoadScript({
     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '',
@@ -75,32 +159,83 @@ function CreateProperty() {
   });
 
   useEffect(() => {
-    if (isLoaded && autocompleteInputRef.current) {
-      const autocomplete = new window.google.maps.places.Autocomplete(
-        autocompleteInputRef.current,
-        { types: ['(cities)'], componentRestrictions: { country: 'ID' } },
+    if (isLoaded && cityInputRef.current) {
+      const cityAutocomplete = new window.google.maps.places.Autocomplete(
+        cityInputRef.current,
+        {
+          types: ['(cities)'],
+          componentRestrictions: { country: 'ID' },
+        },
       );
 
-      autocomplete.addListener('place_changed', () => {
-        const place = autocomplete.getPlace();
+      cityAutocomplete.addListener('place_changed', () => {
+        const place = cityAutocomplete.getPlace();
         if (place.geometry && place.geometry.location) {
-          const city = place.formatted_address || '';
+          const cityName = place.formatted_address || '';
           const latitude = place.geometry.location.lat();
           const longitude = place.geometry.location.lng();
 
-          formik.setFieldValue('city', city);
-          formik.setFieldValue('latitude', latitude);
-          formik.setFieldValue('longitude', longitude);
+          formik.setFieldValue('city', cityName);
+          setSelectedCity({ name: cityName, lat: latitude, lng: longitude });
+
+          // Initialize address autocomplete with city bounds
+          if (addressInputRef.current) {
+            const bounds = new window.google.maps.LatLngBounds(
+              new window.google.maps.LatLng(latitude - 0.1, longitude - 0.1),
+              new window.google.maps.LatLng(latitude + 0.1, longitude + 0.1),
+            );
+            const addressAutocompleteService =
+              new window.google.maps.places.Autocomplete(
+                addressInputRef.current,
+                {
+                  types: ['address'],
+                  bounds,
+                  componentRestrictions: { country: 'ID' },
+                  strictBounds: true,
+                },
+              );
+            setAddressAutocomplete(addressAutocompleteService);
+
+            addressAutocompleteService.addListener('place_changed', () => {
+              const place = addressAutocompleteService.getPlace();
+              if (place.geometry && place.geometry.location) {
+                formik.setFieldValue('address', place.formatted_address || '');
+                formik.setFieldValue('latitude', place.geometry.location.lat());
+                formik.setFieldValue(
+                  'longitude',
+                  place.geometry.location.lng(),
+                );
+              }
+            });
+          }
         }
       });
     }
   }, [isLoaded]);
 
+  useEffect(() => {
+    if (selectedCity && addressAutocomplete && addressInputRef.current) {
+      const bounds = new window.google.maps.LatLngBounds(
+        new window.google.maps.LatLng(
+          selectedCity.lat - 0.1,
+          selectedCity.lng - 0.1,
+        ),
+        new window.google.maps.LatLng(
+          selectedCity.lat + 0.1,
+          selectedCity.lng + 0.1,
+        ),
+      );
+      addressAutocomplete.setBounds(bounds);
+      addressAutocomplete.setComponentRestrictions({ country: 'ID' });
+      addressAutocomplete.setOptions({ strictBounds: true });
+    }
+  }, [selectedCity, addressAutocomplete]);
+
   return (
     <>
-      <div className="w-screen tracking-tighter px-10">
+      <div className="tracking-tighter lg:px-10">
         <div className="flex justify-center items-center">
-          <div className="lg:max-w-[1000px]">
+          <div className="w-full">
             {/* HEADER */}
             <div>
               <div className="py-4">
@@ -113,13 +248,22 @@ function CreateProperty() {
               <div></div>
             </div>
 
-            <form onSubmit={formik.handleSubmit} className="lg:max-w-[1000px]">
+            <form
+              onSubmit={formik.handleSubmit}
+              className="w-full"
+              onKeyPress={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                }
+              }}
+            >
               <div className="flex justify-center flex-col gap-6">
                 {/* NAME */}
                 <div className="flex flex-col">
                   <div className="font-semibold text-2xl mb-2">
                     Create a new listing
                   </div>
+
                   <div className="form-floating w-full">
                     <input
                       type="name"
@@ -179,12 +323,12 @@ function CreateProperty() {
 
                     <div
                       className={`rounded-xl h-18 border cursor-pointer border-zinc-400 p-2 flex justify-center flex-col w-28 hover:border-zinc-600 hover:bg-zinc-200 hover:border-2 ${
-                        formik.values.category === 'Guest House'
+                        formik.values.category === 'Guesthouse'
                           ? 'border-2 border-zinc-600 bg-zinc-200'
                           : ''
                       }`}
                       onClick={() =>
-                        formik.setFieldValue('category', 'Guest House')
+                        formik.setFieldValue('category', 'Guesthouse')
                       }
                     >
                       <div className="text-3xl">
@@ -193,46 +337,69 @@ function CreateProperty() {
                       <div className="font-semibold">Guest House</div>
                     </div>
                   </div>
+                  {formik.errors.category && (
+                    <div className="text-red-600 text-xs">
+                      {formik.errors.category}
+                    </div>
+                  )}
                 </div>
 
-                {/* LOCATION */}
+                {/* CITY */}
                 <div className="flex flex-col">
-                  <div className="font-semibold text-xl">Location details</div>
-                  <div className="text-zinc-500 mb-2">
-                    Please detailed address of your property
+                  <div className="font-semibold text-xl">
+                    Where is your property located?
                   </div>
+                  <div className="text-zinc-500 mb-2">
+                    More about the area of your property
+                  </div>
+
                   <div className="form-floating w-full">
                     <input
                       type="text"
                       name="city"
                       className="form-control mb-2"
-                      id="floatingInput"
+                      id="floatingCityInput"
                       placeholder="City"
-                      ref={autocompleteInputRef}
-                      onChange={formik.handleChange}
+                      ref={cityInputRef}
+                      onChange={(e) => {
+                        formik.handleChange(e);
+                        setSelectedCity(null); // Clear selected city when city input changes
+                      }}
                       onBlur={formik.handleBlur}
                       value={formik.values.city}
                     />
-                    <label htmlFor="floatingInput">City</label>
+                    <label htmlFor="floatingCityInput">City</label>
                   </div>
                   {formik.errors.city && (
-                    <div className="text-red-600 text-xs mb-3">
+                    <div className="text-red-600 text-xs">
                       {formik.errors.city}
                     </div>
                   )}
+                </div>
 
-                  <div className="form-floating w-full">
+                {/* ADDRESS */}
+                <div className="flex flex-col">
+                  <div className="font-semibold text-xl">
+                    Where exactly in the city?
+                  </div>
+                  <div className="text-zinc-500 mb-2">
+                    Address details within the city
+                  </div>
+                  <div className="form-floating w-full mt-2">
                     <input
                       type="text"
-                      className="form-control mb-2"
-                      id="floatingInput"
                       name="address"
-                      placeholder="address"
+                      className="form-control mb-2"
+                      id="floatingAddressInput"
+                      placeholder="Address"
+                      ref={addressInputRef}
                       onChange={formik.handleChange}
                       onBlur={formik.handleBlur}
                       value={formik.values.address}
                     />
-                    <label htmlFor="floatingInput">Address details</label>
+                    <label htmlFor="floatingAddressInput">
+                      Address details
+                    </label>
                   </div>
                   {formik.errors.address && (
                     <div className="text-red-600 text-xs">
@@ -254,7 +421,7 @@ function CreateProperty() {
                       className="form-control mb-2"
                       id="exampleFormControlTextarea1"
                       name="desc"
-                      placeholder="Bedrooms, breakfast included, ..."
+                      placeholder="Overall appeal and features of yourr property: the location, environment, view, amenities, ..."
                       rows={3}
                       onChange={formik.handleChange}
                       onBlur={formik.handleBlur}
@@ -277,10 +444,10 @@ function CreateProperty() {
                       src={
                         formik.values.pic
                           ? URL.createObjectURL(formik.values.pic)
-                          : 'https://assets.loket.com/images/banner-event.jpg'
+                          : 'https://i.ibb.co.com/xh2fRNL/New-Project-3.png'
                       }
                       alt=""
-                      className="rounded-xl w-full"
+                      className="rounded-xl w-full h-80 object-cover"
                       onClick={() => imageRef.current?.click()}
                     />
                   </div>
@@ -291,6 +458,7 @@ function CreateProperty() {
                       ref={imageRef}
                       hidden
                       accept="image/*"
+                      // className="w-full h-10"
                       onChange={(e) => {
                         if (e.currentTarget.files) {
                           formik.setFieldValue('pic', e.currentTarget.files[0]);
@@ -306,12 +474,25 @@ function CreateProperty() {
                   </div>
                 </div>
 
-                <div className="flex flex-row gap-2 justify-center mb-5">
+                {/* SUBMIT */}
+                <div className="flex flex-row justify-center gap-3">
+                  <button
+                    type="button"
+                    onClick={handleCancel}
+                    className="btn btn-danger w-28"
+                  >
+                    Cancel
+                  </button>
                   <button
                     type="submit"
-                    className="btn btn-dark text-white w-32"
+                    className="btn btn-dark w-28"
+                    disabled={!formik.isValid || formik.isSubmitting}
                   >
-                    Post my listing
+                    {formik.isSubmitting ? (
+                      <Spinner animation="border" size="sm" />
+                    ) : (
+                      'Create'
+                    )}
                   </button>
                 </div>
               </div>

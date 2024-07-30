@@ -86,6 +86,23 @@ export class PropertyController {
       next(error);
     }
   }
+
+  async getProfilePropertyByTenantId(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ) {
+    try {
+      const data = await propertyServices.getProfilePropertyByTenantId(req);
+      return res.send({
+        message: 'Fetching all properties from tenant id',
+        data,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
   async getPropertyDetailHost(req: Request, res: Response, next: NextFunction) {
     try {
       const data = await propertyServices.getPropertyDetailHost(req);

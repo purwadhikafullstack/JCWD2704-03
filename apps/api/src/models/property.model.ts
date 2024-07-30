@@ -10,6 +10,7 @@ export type TProperty = {
   category: Category;
   pic: Buffer | null;
   desc: string;
+  pic_name: string;
   address: string;
   latitude?: number;
   longitude?: number;

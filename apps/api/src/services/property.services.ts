@@ -3,6 +3,7 @@ import { prisma } from '../libs/prisma';
 import { Request } from 'express';
 import { TProperty } from '@/models/property.model';
 import sharp from 'sharp';
+import shortid from 'shortid';
 
 class PropertyService {
   async getRoomAvailability(
@@ -105,23 +106,65 @@ class PropertyService {
           tenant: true,
         },
       });
+
       return properties;
     } catch (error) {
       console.error('Error searching properties:', error);
       throw new Error('Error searching properties');
     }
   }
+
   async getAllPropByTenantId(req: Request) {
-    const property = await prisma.property.findMany({
-      // where: { tenant_id: 'clyvb46sq00003amlkg2sh5i4' },
-      where: { tenant_id: req.user.id },
-      include: {
-        RoomCategory: true,
-      },
-    });
-    console.log(property);
-    console.log(req.user.id);
-    return property;
+    try {
+      // Check if req.user and req.user.id are defined
+      if (!req.user || !req.user.id) {
+        throw new Error('User or User ID is undefined');
+      }
+
+      // Log tenant ID for debugging purposes
+      console.log('Fetching properties for tenant ID:', req.user.id);
+
+      // Fetch properties associated with the tenant ID
+      const properties = await prisma.property.findMany({
+        where: { tenant_id: req.user.id, deletedAt: null },
+        // Filter by tenant ID
+        include: {
+          RoomCategory: true, // Include RoomCategory, but it should not filter out properties without RoomCategory
+        },
+      });
+
+      // Log the retrieved properties for debugging
+      console.log('Retrieved properties:', properties);
+
+      // Return the properties
+      return properties;
+    } catch (error) {
+      // Log any errors that occur during the fetch
+      console.error('Error fetching properties:', error);
+
+      // Rethrow the error to be handled by the calling function
+      throw error;
+    }
+  }
+
+  async getProfilePropertyByTenantId(req: Request) {
+    try {
+      const { id } = req.params;
+
+      const properties = await prisma.property.findMany({
+        where: { tenant_id: id, deletedAt: null },
+
+        include: {
+          RoomCategory: true,
+        },
+      });
+
+      console.log('Retrieved properties:', properties);
+      return properties;
+    } catch (error) {
+      console.error('Error fetching properties:', error);
+      throw error;
+    }
   }
 
   async getAllRoom(req: Request) {
@@ -243,6 +286,7 @@ class PropertyService {
 
     return room;
   }
+
   async getPropertyDetailHost(req: Request) {
     const { propertyId } = req.params;
 
@@ -265,6 +309,8 @@ class PropertyService {
         longitude: true,
         createdAt: true,
         updatedAt: true,
+        pic_name: true,
+        deletedAt: true,
         RoomCategory: {
           include: {
             Room: {
@@ -281,34 +327,48 @@ class PropertyService {
       },
     });
 
-    // Handle case where property is not found
-    if (!data) {
-      throw new Error('Property not found');
+    // Handle case where property is not found or is deleted
+    if (!data || data.deletedAt) {
+      throw new Error('Property not found or is deleted');
     }
 
     // Calculate the remaining rooms for each category
     const roomCategoriesWithAvailableRooms = data.RoomCategory.map(
       (category) => {
-        const totalRooms = category.Room.length;
+        // Skip the room category if it is deleted
+        if (category.deletedAt) {
+          return null;
+        }
+
+        const totalRooms = category.Room.filter(
+          (room) => !room.deletedAt,
+        ).length; // Count only non-deleted rooms
         const bookedRooms = category.Room.filter((room) => {
-          return room.OrderRoom.some((orderRoom) => {
-            const order = orderRoom.order;
-            const orderCheckIn = new Date(order.checkIn_date);
-            const orderCheckOut = new Date(order.checkOut_date);
-            return (
-              orderCheckIn < new Date() &&
-              orderCheckOut > new Date() &&
-              order.status !== 'cancelled'
-            );
-          });
+          return (
+            !room.deletedAt &&
+            room.OrderRoom.some((orderRoom) => {
+              const order = orderRoom.order;
+              const orderCheckIn = new Date(order.checkIn_date);
+              const orderCheckOut = new Date(order.checkOut_date);
+              return (
+                orderCheckIn < new Date() &&
+                orderCheckOut > new Date() &&
+                order.status !== 'cancelled'
+              );
+            })
+          );
         }).length;
 
-        return {
-          ...category,
-          remainingRooms: totalRooms - bookedRooms,
-        };
+        return totalRooms > 0
+          ? {
+              // Only include categories with at least one room
+              ...category,
+              roomCount: totalRooms, // Added roomCount
+              remainingRooms: totalRooms - bookedRooms,
+            }
+          : null;
       },
-    ).filter((category) => category.remainingRooms > 0); // Filter out categories with no remaining rooms
+    ).filter((category) => category !== null); // Filter out null categories
 
     return {
       ...data,
@@ -353,7 +413,9 @@ class PropertyService {
         latitude: true,
         longitude: true,
         createdAt: true,
+        pic_name: true,
         updatedAt: true,
+        deletedAt: true,
         RoomCategory: {
           include: {
             Room: {
@@ -421,13 +483,15 @@ class PropertyService {
     };
   }
 
-  async renderPicProperty(req: Request) {
-    const data = await prisma.property.findUnique({
+  async renderPicProperty(req: Request): Promise<Buffer | null> {
+    const picName = req.params.picName;
+    const property = await prisma.property.findUnique({
       where: {
-        id: req.params.id,
+        pic_name: picName,
       },
     });
-    return data?.pic;
+
+    return property?.pic || null;
   }
 
   // async renderPicRoom(req: Request) {
@@ -462,6 +526,8 @@ class PropertyService {
       ? parseFloat(String(longitude))
       : undefined;
 
+    const picName = shortid.generate();
+
     const createProperty = await prisma.property.create({
       data: {
         tenant: {
@@ -470,6 +536,7 @@ class PropertyService {
           },
         },
         pic: buffer,
+        pic_name: picName,
         name,
         category,
         desc,
@@ -482,57 +549,6 @@ class PropertyService {
 
     return createProperty;
   }
-
-  /* async updateProperty(req: Request) {
-    const { propertyId } = req.params;
-    const { file } = req;
-    const userId = req.user?.id;
-
-    const currentProperty = await prisma.property.findUnique({
-      where: { id: propertyId },
-    });
-
-    if (!currentProperty || currentProperty.tenant_id !== userId) {
-      throw new Error('Listing not found or unauthorized');
-    }
-
-    const { name, category, desc, city, address, latitude, longitude } =
-      req.body as Partial<TProperty>;
-
-    let buffer;
-    if (file) {
-      buffer = await sharp(file.buffer).png().toBuffer();
-    }
-
-    const parsedLatitude = latitude ? parseFloat(String(latitude)) : undefined;
-    const parsedLongitude = longitude
-      ? parseFloat(String(longitude))
-      : undefined;
-
-    const updatedData: Prisma.PropertyUpdateInput = {
-      name: name || currentProperty.name,
-      category: category || currentProperty.category,
-      desc: desc || currentProperty.desc,
-      address: address || currentProperty.address,
-      city: city || currentProperty.city,
-      latitude: parsedLatitude ?? currentProperty.latitude,
-      longitude: parsedLongitude ?? currentProperty.longitude,
-      pic: buffer || currentProperty.pic,
-    };
-
-    try {
-      const updatedProperty = await prisma.property.update({
-        where: { id: propertyId },
-        data: updatedData,
-      });
-
-      return updatedProperty;
-    } catch (error) {
-      console.error('Error updating property:', error);
-      throw new Error('Failed to update property');
-    }
-  }
-    */
 
   async updateProperty(req: Request) {
     const { propertyId } = req.params;
@@ -561,6 +577,8 @@ class PropertyService {
       ? parseFloat(String(longitude))
       : undefined;
 
+    const picName = shortid.generate();
+
     const updatedData: any = {
       name,
       category,
@@ -570,6 +588,7 @@ class PropertyService {
       latitude: parsedLatitude,
       longitude: parsedLongitude,
       pic: buffer,
+      pic_name: picName,
     };
 
     if (buffer) {
@@ -582,9 +601,84 @@ class PropertyService {
     });
   }
 
-  async createRoom(req: Request) {}
+  async deleteProperty(req: Request) {
+    const propertyId = req.params.propertyId;
 
-  async updateRoom(req: Request) {}
+    const property = await prisma.property.findUnique({
+      where: { id: propertyId },
+      include: {
+        RoomCategory: {
+          include: {
+            Room: {
+              include: {
+                OrderRoom: {
+                  include: {
+                    order: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!property) {
+      throw new Error('Property not found.');
+    }
+
+    const today = new Date();
+
+    // Check if any associated rooms have future or ongoing orders
+    const hasFutureOrders = property.RoomCategory.some((roomCategory) =>
+      roomCategory.Room.some((room) =>
+        room.OrderRoom.some(
+          (orderRoom) => orderRoom.order.checkOut_date >= today,
+        ),
+      ),
+    );
+
+    if (hasFutureOrders) {
+      throw new Error(
+        'Cannot delete the property because it has rooms with future or ongoing orders.',
+      );
+    }
+
+    // Soft delete all rooms associated with the room categories of the property
+    await prisma.room.updateMany({
+      where: {
+        roomCategory: {
+          property_id: propertyId,
+        },
+      },
+      data: {
+        deletedAt: new Date(),
+      },
+    });
+
+    // Soft delete all room categories associated with the property
+    await prisma.roomCategory.updateMany({
+      where: {
+        property_id: propertyId,
+      },
+      data: {
+        deletedAt: new Date(),
+      },
+    });
+
+    // Soft delete the property
+    await prisma.property.update({
+      where: { id: propertyId },
+      data: {
+        deletedAt: new Date(),
+      },
+    });
+
+    return {
+      message:
+        'Property and associated room categories and rooms successfully deleted.',
+    };
+  }
 }
 
 export default new PropertyService();

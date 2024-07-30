@@ -8,4 +8,6 @@ export const initialUser = {
   last_name: '',
   image: '',
   isVerified: '',
+  image_name: '',
+  isRequestingEmailChange: '',
 };

@@ -1,17 +1,23 @@
 import { RoomCategory } from './roomCategory.model';
 
 export interface Property {
-  name: string;
   id: string;
   tenant_id: string;
-  category: string;
-  city: string;
-  pic: string | null;
+  name: string;
+  category: string; // Assuming this is an enum or string in your schema
+  pic?: string;
   desc: string;
+  city?: string;
   address: string;
   latitude?: number;
   longitude?: number;
-  createdAt: string;
-  updateAt: string;
-  RoomCategory: RoomCategory;
+  createdAt: string; // Adjust to Date if necessary
+  updatedAt: string; // Adjust to Date if necessary
+  deletedAt?: string; // Adjust to Date if necessary
+  pic_name?: string;
+  RoomCategory?: RoomCategoryWithCount[]; // Update this line
+}
+
+export interface RoomCategoryWithCount extends RoomCategory {
+  roomCount: number; // Add this to include the count
 }
