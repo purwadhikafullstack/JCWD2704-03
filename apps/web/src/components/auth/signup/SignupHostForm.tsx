@@ -207,7 +207,7 @@ function SignupHostForm() {
               <div className="text-xs flex flex-row gap-1">
                 <div>Already have an account?</div>
                 <Link
-                  href="/auth/login/user"
+                  href="/auth/login/tenant"
                   className="font-semibold text-[#263C94] no-underline"
                 >
                   Sign in here
@@ -333,7 +333,7 @@ function SignupHostForm() {
           <div className="text-xs flex flex-row gap-1">
             <div>Already have an account?</div>
             <Link
-              href="/auth/login/user"
+              href="/auth/login/tenant"
               className="font-semibold text-[#263C94] no-underline"
             >
               Sign in here

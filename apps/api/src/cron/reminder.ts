@@ -1,8 +1,8 @@
 import { PrismaClient } from '@prisma/client';
 import fs from 'fs';
 import path from 'path';
-import { transporter } from './nodemailer';
 import moment, { locales } from 'moment-timezone';
+import { transporter } from '@/libs/nodemailer';
 const prisma = new PrismaClient();
 
 // Function to send reminder emails
@@ -18,6 +18,17 @@ export default async function sendBookingReminders(orderId: string) {
         property: true,
       },
     });
+    if (!order) {
+      throw new Error('Order not found');
+    }
+    const templatePath = path.join(__dirname, 'checkinreminder.html');
+    let htmlTemplate = fs.readFileSync(templatePath, 'utf-8');
+
+    htmlTemplate = htmlTemplate.replace('{propertyName}', order.property.name);
+    htmlTemplate = htmlTemplate.replace(
+      '{checkInDate}',
+      moment(order.checkIn_date).format('MMMM Do YYYY'),
+    );
     var cron = require('node-cron');
     let targetDate = new Date();
     if (order) {
@@ -30,6 +41,11 @@ export default async function sendBookingReminders(orderId: string) {
       const hours = 23;
       const dayOfMonth = date.getUTCDate() - 1;
       const month = date.getUTCMonth() + 1;
+      // const second = 10;
+      // const minute = 59;
+      // const hours = 23;
+      // const dayOfMonth = date.getUTCDate() - 1;
+      // const month = date.getUTCMonth() + 1;
       return `${second} ${minute} ${hours} ${dayOfMonth} ${month} *`;
     }
     console.log(getCronExpression(targetDate));
@@ -40,9 +56,9 @@ export default async function sendBookingReminders(orderId: string) {
         console.log('masuk function');
         const krimEmail = transporter.sendMail({
           from: 'purwadhika2704@gmail.com',
-          to: order?.user.email,
+          to: order.user.email,
           subject: 'Booking Reminder',
-          html: '<h1> iniii reminder buat checkIn () <h1/>',
+          html: htmlTemplate,
         });
         console.log('kiiriim email', krimEmail);
 

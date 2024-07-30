@@ -1,6 +1,6 @@
 'use client';
 import { getValidAuthTokens } from '@/libs/cookie';
-import { TUser } from '@/models/user.model';
+import { User } from '@/models/user.model';
 import { keepLogin } from '@/libs/redux/middlewares/auth.middleware';
 import { useEffect } from 'react';
 import { useAppDispatch } from '@/app/hooks';

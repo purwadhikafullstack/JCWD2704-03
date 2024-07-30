@@ -1,12 +1,14 @@
+import LoginForm from '@/components/auth/signin/LoginUserForm';
 import React from 'react';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 function page() {
   return (
-    <div>
-      ini login user
-      <div className="font-bold">test</div>
-      <button className="bg-red-300 font-bold">submit</button>
-    </div>
+    <>
+      <ToastContainer />
+      <LoginForm />
+    </>
   );
 }
 

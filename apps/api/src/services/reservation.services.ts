@@ -1,10 +1,14 @@
-import { Request } from 'express';
+import { Request, Response } from 'express';
 import { prisma } from '../libs/prisma';
 import { generateInvoice } from '@/utils/invoice';
 import sharp from 'sharp';
-import { scheduleRoomAvailabilityUpdate } from '@/libs/scheduler';
-import sendBookingReminders from '@/libs/reminder';
 import moment from 'moment-timezone';
+import { connect } from 'ngrok';
+import { startExpireOrdersCron } from '@/cron/expiredOrder';
+import { server } from 'typescript';
+import crypto from 'crypto';
+
+const midTransClient = require('midtrans-client');
 class ReservationService {
   async getAllOrder(req: Request) {
     try {
@@ -18,16 +22,11 @@ class ReservationService {
     const { orderId } = req.params;
     const data = await prisma.order.findUnique({
       where: { id: orderId },
-      select: {
-        checkIn_date: true,
-        checkOut_date: true,
-        total_room: true,
-        total_price: true,
-        payment_method: true,
-        room: true,
+      include: {
         property: true,
-        invoice_id: true,
-        id: true,
+        user: true,
+        RoomCategory: true,
+        OrderRoom: true,
       },
     });
     if (!data) {
@@ -37,58 +36,109 @@ class ReservationService {
     return data;
   }
   async getOrderByUserId(req: Request) {
-    const staticUserId = 'cly9wnpqn0008zgag7m5r2b3i';
+    // const staticUserId = 'clyvb46sr00013amly571vgjq';
     const data = await prisma.order.findMany({
       // where: { user_id: req.user?.id },
-      where: { user_id: staticUserId },
+      where: { user_id: req.user?.id },
       orderBy: {
         updatedAt: 'desc',
       },
       include: {
         property: true,
-        room: true,
         user: true,
+        RoomCategory: true,
+        OrderRoom: true,
       },
     });
     return data;
   }
   async getOrderBySellerId(req: Request) {
+    const page = parseInt(req.query.page as string, 10) || 1;
+    const limit = parseInt(req.query.limit as string, 10) || 10;
+    const offset = (page - 1) * limit;
     const data = await prisma.order.findMany({
       where: {
         property: {
-          tenant_id: 'cly9whjqn0000zgagrd8gp3ji',
-          // tenant_id: req.user?.id,
+          // tenant_id: 'clyvb46sq00003amlkg2sh5i4',
+          tenant_id: req.user?.id,
         },
       },
       include: {
-        user: true,
         property: true,
-        room: true,
+        user: true,
+        RoomCategory: true,
+        OrderRoom: true,
       },
       orderBy: {
         updatedAt: 'desc',
       },
+      skip: offset,
+      take: limit,
     });
-    return data;
+    const totalOrders = await prisma.order.count({
+      where: {
+        property: {
+          tenant_id: req.user?.id,
+        },
+      },
+    });
+    return {
+      data,
+      totalOrders,
+      totalPages: Math.ceil(totalOrders / limit),
+      currentPage: page,
+    };
   }
-
   async createOrder(req: Request) {
     const {
       user_id,
       property_id,
-      room_id,
+      roomCategory_id,
+      room_ids, // Array of room IDs
       checkIn_date,
       checkOut_date,
-      total_room,
-      payment_method,
+      payment_method = null,
       total_price,
       status = 'pending_payment',
     } = req.body;
-    const parsedTotalRoom = parseInt(total_room, 10);
+
+    let roomIdsArray = room_ids;
+    roomIdsArray = [...new Set(roomIdsArray)];
+    console.log('Number of rooms:', roomIdsArray.length);
+    console.log('Room IDs:', roomIdsArray);
+    // Cek apakah sudah ada order dengan detail yang sama
+    const existingOrder = await prisma.order.findFirst({
+      where: {
+        user_id: user_id,
+        property_id: property_id,
+        checkIn_date: new Date(checkIn_date),
+        checkOut_date: new Date(checkOut_date),
+        OrderRoom: {
+          some: {
+            room_id: {
+              in: roomIdsArray,
+            },
+          },
+        },
+      },
+      include: {
+        OrderRoom: true,
+      },
+    });
+
+    if (existingOrder) {
+      throw new Error(
+        'Anda sudah memiliki pesanan untuk kamar dan tanggal ini.',
+      );
+    }
 
     const room = await prisma.room.findFirst({
-      where: { id: room_id },
+      where: { id: roomIdsArray[0] },
+      select: {
+        roomCategory: true,
+      },
     });
+
     if (!room) {
       throw new Error('Room not found');
     }
@@ -97,73 +147,72 @@ class ReservationService {
     const diff = Math.abs(checkOut.getTime() - checkIn.getTime());
     // Calculate the duration in days
     const durationInDays = Math.ceil(diff / (1000 * 3600 * 24));
-
     console.log(durationInDays);
     if (checkIn > checkOut) {
       console.error('Check-out date must be after check-in date!');
     }
+
+    // console.log('berapa kamar yang di minta', roomIdsArray.length());
     let adjustedTotalPrice;
-    if (room.peak_price) {
-      adjustedTotalPrice = durationInDays * parsedTotalRoom * room.peak_price;
+    if (room.roomCategory.peak_price) {
+      adjustedTotalPrice =
+        durationInDays * roomIdsArray.length * room.roomCategory.peak_price;
     } else {
-      adjustedTotalPrice = durationInDays * parsedTotalRoom * room.price;
+      adjustedTotalPrice =
+        durationInDays * roomIdsArray.length * room.roomCategory.price;
     }
-    await prisma.room.update({
-      where: { id: room_id },
-      data: {
-        availability: room.availability - total_room,
-      },
-    });
-    scheduleRoomAvailabilityUpdate(checkIn, room_id, parsedTotalRoom, false); // Reduce availability at check-in
-    scheduleRoomAvailabilityUpdate(checkOut, room_id, parsedTotalRoom, true); // Increase availability at check-out
 
     const order = await prisma.order.create({
       data: {
         user: { connect: { id: user_id } },
         property: { connect: { id: property_id } },
-        room: { connect: { id: room_id } },
+        RoomCategory: { connect: { id: roomCategory_id } },
         checkIn_date: new Date(checkIn_date),
         checkOut_date: new Date(checkOut_date),
-        total_room: parsedTotalRoom,
         total_price: adjustedTotalPrice,
-        payment_method,
         invoice_id: generateInvoice(property_id),
+        payment_method,
         status,
         createdAt: new Date(),
         updatedAt: new Date(),
       },
     });
-    setTimeout(
-      async () => {
-        const expireOrder = await prisma.order.findUnique({
-          where: { id: order.id },
-        });
-        if (expireOrder && expireOrder.status === 'pending_payment') {
-          // Fetch current room availability before updating
-          const currentRoom = await prisma.room.findFirst({
-            where: { id: room_id },
-          });
+    const orderRooms = roomIdsArray.map((room_id: string) => ({
+      order_id: order.id,
+      room_id,
+    }));
 
-          if (!currentRoom) {
-            throw new Error('Room not found during cancellation process');
-          }
-          // Cancel the order
-          await prisma.$transaction([
-            prisma.order.update({
-              where: { id: expireOrder.id },
-              data: { status: 'cancelled' },
-            }),
-            prisma.room.update({
-              where: { id: room_id },
-              data: {
-                availability: currentRoom.availability + parsedTotalRoom,
-              },
-            }),
-          ]);
-        }
-      },
-      60 * 60 * 1000,
-    );
+    await prisma.orderRoom.createMany({
+      data: orderRooms,
+    });
+    // setTimeout(
+    //   async () => {
+    //     const expireOrder = await prisma.order.findUnique({
+    //       where: { id: order.id },
+    //       include: { OrderRoom: true },
+    //     });
+    //     if (expireOrder && expireOrder.status === 'pending_payment') {
+    //       // Cancel the order
+    //       await prisma.$transaction([
+    //         prisma.order.update({
+    //           where: { id: expireOrder.id },
+    //           data: {
+    //             status: 'cancelled',
+    //             checkIn_date: new Date('1970-01-01T00:00:00Z'),
+    //             checkOut_date: new Date('1970-01-01T00:00:00Z'),
+    //           },
+    //         }),
+    //       ]);
+    //     }
+    //   },
+    //   60 * 60 * 1000,
+    // );
+    let cronStarted = false;
+    if (!cronStarted) {
+      startExpireOrdersCron();
+      cronStarted = true;
+    }
+
     return order;
   }
   async updateOrder(req: Request) {
@@ -173,7 +222,8 @@ class ReservationService {
       where: { id: orderId },
       include: {
         property: true,
-        room: true,
+        OrderRoom: true,
+        RoomCategory: true,
       },
     });
     if (!order) {
@@ -196,8 +246,159 @@ class ReservationService {
     });
     console.log('testttt', moment.tz('Asia/Jakarta').format());
 
-    if (updatedOrder) await sendBookingReminders(orderId);
     return updatedOrder;
+  }
+  async createSnapMidtrans(req: Request) {
+    const { order_id, total_price } = req.body;
+    let snap = new midTransClient.Snap({
+      isProduction: false,
+      serverKey: process.env.MIDTRANS_SERVER_KEY,
+      clientKey: process.env.MIDTRANS_CLIENT_KEY,
+    });
+    const totalPrice = parseInt(total_price);
+    const payload = {
+      transaction_details: {
+        order_id: order_id,
+        gross_amount: totalPrice,
+      },
+    };
+    console.log('tipene totalprice', typeof totalPrice);
+    const token = await snap.createTransactionToken(payload);
+    if (token) {
+      await prisma.order.update({
+        where: { id: order_id },
+        data: { token_midTrans: token },
+      });
+      return token;
+    }
+  }
+
+  async updateStatusBasedOnMidtransResponse(order_id: string, data: any) {
+    console.log('coba update midtrans');
+    const hash = crypto
+      .createHash('sha512')
+      .update(
+        `${order_id}${data.status_code}${data.gross_amount}${process.env.MIDTRANS_SERVER_KEY}`,
+      )
+      .digest('hex');
+    if (data.signature_key !== hash) {
+      console.log('masuk error decode hash');
+      return {
+        status: 'error',
+        message: 'Invalid Signature key',
+      };
+    }
+    let responseData = null;
+    let transactionStatus = data.transaction_status;
+    let fraudStatus = data.fraud_status;
+
+    if (transactionStatus == 'capture') {
+      console.log('masuk capture');
+      if (fraudStatus == 'accept') {
+        const transaction = await prisma.order.update({
+          where: { id: order_id },
+          data: {
+            payment_date: moment.tz('Asia/Jakarta').format(),
+            status: 'success',
+            updatedAt: new Date(),
+            payment_method: 'MANDIRI',
+          },
+        });
+        responseData = transaction;
+      }
+    } else if (transactionStatus == 'settlement') {
+      console.log('masuk settlement');
+      const transaction = await prisma.order.update({
+        where: { id: order_id },
+        data: {
+          payment_date: moment.tz('Asia/Jakarta').format(),
+          status: 'success',
+          updatedAt: new Date(),
+          payment_method: 'MANDIRI',
+        },
+      });
+      responseData = transaction;
+    } else if (
+      transactionStatus == 'cancel' ||
+      transactionStatus == 'deny' ||
+      transactionStatus == 'expire'
+    ) {
+      const transaction = await prisma.order.update({
+        where: { id: order_id },
+        data: {
+          payment_date: moment.tz('Asia/Jakarta').format(),
+          status: 'cancelled',
+          updatedAt: new Date(),
+          payment_method: 'MANDIRI',
+        },
+      });
+      responseData = transaction;
+    } else if (transactionStatus == 'pending') {
+      const transaction = await prisma.order.update({
+        where: { id: order_id },
+        data: {
+          payment_date: moment.tz('Asia/Jakarta').format(),
+          status: 'pending_payment',
+          updatedAt: new Date(),
+          payment_method: 'MANDIRI',
+        },
+      });
+      responseData = transaction;
+    }
+    if (
+      transactionStatus.status === 'settlement' ||
+      transactionStatus.status === 'capture'
+    ) {
+      const order = await prisma.order.findUnique({
+        where: { id: order_id },
+      });
+      if (!order) {
+        return console.log('order tidak ditemukan');
+      }
+      const isDataReviewExist = await prisma.review.findFirst({
+        where: {
+          order_id: order_id,
+          property_id: order.property_id,
+        },
+      });
+
+      if (!isDataReviewExist) {
+        await prisma.review.create({
+          data: {
+            property_id: order.property_id,
+            user_id: order.user_id,
+            order_id: order_id,
+            review: '',
+            rating: 0,
+          },
+        });
+      }
+    }
+    return {
+      status: 'success',
+      data: responseData,
+    };
+  }
+
+  // update transaction status
+  async transferNotif(req: Request) {
+    console.log('transfernotif');
+    const { order_id, status, payment_method } = req.body;
+    const transactionDetail = await prisma.order.findUnique({
+      where: { id: order_id },
+      include: {
+        property: true,
+        user: true,
+        RoomCategory: true,
+        OrderRoom: true,
+      },
+    });
+    if (transactionDetail) {
+      this.updateStatusBasedOnMidtransResponse(
+        transactionDetail.id,
+        req.body,
+      ).then((result) => console.log('transaction notif midtrans', result));
+    }
   }
 }
 
