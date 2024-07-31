@@ -27,29 +27,16 @@ export class UserController {
 
   async sendVerif(req: Request, res: Response, next: NextFunction) {
     try {
-      await usersServices.sendVerification(req);
-      res.send({ message: 'Verification success' });
+      const result = await usersServices.sendVerification(req);
+      if (result?.redirectUrl) {
+        res.redirect(result.redirectUrl);
+      } else {
+        res.status(400).send({ message: 'Verification failed' });
+      }
     } catch (error) {
       next(error);
     }
   }
-
-  // sendVerification = async (req: Request, res: Response) => {
-  //   try {
-  //     const { token } = req.params;
-  //     const result = await verifyUserToken(token);
-
-  //     if (result.message === 'User already verified') {
-  //       res.status(200).json(result);
-  //     } else {
-  //       res.status(200).json(result);
-  //     }
-  //   } catch (error) {
-  //     console.log('Error sending verification:', error);
-  //     res.status(500).json({ error: 'Internal server error' });
-  //   }
-  // };
-
   async userEntryData(req: Request, res: Response, next: NextFunction) {
     try {
       const updatedUser = await usersServices.userEntryData(req);

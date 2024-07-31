@@ -1,5 +1,5 @@
 import type { TUser } from '@/models/user.model';
-import { Request } from 'express';
+import { Request, Response } from 'express';
 import { comparePassword, hashPassword } from '../libs/bcrypt';
 import { createToken } from '../libs/jwt';
 import { transporter } from '../libs/nodemailer';
@@ -93,6 +93,39 @@ class UserService {
     );
   }
 
+  // async sendingEmail(
+  //   userId: string,
+  //   userEmail: string,
+  //   pathToEmailTemplate: string,
+  //   emailSubject: string,
+  //   verify_url: string,
+  // ) {
+  //   const verifyToken = createToken({ id: userId }, '1hr');
+
+  //   const template = fs
+  //     .readFileSync(__dirname + pathToEmailTemplate)
+  //     .toString();
+
+  //   const html = render(template, {
+  //     email: userEmail,
+  //     verify_url: `http://localhost:3000/${verify_url}/${verifyToken}`,
+  //   });
+
+  //   let returnFromTransporter = await transporter
+  //     .sendMail({
+  //       to: userEmail,
+  //       subject: emailSubject,
+  //       html,
+  //     })
+  //     .then((info) => {
+  //       return 'Email sent successfully';
+  //     })
+  //     .catch((error) => {
+  //       return error.message;
+  //     });
+  //   return returnFromTransporter;
+  // }
+
   async sendingEmail(
     userId: string,
     userEmail: string,
@@ -100,12 +133,16 @@ class UserService {
     emailSubject: string,
     verify_url: string,
   ) {
-    const verifyToken = createToken({ id: userId }, '1hr');
+    const tokenStore: Record<string, { used: boolean }> = {};
+
+    const verifyToken = createToken({ id: userId }, '1hr'); // Token valid untuk 1 jam
+
+    // Simpan token dan status di memori
+    tokenStore[verifyToken] = { used: false };
 
     const template = fs
       .readFileSync(__dirname + pathToEmailTemplate)
       .toString();
-
     const html = render(template, {
       email: userEmail,
       verify_url: `http://localhost:3000/${verify_url}/${verifyToken}`,
@@ -117,65 +154,49 @@ class UserService {
         subject: emailSubject,
         html,
       })
-      .then((info) => {
-        return 'Email sent successfully';
-      })
-      .catch((error) => {
-        return error.message;
-      });
+      .then(() => 'Email sent successfully')
+      .catch((error) => error.message);
+
     return returnFromTransporter;
   }
 
   async sendVerification(req: Request) {
-    console.log('Start function sendVerification');
+    const { token } = req.params;
 
-    try {
-      const { token } = req.params;
-
-      const user = verify(token, SECRET_KEY) as TUser;
-
-      if (!user || !user.id) {
-        throw new Error('Invalid token/user');
-      }
-
-      const existingUser = await prisma.user.findUnique({
-        where: { id: user.id },
-      });
-
-      if (existingUser?.isVerified === true) {
-        return { message: 'User already verified' };
-      }
-
-      await prisma.user.update({
-        where: { id: user?.id },
-        data: { isVerified: true },
-      });
-
-      return { success: true };
-    } catch (error) {
-      console.log('Error sending verification:', error);
+    if (!token) {
+      throw new Error('Token is missing');
     }
+
+    const decodedToken = verify(token, process.env.SECRET_KEY as string) as {
+      id: string;
+    };
+
+    if (!decodedToken || !decodedToken.id) {
+      throw new Error('Invalid token');
+    }
+
+    const existingUser = await prisma.user.findUnique({
+      where: { id: decodedToken.id },
+    });
+
+    if (!existingUser) {
+      throw new Error('User not found');
+    }
+
+    if (existingUser.isVerified) {
+      // Redirect to home if already verified
+      return { redirectUrl: '/' };
+    }
+
+    // Update user to verified
+    await prisma.user.update({
+      where: { id: decodedToken.id },
+      data: { isVerified: true },
+    });
+
+    // After verification, redirect to the form page where the user will submit additional info
+    return { redirectUrl: `/verify/${token}` };
   }
-
-  // async userEntryData(req: Request) {
-  //   const { token, password, first_name, last_name } = req.body;
-  //   const decodedToken = verify(token, SECRET_KEY) as { id: string };
-  //   if (!decodedToken || !decodedToken.id) {
-  //     throw new Error('Invalid token');
-  //   }
-  //   const userId = decodedToken.id;
-  //   const hashPass = await hashPassword(password);
-  //   const updatedUser = await prisma.user.update({
-  //     where: { id: userId },
-  //     data: {
-  //       first_name,
-  //       last_name,
-  //       password: hashPass,
-  //     },
-  //   });
-
-  //   return updatedUser;
-  // }
 
   async userEntryData(req: Request) {
     const { token, password, first_name, last_name } = req.body;
@@ -201,6 +222,7 @@ class UserService {
         first_name,
         last_name,
         password: hashPass,
+        isVerified: true,
       },
     });
 

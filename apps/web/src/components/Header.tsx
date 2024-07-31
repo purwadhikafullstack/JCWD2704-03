@@ -88,10 +88,10 @@ export const Header = () => {
             <div className="flex flex-row gap-4 items-center justify-center">
               {!loggedinUser.first_name && (
                 <button
-                  className="font-semibold text-sm hidden lg:flex hover:text-[#ED777B] hover:border-b-2"
+                  className="font-semibold text-sm hidden lg:flex hover:text-[#ED777B] "
                   onClick={tenantRegisterButton}
                 >
-                  Become a property host
+                  Start hosting
                 </button>
               )}
 

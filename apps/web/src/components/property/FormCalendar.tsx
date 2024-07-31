@@ -1,22 +1,23 @@
 'use client';
-import React, { useRef, useEffect } from 'react';
-import { Formik, Field, Form, ErrorMessage } from 'formik';
+import React, { useRef, useEffect, useState } from 'react';
+import { Formik, Field, Form, FormikProps } from 'formik';
 import * as Yup from 'yup';
 import { useRouter } from 'next/navigation';
-import { BiCalendar } from 'react-icons/bi';
-import 'bootstrap/dist/css/bootstrap.min.css';
 import { FaSearch } from 'react-icons/fa';
+import 'bootstrap/dist/css/bootstrap.min.css';
+import { BiCalendar } from 'react-icons/bi';
 import { Libraries, useLoadScript } from '@react-google-maps/api';
 import Spinner from 'react-bootstrap/Spinner';
 import { axiosInstance } from '@/libs/axios.config';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const libraries: Libraries = ['places'];
 
-const SearchForm: React.FC = () => {
+const FormCalendar: React.FC = () => {
   const router = useRouter();
   const autocompleteInputRef = useRef<HTMLInputElement>(null);
-  const formikRef = useRef<any>(null);
-
+  const formikRef = useRef<FormikProps<any>>(null);
   const getTodayDate = () => {
     const today = new Date();
     const year = today.getFullYear();
@@ -24,6 +25,8 @@ const SearchForm: React.FC = () => {
     const day = String(today.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
   };
+
+  const [checkInDate, setCheckInDate] = useState(getTodayDate());
 
   const getTomorrowDate = () => {
     const tomorrow = new Date();
@@ -43,7 +46,16 @@ const SearchForm: React.FC = () => {
   const validationSchema = Yup.object({
     city: Yup.string().required('City is required'),
     checkIn: Yup.string().required('Check-in date is required'),
-    checkOut: Yup.string().required('Check-out date is required'),
+    checkOut: Yup.string()
+      .required('Check-out date is required')
+      .test(
+        'check-out-date',
+        'Check-out date cannot be before check-in date',
+        function (value) {
+          const { checkIn } = this.parent;
+          return new Date(value!) >= new Date(checkIn);
+        },
+      ),
   });
 
   const handleSearchSubmit = async (values: any) => {
@@ -75,7 +87,8 @@ const SearchForm: React.FC = () => {
       const autocomplete = new window.google.maps.places.Autocomplete(
         autocompleteInputRef.current,
         {
-          types: ['geocode'],
+          types: ['(cities)'],
+          componentRestrictions: { country: 'id' }, // Restrict to Indonesia
         },
       );
 
@@ -86,12 +99,38 @@ const SearchForm: React.FC = () => {
             component.types.includes('locality'),
           );
           if (cityComponent) {
-            formikRef.current.setFieldValue('city', cityComponent.long_name);
+            formikRef.current?.setFieldValue('city', cityComponent.long_name);
           }
         }
       });
     }
   }, [isLoaded]);
+
+  const handleDateChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    setFieldValue: (field: string, value: any) => void,
+  ) => {
+    const { name, value } = e.target;
+    if (name === 'checkIn') {
+      setFieldValue(name, value);
+      setCheckInDate(value);
+      // Update the min attribute for checkOut date
+      formikRef.current?.setFieldValue(
+        'checkOut',
+        value > formikRef.current.values.checkOut
+          ? value
+          : formikRef.current.values.checkOut,
+      );
+    } else if (name === 'checkOut') {
+      const checkIn = formikRef.current?.values.checkIn;
+      if (new Date(value) < new Date(checkIn)) {
+        toast.error('Check-out date cannot be before check-in date');
+        setFieldValue(name, checkIn); // Reset to check-in date
+      } else {
+        setFieldValue(name, value);
+      }
+    }
+  };
 
   if (!isLoaded) return <Spinner animation="border" />;
 
@@ -99,101 +138,95 @@ const SearchForm: React.FC = () => {
 
   return (
     <>
-      <div className="relative w-screen">
-        <img
-          src="https://i.ibb.co.com/5rcMxmc/Untitled-design-4.png"
-          alt=""
-          className="object-cover w-full h-[400px]"
-        />
-        <div className="absolute inset-0 flex items-center justify-center">
+      <ToastContainer />
+      <div className="">
+        <div className="inset-0 flex items-center justify-center font-medium tracking-tight">
           <div className="flex justify-center">
             <Formik
               initialValues={initialValues}
               validationSchema={validationSchema}
-              onSubmit={(values) => {
-                router.push(
-                  `/search?city=${values.city}&checkIn=${values.checkIn}&checkOut=${values.checkOut}&page=1`,
-                );
+              onSubmit={async (values, { setSubmitting }) => {
+                try {
+                  await handleSearchSubmit(values);
+                  router.push(
+                    `/search?city=${values.city}&checkIn=${values.checkIn}&checkOut=${values.checkOut}&page=1&limit=10`,
+                  );
+                } catch (error) {
+                  console.error('Submission error:', error);
+                } finally {
+                  setSubmitting(false); // Ensure isSubmitting is reset after handling
+                }
               }}
               innerRef={formikRef}
             >
-              {({ isSubmitting, handleChange }) => (
-                <Form className="shadow-xl border-zinc-800 rounded-xl m-4 p-4 text-zinc-800 lg:w-[800px] w-96 bg-white">
-                  <div className="flex flex-col gap-3">
+              {({ isSubmitting, handleChange, setFieldValue }) => (
+                <Form className="rounded-full text-zinc-800 bg-zinc-100 py-2 px-10 border shadow-sm">
+                  <div className="flex flex-row gap-1 items-center">
+                    <div className="font-bold text-sm px-2">
+                      Find properties in
+                    </div>
+
                     <div>
-                      <div className="font-semibold tracking-tighter">
-                        Where to?
-                      </div>
                       <div className="relative">
-                        <div className="absolute inset-y-0 start-0 flex items-center ps-2.5 pointer-events-none">
-                          <FaSearch className="text-sm" />
-                        </div>
                         <Field
                           type="text"
                           name="city"
                           innerRef={autocompleteInputRef}
-                          className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                          className="bg-zinc-100 border-none text-gray-900 text-sm rounded-full focus:ring-zinc-100 focus:border-zinc-100 focus:shadow-lg focus:bg-white block w-48 ps-10 px-4 py-3 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-40"
                           placeholder="Search destination"
                           onChange={handleChange}
                         />
                       </div>
                     </div>
-
+                    <div className="font-medium text-sm px-2 text-zinc-500">
+                      on
+                    </div>
                     <div>
-                      <div className="font-semibold tracking-tighter">
-                        Check-in date
-                      </div>
                       <div className="relative">
-                        <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                          <BiCalendar className="w-4 h-4" />
-                        </div>
                         <Field
                           type="date"
                           name="checkIn"
-                          className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 py-2.5 "
+                          className="bg-zinc-100 border-none text-gray-900 text-sm rounded-full focus:ring-zinc-100 focus:border-zinc-100 focus:shadow-lg focus:bg-white block py-3 w-30"
                           placeholder="Select date start"
                           defaultValue={getTodayDate()}
                           min={getTodayDate()}
-                          onChange={handleChange}
+                          onChange={(e: any) =>
+                            handleDateChange(e, setFieldValue)
+                          }
                         />
                       </div>
                     </div>
 
+                    <div className="font-medium text-sm px-2 text-zinc-500">
+                      to
+                    </div>
+
                     <div>
-                      <div className="font-semibold tracking-tighter">
-                        Check-out date
-                      </div>
                       <div className="relative">
-                        <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                          <BiCalendar className="w-4 h-4" />
-                        </div>
                         <Field
                           type="date"
                           name="checkOut"
-                          className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 py-2.5 "
+                          className="bg-zinc-100 border-none text-gray-900 text-sm rounded-full focus:ring-zinc-100 focus:border-zinc-100 focus:shadow-lg focus:bg-white block py-3 w-30"
                           placeholder="Select date end"
-                          min={getTomorrowDate()}
-                          onChange={handleChange}
+                          min={checkInDate}
+                          onChange={(e: any) =>
+                            handleDateChange(e, setFieldValue)
+                          }
                         />
                       </div>
                     </div>
 
                     <button
                       type="submit"
-                      className="btn btn-dark w-full justify-center items-center text-center flex mt-3"
+                      className="bg-black p-3 hover:shadow-md rounded-full hover:bg-zinc-200 text-center flex"
                       disabled={isSubmitting}
                     >
                       {isSubmitting ? (
-                        <Spinner
-                          animation="border"
-                          role="status"
-                          size="sm"
-                          className="me-2"
-                        >
+                        <Spinner animation="border" role="status" size="sm">
                           <span className="visually-hidden">Loading...</span>
                         </Spinner>
                       ) : (
-                        'Search now'
+                        <FaSearch className="text-white" />
                       )}
                     </button>
                   </div>
@@ -207,4 +240,4 @@ const SearchForm: React.FC = () => {
   );
 };
 
-export default SearchForm;
+export default FormCalendar;

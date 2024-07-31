@@ -60,21 +60,25 @@ class PropertyService {
 
     return remainingAvailability;
   }
+
   async searchProperties(
     city: string,
     checkIn: Date,
     checkOut: Date,
-  ): Promise<any[]> {
+    page: number,
+    limit: number,
+  ): Promise<any> {
     try {
+      // Find properties with pagination
       const properties = await prisma.property.findMany({
         where: {
           city: { contains: city },
           deletedAt: null,
           Room: {
             some: {
-              deletedAt: null, // Ensure the room is not deleted
+              deletedAt: null,
               roomCategory: {
-                deletedAt: null, // Ensure the room category is not deleted
+                deletedAt: null,
               },
               OrderRoom: {
                 none: {
@@ -93,21 +97,64 @@ class PropertyService {
         include: {
           Room: {
             where: {
-              deletedAt: null, // Filter rooms that are not deleted
+              deletedAt: null,
             },
             include: {
-              OrderRoom: {
-                include: {
-                  order: true,
-                },
-              },
+              roomCategory: true, // Include roomCategory to access price
             },
           },
           tenant: true,
         },
+        skip: (page - 1) * limit,
+        take: limit,
       });
 
-      return properties;
+      // Find total properties count
+      const totalProperties = await prisma.property.count({
+        where: {
+          city: { contains: city },
+          deletedAt: null,
+          Room: {
+            some: {
+              deletedAt: null,
+              roomCategory: {
+                deletedAt: null,
+              },
+              OrderRoom: {
+                none: {
+                  order: {
+                    AND: [
+                      { checkIn_date: { lte: checkOut } },
+                      { checkOut_date: { gte: checkIn } },
+                      { status: { not: 'cancelled' } },
+                    ],
+                  },
+                },
+              },
+            },
+          },
+        },
+      });
+
+      // Calculate lowest price per property
+      const propertiesWithLowestPrice = properties.map((property) => {
+        const rooms = property.Room || [];
+        const lowestPrice = rooms
+          .map((room) => room.roomCategory.price) // Map prices from RoomCategory
+          .reduce((min, price) => (price < min ? price : min), Infinity); // Find the minimum price
+
+        return {
+          ...property,
+          lowestPrice: isFinite(lowestPrice) ? lowestPrice : null, // Add lowest price to property
+        };
+      });
+
+      return {
+        properties: propertiesWithLowestPrice,
+        totalProperties,
+        totalPages: Math.ceil(totalProperties / limit),
+        currentPage: page,
+      };
     } catch (error) {
       console.error('Error searching properties:', error);
       throw new Error('Error searching properties');
