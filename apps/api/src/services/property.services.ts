@@ -463,6 +463,15 @@ class PropertyService {
         pic_name: true,
         updatedAt: true,
         deletedAt: true,
+        tenant: {
+          select: {
+            id: true,
+            first_name: true,
+            last_name: true,
+            image_name: true,
+            createdAt: true,
+          },
+        },
         RoomCategory: {
           include: {
             Room: {
