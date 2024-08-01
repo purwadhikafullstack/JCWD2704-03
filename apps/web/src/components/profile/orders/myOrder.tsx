@@ -6,7 +6,7 @@ import dayjs from 'dayjs';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { FaMoon } from 'react-icons/fa';
-
+import Spinner from 'react-bootstrap/Spinner';
 function MyOrder() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
@@ -53,13 +53,15 @@ function MyOrder() {
     const fetchOrders = async () => {
       try {
         const response = await axiosInstance().get(
-          `http://localhost:8000/api/reservations/user/myOrder`,
+          `/api/reservations/user/myOrder`,
         );
         console.log('Response data:', response.data);
         const orders: Order[] = response.data.data;
         setOrders(orders);
       } catch (error) {
         console.error('Error fetching rooms:', error);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -72,7 +74,15 @@ function MyOrder() {
     const diff = Math.abs(checkOutDate.getTime() - checkInDate.getTime());
     return Math.ceil(diff / (1000 * 3600 * 24));
   };
-
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center">
+        <Spinner animation="border" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </Spinner>
+      </div>
+    );
+  }
   return (
     <>
       <div>

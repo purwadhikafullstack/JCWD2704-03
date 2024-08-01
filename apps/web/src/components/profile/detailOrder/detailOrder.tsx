@@ -9,7 +9,7 @@ import { FaMoon, FaStar } from 'react-icons/fa';
 import Swal from 'sweetalert2';
 import FormPaymentProofComponent from '@/components/invoice/uploadPayment';
 import ReviewModal from '../reviewModal';
-
+import Spinner from 'react-bootstrap/Spinner';
 function DetailOrder() {
   const [order, setOrders] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
@@ -26,12 +26,12 @@ function DetailOrder() {
     const fetchOrders = async () => {
       try {
         const response = await axiosInstance().get(
-          `http://localhost:8000/api/reservations/${orderId}`,
+          `/api/reservations/${orderId}`,
         );
         const order: Order = response.data.data;
         setOrders(order);
         const reviewCheckResponse = await axiosInstance().get(
-          `http://localhost:8000/api/reviews/review/${orderId}`,
+          `/api/reviews/review/${orderId}`,
         );
         const reviewData = reviewCheckResponse.data.data;
 
@@ -46,6 +46,8 @@ function DetailOrder() {
         console.log('isi review', reviewData);
       } catch (error) {
         console.error('Error fetching rooms:', error);
+      } finally {
+        setLoading(false); // Set loading ke false setelah data diambil atau terjadi error
       }
     };
 
@@ -64,7 +66,7 @@ function DetailOrder() {
       if (result.isConfirmed) {
         try {
           const response = await axiosInstance().patch(
-            `http://localhost:8000/api/reservations/user/order/cancelled/${orderId}`,
+            `/api/reservations/user/order/cancelled/${orderId}`,
           );
           console.log(response.data);
 
@@ -89,7 +91,7 @@ function DetailOrder() {
   const handleSubmitReview = async () => {
     try {
       const request = await axiosInstance().post(
-        'http://localhost:8000/api/reviews/addReview',
+        '/api/reviews/addReview',
         {
           order_id: orderId,
           review: reviewText,
@@ -114,6 +116,15 @@ function DetailOrder() {
       console.error('Error submitting review:', error);
     }
   };
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center">
+        <Spinner animation="border" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </Spinner>
+      </div>
+    );
+  }
   const disableCancel = order?.status === 'success';
   if (!order) return <div>No order found</div>;
   const showButton = dayjs(order.checkOut_date).isBefore(dayjs());

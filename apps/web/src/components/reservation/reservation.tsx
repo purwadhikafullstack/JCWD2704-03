@@ -7,8 +7,10 @@ import { User } from '@/models/user.model';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useAppSelector } from '@/app/hooks';
 import { RoomCategory } from '@prisma/client';
-import { Room } from '@/models/room.model';
-
+import { FaSmoking } from 'react-icons/fa';
+import { MdOutlinePayment } from 'react-icons/md';
+import { PiForkKnifeFill } from 'react-icons/pi';
+import { IoPersonOutline } from 'react-icons/io5';
 function Reservation() {
   const router = useRouter();
   const params = useParams();
@@ -36,7 +38,7 @@ function Reservation() {
         console.log(id);
 
         const response = await axiosInstance().get(
-          `http://localhost:8000/api/properties/room/${id}`,
+          `/api/properties/room/${id}`,
         );
         const { data } = response.data;
 
@@ -114,8 +116,9 @@ function Reservation() {
     }
   };
   const isPayDisabled = !checkInDate || !checkOutDate;
+
   return (
-    <div className="max-w-7xl m-auto h-screen w-screen">
+    <div className="max-w-screen-xl m-auto h-screen w-screen">
       <div>
         <h1 className="text-2xl md:text-3xl font-bold md:py-6 p-6">
           Detail Reservation
@@ -140,12 +143,55 @@ function Reservation() {
                 <p className="md:text-lg text-gray-500 text-base">
                   {rooms?.desc}
                 </p>
-                <div className="flex flex-row">
-                  <div>Price: </div>
-                  Rp.
-                  {rooms?.peak_price
-                    ? rooms.peak_price.toLocaleString()
-                    : rooms?.price.toLocaleString()}
+                <div className="flex gap-2">
+                  <IoPersonOutline className="mt-1" />
+                  <div className="flex flex-row  text-blue-900">
+                    {rooms?.guest}
+                  </div>
+                </div>
+                <div>
+                  <div className="flex flex-row">
+                    {rooms?.isBreakfast === true ? (
+                      <div className="flex gap-2">
+                        <PiForkKnifeFill className="mt-1" />
+                        <div className=" text-blue-900">Breakfast included</div>
+                      </div>
+                    ) : (
+                      <div>
+                        <div className="font-semibold">No Breakfast</div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div>
+                  <div className="flex flex-row">
+                    {rooms?.isSmoking === true ? (
+                      <div className="flex gap-2 flex-row">
+                        <FaSmoking className="mt-1" />
+                        <div className=" text-blue-900">Smoking</div>
+                      </div>
+                    ) : (
+                      <div className="flex gap-2 flex-row">
+                        <div className="font-semibold">Non-smoking</div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div>
+                  <div className="flex flex-row">
+                    {rooms?.isRefunable === true ? (
+                      <div className="flex gap-2">
+                        <MdOutlinePayment className="mt-1" />
+                        <div className="font-semibold text-blue-900">
+                          Refunable
+                        </div>
+                      </div>
+                    ) : (
+                      <div>
+                        <div className="font-semibold">Non-refunable</div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -156,6 +202,7 @@ function Reservation() {
             <div className="font-semibold text-xl">Order summary</div>
             <div className="flex justify-between">
               <div>Price Room</div>
+
               <div>Rp. {price?.toLocaleString() || 'N/A'}</div>
             </div>
             <div className="border-b my-2" />

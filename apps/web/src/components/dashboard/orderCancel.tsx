@@ -6,6 +6,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { FaMoon, FaStar } from 'react-icons/fa';
 import Swal from 'sweetalert2';
+import Spinner from 'react-bootstrap/Spinner';
 
 function CancelOrder() {
   const [order, setOrders] = useState<Order | null>(null);
@@ -17,7 +18,7 @@ function CancelOrder() {
     const fetchOrders = async () => {
       try {
         const response = await axiosInstance().get(
-          `http://localhost:8000/api/reservations/${orderId}`,
+          `/api/reservations/${orderId}`,
         );
         const order: Order = response.data.data;
         setOrders(order);
@@ -40,8 +41,9 @@ function CancelOrder() {
     }).then(async (result) => {
       if (result.isConfirmed) {
         try {
+          setLoading(true);
           const response = await axiosInstance().patch(
-            `http://localhost:8000/api/reservations/tenant/order/cancelled/${orderId}`,
+            `/api/reservations/tenant/order/cancelled/${orderId}`,
           );
           console.log(response.data);
 
@@ -63,6 +65,15 @@ function CancelOrder() {
       }
     });
   };
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center">
+        <Spinner animation="border" role="status" size="sm" className="me-2">
+          <span className="visually-hidden">Loading...</span>
+        </Spinner>
+      </div>
+    );
+  }
   if (!order) return <div>No order found</div>;
   return (
     <>

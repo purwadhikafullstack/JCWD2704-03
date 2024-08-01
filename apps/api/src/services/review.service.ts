@@ -88,6 +88,33 @@ class ReviewService {
       return 'No one has bought the event so no review yet';
     }
   }
+  async getAllReviews(req: Request) {
+    const { property_id } = req.params;
+
+    const reviews = await prisma.review.findMany({
+      where: { property_id },
+      include: {
+        user: true,
+        order: true,
+        property: true,
+      },
+    });
+
+    const totalReviews = reviews.length;
+    return { reviews: [reviews], totalReviews };
+  }
+  async getAverageRating(req: Request) {
+    const { property_id } = req.params;
+
+    const averageRating = await prisma.review.aggregate({
+      where: { property_id },
+      _avg: {
+        rating: true,
+      },
+    });
+
+    return averageRating._avg.rating;
+  }
 }
 
 export default new ReviewService();

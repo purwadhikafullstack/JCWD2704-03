@@ -24,7 +24,7 @@ const PropertyReview = () => {
     const fetchEventData = async () => {
       try {
         const reviewResponse = await axiosInstance().get(
-          `api/reviews/getReviewByPropertyId/${propertyId}`,
+          `/api/reviews/getReviewByPropertyId/${propertyId}`,
         );
         const { data } = reviewResponse.data; // Adjust based on your API response structure
         console.log(data);

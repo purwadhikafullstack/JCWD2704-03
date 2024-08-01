@@ -20,8 +20,7 @@ async function fetchResults(searchParams: SearchParams) {
     process.env.NEXT_PUBLIC_BASE_API_URL || 'http://localhost:8000/api/';
 
   // Construct the URL using template literals
-  const url = `http://localhost:8000/api/properties/search?city=${city}&checkIn=${checkIn}&checkOut=${checkOut}`;
-
+  const url = `${baseUrl}/api/properties/search?city=${city}&checkIn=${checkIn}&checkOut=${checkOut};`;
   try {
     const response = await axiosInstance().get(url);
     return response.data;

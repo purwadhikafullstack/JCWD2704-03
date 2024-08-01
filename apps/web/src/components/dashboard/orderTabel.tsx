@@ -21,6 +21,7 @@ function OrderTable() {
       setOrders(data);
       setTotalPages(totalPages);
       setCurrentPage(currentPage);
+      console.log(data);
     } catch (error) {
       console.error('Error fetching order data:', error);
     }
@@ -88,7 +89,7 @@ function OrderTable() {
   ];
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6 max-w-screen-xl">
       <div className=" text-3xl font-semibold pb-3 text-[#263C94] mt-10">
         All Transaction
       </div>

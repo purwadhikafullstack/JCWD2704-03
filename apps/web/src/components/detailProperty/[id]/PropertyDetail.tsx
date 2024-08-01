@@ -31,7 +31,7 @@ function PropertyDetail() {
       const baseUrl =
         process.env.NEXT_PUBLIC_BASE_API_URL || 'http://localhost:8000/api/';
 
-      const url = `${baseUrl}properties/detail/${name}?checkIn=${checkIn}&checkOut=${checkOut}`;
+      const url = `${baseUrl}/api/properties/detail/${name}?checkIn=${checkIn}&checkOut=${checkOut}`;
 
       console.log(`Fetching property details from: ${url}`);
 
