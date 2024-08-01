@@ -61,7 +61,7 @@ const PasswordResetForm = () => {
           </Link>
           <h2 className="font-bold">Forgot password?</h2>
           <div className="text-zinc-400">
-            No worries, we'll send you reset instructions!
+            No worries, we&apos;ll send you reset instructions!
           </div>
         </div>
         {/* FORM SUBMIT EMAIL */}

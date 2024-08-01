@@ -16,7 +16,7 @@ import { Type, Bed } from '@prisma/client';
 //   updatedAt?: Date;
 // };
 
-export type RoomCategory = {
+export type TRoomCategory = {
   id: string;
   property_id: string;
   type: Type;
@@ -50,6 +50,6 @@ export type RoomCategory = {
   }[];
 };
 
-export interface RoomCategoryWithCount extends RoomCategory {
+export interface RoomCategoryWithCount extends TRoomCategory {
   roomCount: number; // Add this line to include the count
 }

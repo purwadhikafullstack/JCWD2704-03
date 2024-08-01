@@ -1,7 +1,7 @@
 import { Prisma } from '@prisma/client';
 import { prisma } from '../libs/prisma';
 import { Request } from 'express';
-import { RoomCategory } from '@/models/roomCat.model';
+import { TRoomCategory } from '@/models/roomCat.model';
 import sharp from 'sharp';
 import shortid from 'shortid';
 
@@ -22,7 +22,7 @@ class RoomService {
       bed,
       desc,
       numberOfRooms,
-    } = req.body as RoomCategory & { numberOfRooms: number };
+    } = req.body as TRoomCategory & { numberOfRooms: number };
     const { file } = req;
 
     // Check for property and permission
@@ -138,7 +138,7 @@ class RoomService {
       bed,
       desc,
       numberOfRooms,
-    } = req.body as Partial<RoomCategory> & { numberOfRooms: number };
+    } = req.body as Partial<TRoomCategory> & { numberOfRooms: number };
     const { file } = req;
 
     const roomCategory = await prisma.roomCategory.findFirst({
