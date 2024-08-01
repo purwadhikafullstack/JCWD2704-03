@@ -171,7 +171,10 @@ function PropertyDetail() {
                 </button>
                 <p>
                   Total Price: $
-                  {roomCounts[roomCategory.id] * roomCategory.price}
+                  {roomCounts[roomCategory.id] *
+                    (roomCategory.peak_price
+                      ? roomCategory.peak_price
+                      : roomCategory.price)}
                 </p>
               </div>
               {roomCategory.Room.length > 0 && (
