@@ -18,6 +18,7 @@ import { PiForkKnife } from 'react-icons/pi';
 import { TbSmoking } from 'react-icons/tb';
 import { MdOutlinePayment } from 'react-icons/md';
 import ChangeDateCalendar from '@/components/property/ChangeDateCalendar';
+import { Review } from '@/models/review.modal';
 
 interface RoomPriceProps {
   roomCategory: RoomCategory;
@@ -45,6 +46,7 @@ function PropertyDetail() {
   } | null>(null);
   const [showFullDesc, setShowFullDesc] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [reviews, setReviews] = useState<Review[]>([]);
 
   const toggleDescription = () => {
     setShowFullDesc(!showFullDesc);
@@ -162,6 +164,28 @@ function PropertyDetail() {
     });
   };
 
+  useEffect(() => {
+    const fetchReviews = async () => {
+      const baseUrl =
+        process.env.NEXT_PUBLIC_BASE_API_URL || `http://localhost:8000/api/`;
+      const url = `${baseUrl}reviews/getReviewByPropertyId/${property?.id}`;
+      console.log(`Fetching property reviews from: ${url}`);
+
+      try {
+        const response = await axiosInstance().get(url);
+
+        const data: Review[] = response.data.data;
+        console.log('Logging response data:', data);
+
+        setReviews(data);
+      } catch (error) {
+        console.error('Failed to fetch reviews:', error);
+      }
+    };
+
+    fetchReviews();
+  }, [property?.id]);
+
   return (
     <>
       <Header />
@@ -226,7 +250,10 @@ function PropertyDetail() {
             </div>
           )}
 
-          <ChangeDateCalendar />
+          <div className="hidden lg:flex">
+            <ChangeDateCalendar />
+          </div>
+
           {/* SECTION ROOM */}
           <div className="rooms flex flex-col gap-4">
             {roomCategories.length > 0 ? (
@@ -385,7 +412,7 @@ function PropertyDetail() {
           <hr />
           {/* SECTION MAPS */}
           <div>
-            <div className="text-xl font-medium pb-3">Where you'll be</div>
+            <div className="text-xl font-medium pb-3">Where you&apos;ll be</div>
             <div className="pb-3">{property?.address}</div>
             {property && property.latitude && property.longitude && (
               <div className="map-container py-3 rounded-xl overflow-hidden">
@@ -400,7 +427,54 @@ function PropertyDetail() {
           <hr />
 
           {/* SECTION REVIEW */}
-          <div>INI REVIEW</div>
+          <div>
+            <div className="text-xl font-medium pb-3">Reviews from guests</div>
+
+            <div>
+              {reviews.length === 0 ? (
+                <p>No reviews available.</p>
+              ) : (
+                <ul>
+                  {reviews.map((review) => (
+                    <li key={review.id}>
+                      <div className="flex gap-2">
+                        {/* IMAGE USERR */}
+                        {review.user.image_name ? (
+                          <div className="border-red-200 border-2 w-10 h-10 object-cover rounded-full ">
+                            <img
+                              src={`${imageSrcUser}${review.user.image_name}`}
+                              alt="User Avatar"
+                              className="w-10 h-10 object-cover rounded-full "
+                            />
+                          </div>
+                        ) : (
+                          <div className="w-10 h-10 border-red-200 border-2 object-cover rounded-full ">
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              viewBox="0 0 32 32"
+                              aria-hidden="true"
+                              role="presentation"
+                              focusable="false"
+                              className="w-full h-full"
+                            >
+                              <path d="M16 .7C7.56.7.7 7.56.7 16S7.56 31.3 16 31.3 31.3 24.44 31.3 16 24.44.7 16 .7zm0 28c-4.02 0-7.6-1.88-9.93-4.81a12.43 12.43 0 0 1 6.45-4.4A6.5 6.5 0 0 1 9.5 14a6.5 6.5 0 0 1 13 0 6.51 6.51 0 0 1-3.02 5.5 12.42 12.42 0 0 1 6.45 4.4A12.67 12.67 0 0 1 16 28.7z"></path>
+                            </svg>
+                          </div>
+                        )}
+
+                        <div>
+                          {review.user.first_name} {review.user.last_name}
+                        </div>
+                      </div>
+
+                      <p>Rating: {review.rating}</p>
+                      <p>{review.review}</p>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
         </div>
       </div>
       <Footer />

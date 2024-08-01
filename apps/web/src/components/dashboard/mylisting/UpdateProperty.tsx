@@ -201,7 +201,7 @@ function UpdateProperty() {
             name: property.name,
             desc: property.desc,
             category: property.category,
-            city: property.city,
+            city: property.city || '',
             address: property.address,
             latitude: property.latitude || null,
             longitude: property.longitude || null,
