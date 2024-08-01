@@ -35,9 +35,7 @@ function Reservation() {
       try {
         console.log(id);
 
-        const response = await axiosInstance().get(
-          `http://localhost:8000/api/properties/room/${id}`,
-        );
+        const response = await axiosInstance().get(`api/properties/room/${id}`);
         const { data } = response.data;
 
         console.log('Response:', response.data);

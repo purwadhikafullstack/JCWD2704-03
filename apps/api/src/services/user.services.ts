@@ -93,39 +93,6 @@ class UserService {
     );
   }
 
-  // async sendingEmail(
-  //   userId: string,
-  //   userEmail: string,
-  //   pathToEmailTemplate: string,
-  //   emailSubject: string,
-  //   verify_url: string,
-  // ) {
-  //   const verifyToken = createToken({ id: userId }, '1hr');
-
-  //   const template = fs
-  //     .readFileSync(__dirname + pathToEmailTemplate)
-  //     .toString();
-
-  //   const html = render(template, {
-  //     email: userEmail,
-  //     verify_url: `http://localhost:3000/${verify_url}/${verifyToken}`,
-  //   });
-
-  //   let returnFromTransporter = await transporter
-  //     .sendMail({
-  //       to: userEmail,
-  //       subject: emailSubject,
-  //       html,
-  //     })
-  //     .then((info) => {
-  //       return 'Email sent successfully';
-  //     })
-  //     .catch((error) => {
-  //       return error.message;
-  //     });
-  //   return returnFromTransporter;
-  // }
-
   async sendingEmail(
     userId: string,
     userEmail: string,
@@ -135,9 +102,8 @@ class UserService {
   ) {
     const tokenStore: Record<string, { used: boolean }> = {};
 
-    const verifyToken = createToken({ id: userId }, '1hr'); // Token valid untuk 1 jam
+    const verifyToken = createToken({ id: userId }, '1hr');
 
-    // Simpan token dan status di memori
     tokenStore[verifyToken] = { used: false };
 
     const template = fs
@@ -145,7 +111,7 @@ class UserService {
       .toString();
     const html = render(template, {
       email: userEmail,
-      verify_url: `http://localhost:3000/${verify_url}/${verifyToken}`,
+      verify_url: `${process.env.BASE_WEB_URL}/${verify_url}/${verifyToken}`,
     });
 
     let returnFromTransporter = await transporter

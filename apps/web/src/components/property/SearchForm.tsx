@@ -74,20 +74,16 @@ const SearchForm: React.FC = () => {
     if (isLoaded && autocompleteInputRef.current) {
       const autocomplete = new window.google.maps.places.Autocomplete(
         autocompleteInputRef.current,
-        {
-          types: ['geocode'],
-        },
+        { types: ['(cities)'], componentRestrictions: { country: 'ID' } },
       );
 
       autocomplete.addListener('place_changed', () => {
         const place = autocomplete.getPlace();
-        if (place.address_components) {
-          const cityComponent = place.address_components.find((component) =>
-            component.types.includes('locality'),
-          );
-          if (cityComponent) {
-            formikRef.current.setFieldValue('city', cityComponent.long_name);
-          }
+        if (place.address_components && formikRef.current) {
+          formikRef.current.setValues({
+            ...formikRef.current.values,
+            city: place.formatted_address,
+          });
         }
       });
     }

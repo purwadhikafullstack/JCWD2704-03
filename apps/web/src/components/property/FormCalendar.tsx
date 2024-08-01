@@ -65,8 +65,7 @@ const FormCalendar: React.FC = () => {
           city: values.city,
           checkIn: values.checkIn,
           checkOut: values.checkOut,
-          page: 1, // Initial page
-          limit: 10, // Default limit
+          page: 1,
         },
       });
 
@@ -149,7 +148,7 @@ const FormCalendar: React.FC = () => {
                 try {
                   await handleSearchSubmit(values);
                   router.push(
-                    `/search?city=${values.city}&checkIn=${values.checkIn}&checkOut=${values.checkOut}&page=1&limit=10`,
+                    `/search?city=${values.city}&checkIn=${values.checkIn}&checkOut=${values.checkOut}&page=1`,
                   );
                 } catch (error) {
                   console.error('Submission error:', error);

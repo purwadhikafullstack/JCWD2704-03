@@ -17,7 +17,7 @@ function CancelOrder() {
     const fetchOrders = async () => {
       try {
         const response = await axiosInstance().get(
-          `http://localhost:8000/api/reservations/${orderId}`,
+          `/api/reservations/${orderId}`,
         );
         const order: Order = response.data.data;
         setOrders(order);
@@ -41,7 +41,7 @@ function CancelOrder() {
       if (result.isConfirmed) {
         try {
           const response = await axiosInstance().patch(
-            `http://localhost:8000/api/reservations/tenant/order/cancelled/${orderId}`,
+            `api/reservations/tenant/order/cancelled/${orderId}`,
           );
           console.log(response.data);
 

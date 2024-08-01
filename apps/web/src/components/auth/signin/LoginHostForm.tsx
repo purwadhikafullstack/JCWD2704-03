@@ -75,7 +75,7 @@ const LoginForm: React.FC = () => {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: 'http://localhost:3000/auth/callback?userType=tenant',
+          redirectTo: `${process.env.NEXT_PUBLIC_BASE_WEB_URL}/auth/callback?userType=tenant`,
         },
       });
 

@@ -60,14 +60,16 @@ function PropertyDetail() {
       if (!name || !checkIn || !checkOut) return;
 
       const baseUrl =
-        process.env.NEXT_PUBLIC_BASE_API_URL || 'http://localhost:8000/api/';
+        process.env.NEXT_PUBLIC_BASE_API_URL || 'http://localhost:8000/';
 
-      const url = `${baseUrl}properties/detail/${name}?checkIn=${checkIn}&checkOut=${checkOut}`;
+      const url = `${baseUrl}api/properties/detail/${name}?checkIn=${checkIn}&checkOut=${checkOut}`;
 
       console.log(`Fetching property details from: ${url}`);
 
       try {
-        const response = await axiosInstance().get(url);
+        const response = await axiosInstance().get(
+          `api/properties/detail/${name}?checkIn=${checkIn}&checkOut=${checkOut}`,
+        );
         const propertyData = response.data.data;
 
         console.log('Property data received:', propertyData);
@@ -167,8 +169,8 @@ function PropertyDetail() {
   useEffect(() => {
     const fetchReviews = async () => {
       const baseUrl =
-        process.env.NEXT_PUBLIC_BASE_API_URL || `http://localhost:8000/api/`;
-      const url = `${baseUrl}reviews/getReviewByPropertyId/${property?.id}`;
+        process.env.NEXT_PUBLIC_BASE_API_URL || `http://localhost:8000`;
+      const url = `${baseUrl}api/reviews/getReviewByPropertyId/${property?.id}`;
       console.log(`Fetching property reviews from: ${url}`);
 
       try {
