@@ -8,6 +8,7 @@ interface Sale {
   property_name: string;
   total_price: number;
   createdAt: string;
+  invoice_id: string;
 }
 
 const Sales: React.FC = () => {
@@ -26,6 +27,7 @@ const Sales: React.FC = () => {
         },
       });
       setSales(response.data.data);
+      console.log('data all sales', response.data.data);
     } catch (error) {
       console.error('Error fetching sales data:', error);
     }
@@ -67,7 +69,7 @@ const Sales: React.FC = () => {
           <thead>
             <tr className="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
               <th className="py-2 px-4 border">No</th>
-              <th className="py-2 px-4 border">User ID</th>
+              <th className="py-2 px-4 border">Invoice ID</th>
               <th className="py-2 px-4 border">User First Name</th>
               <th className="py-2 px-4 border">Property ID</th>
               <th className="py-2 px-4 border">Property Name</th>
@@ -81,7 +83,7 @@ const Sales: React.FC = () => {
             {sales.map((sale, index) => (
               <tr key={index}>
                 <td className="py-2 px-4 border text-center">{index + 1}</td>
-                <td className="py-2 px-4 border">{sale.user_id}</td>
+                <td className="py-2 px-4 border">{sale.invoice_id}</td>
                 <td className="py-2 px-4 border">{sale.user_firstname}</td>
                 <td className="py-2 px-4 border">{sale.property_id}</td>
                 <td className="py-2 px-4 border">{sale.property_name}</td>

@@ -155,7 +155,7 @@ function DetailOrder() {
                 <div className="flex flex-col text-right">
                   <div>Order ID: </div>
                   <div className="text-gray-200 text-sm">
-                    {order.id.toUpperCase()}
+                    {order.invoice_id.toUpperCase()}
                   </div>
                 </div>
                 {/* checkIn checkOut */}

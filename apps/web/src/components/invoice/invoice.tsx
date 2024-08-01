@@ -10,7 +10,7 @@ import { axiosInstance } from '@/libs/axios.config';
 import { Order } from '@/models/reservation.model';
 import { CountComponent } from './countDown';
 import { useEffect, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 // const paymentMethodMap: { [key: string]: string } = {
 //   MANDIRI: 'MANDIRI Transfer',
@@ -29,6 +29,7 @@ const Invoice = () => {
 
   const search = useSearchParams();
   const id = search.get('order_id');
+  const router = useRouter();
   const statusCode = search.get('status_code');
 
   useEffect(() => {
@@ -60,6 +61,9 @@ const Invoice = () => {
   const handleLinkPayment = () => {
     const token = order?.token_midTrans;
     if (token) window.snap.pay(token);
+  };
+  const handleMyOrder = () => {
+    router.push('/profile');
   };
 
   if (order === undefined) return <h4>Loading fetching order....</h4>;
@@ -113,13 +117,24 @@ const Invoice = () => {
             </div>
             <div className="flex flex-col items-center gap-4 pt-4 text-center">
               <div>
-                Please attach your payment proof to confirm your payment.
+                Please attach your payment proof to confirm your payment. You
+                can attach it on your dashboard.
               </div>
               {/* isi form */}
               {order.status !== 'success' &&
               (order.payment_method === 'gopay' ||
                 order.payment_method === 'qris') ? (
                 <button onClick={handleLinkPayment}>Link Payment</button>
+              ) : null}
+              {order.status !== 'success' &&
+              (order.payment_method === 'MANDIRI' ||
+                order.payment_method === 'BCA') ? (
+                <button
+                  className="text-white bg-gray-800 hover:bg-gray-900 focus:outline-none focus:ring-4 focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-gray-800 dark:hover:bg-gray-700 dark:focus:ring-gray-700 dark:border-gray-700"
+                  onClick={handleMyOrder}
+                >
+                  My Orders
+                </button>
               ) : null}
             </div>
           </div>
@@ -142,8 +157,7 @@ const Invoice = () => {
                 <div className="">
                   <div className="font-semibold">{order?.property.name}</div>
                   <div className="text-zinc-600">
-                    {order?.total_room}{' '}
-                    {order?.total_room === 1 ? 'room' : 'rooms'}
+                    {order.RoomCategory.type} Room
                   </div>
                 </div>
               </div>

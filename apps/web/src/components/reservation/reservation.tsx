@@ -140,6 +140,13 @@ function Reservation() {
                 <p className="md:text-lg text-gray-500 text-base">
                   {rooms?.desc}
                 </p>
+                <div className="flex flex-row">
+                  <div>Price: </div>
+                  Rp.
+                  {rooms?.peak_price
+                    ? rooms.peak_price.toLocaleString()
+                    : rooms?.price.toLocaleString()}
+                </div>
               </div>
             </div>
           </div>

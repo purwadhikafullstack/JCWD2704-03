@@ -136,6 +136,7 @@ class SalesService {
       select: {
         user_id: true,
         property_id: true,
+        invoice_id: true,
         user: {
           select: {
             first_name: true,
@@ -166,88 +167,76 @@ class SalesService {
       property_name: sale.property?.name,
       total_price: sale.total_price,
       createdAt: sale.createdAt,
+      invoice_id: sale.invoice_id,
     }));
 
     return result;
   }
+
   async roomAvailability(req: Request) {
     const { year, month } = req.query;
 
+    // Validasi parameter year dan month
     if (!year || !month) {
-      console.log('Year and month are required');
+      throw new Error('Year and month are required.');
     }
 
-    const yearInt = parseInt(year as string);
-    const monthInt = parseInt(month as string);
+    const yearNumber = parseInt(year as string);
+    const monthNumber = parseInt(month as string);
 
-    const startDate = new Date(yearInt, monthInt - 1, 1);
-    const endDate = new Date(yearInt, monthInt, 0);
-
+    const startDate = new Date(Date.UTC(yearNumber, monthNumber - 1, 1));
+    const endDate = new Date(Date.UTC(yearNumber, monthNumber, 0));
+    console.log('Start Date:', startDate);
+    console.log('End Date:', endDate);
     const orders = await prisma.order.findMany({
       where: {
-        status: 'success',
-        OR: [
-          {
-            checkIn_date: {
-              gte: startDate,
-              lte: endDate,
-            },
-          },
-          {
-            checkOut_date: {
-              gte: startDate,
-              lte: endDate,
-            },
-          },
-          {
-            AND: [
-              {
-                checkIn_date: {
-                  lte: startDate,
-                },
-              },
-              {
-                checkOut_date: {
-                  gte: endDate,
-                },
-              },
-            ],
-          },
-        ],
+        checkIn_date: {
+          gte: startDate,
+          lte: endDate,
+        },
+        checkOut_date: {
+          gte: startDate,
+        },
+        property: {
+          tenant_id: req.user.id,
+        },
+        status: 'success', // Menambahkan kondisi status 'success'
       },
-      include: {
-        RoomCategory: true,
-        property: true,
-        OrderRoom: {
-          include: {
-            room: true,
+      select: {
+        id: true,
+        user_id: true,
+        property_id: true,
+        roomCategory_id: true,
+        checkIn_date: true,
+        checkOut_date: true,
+        total_price: true,
+        invoice_id: true,
+        property: {
+          select: {
+            name: true,
+          },
+        },
+        RoomCategory: {
+          select: {
+            type: true,
           },
         },
       },
     });
 
-    const availability: {
-      [date: string]: { rooms: any[]; properties: any[] };
-    } = {};
+    const daysInMonth = new Date(yearNumber, monthNumber, 0).getDate();
+    const calendar: { date: Date; orders: any[] }[] = [];
+    console.log(daysInMonth);
 
-    for (let day = 1; day <= endDate.getDate(); day++) {
-      const date = new Date(yearInt, monthInt - 1, day);
-      const dateString = date.toISOString().split('T')[0];
-
-      availability[dateString] = {
-        rooms: [],
-        properties: [],
-      };
-
-      for (const order of orders) {
-        if (order.checkIn_date <= date && order.checkOut_date >= date) {
-          availability[dateString].rooms.push(order.RoomCategory);
-          availability[dateString].properties.push(order.property);
-        }
-      }
+    for (let day = 2; day <= daysInMonth + 1; day++) {
+      const date = new Date(yearNumber, monthNumber - 1, day);
+      const ordersForDate = orders.filter(
+        (order) => date >= order.checkIn_date && date <= order.checkOut_date,
+      );
+      calendar.push({ date, orders: ordersForDate });
     }
 
-    return availability;
+    return calendar;
   }
 }
 export default new SalesService();
