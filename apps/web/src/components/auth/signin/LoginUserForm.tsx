@@ -246,7 +246,7 @@ const LoginForm: React.FC = () => {
 
               <div className="flex justify-between">
                 <div className="text-xs flex flex-row gap-1">
-                  <div>Don't have account?</div>
+                  <div>Don&apos;t have account?</div>
                   <Link
                     href="/auth/signup/user"
                     className="font-semibold text-[#263C94] no-underline"
@@ -372,7 +372,7 @@ const LoginForm: React.FC = () => {
 
           <div className="flex flex-col gap-2 justify-between">
             <div className="text-xs flex flex-row gap-1">
-              <div>Don't have account?</div>
+              <div>Don&apos;t have account?</div>
               <Link
                 href="/auth/signup/user"
                 className="font-semibold text-[#263C94] no-underline"
