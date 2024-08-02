@@ -11,6 +11,7 @@ import { useSelector } from 'react-redux';
 import { RootState } from '@/libs/redux/store';
 import dayjs from 'dayjs';
 import { User } from '@/models/user.model';
+import { Spinner } from 'react-bootstrap';
 
 interface Review {
   id: string;
@@ -59,6 +60,8 @@ function UserShowProfile() {
       }
     };
 
+    // setLoading(true);
+
     const fetchUserProperties = async () => {
       try {
         const response = await axiosInstance().get(
@@ -73,6 +76,8 @@ function UserShowProfile() {
         setReviews(allReviews);
       } catch (err: any) {
         setError(err.message);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -80,7 +85,14 @@ function UserShowProfile() {
     fetchUserProperties();
   }, [id]);
 
-  if (loading) return <div>Loading...</div>;
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <Spinner animation="border" />
+      </div>
+    );
+  }
+
   if (error) return <div>Error: {error}</div>;
   if (!user) return <div>No user found</div>;
 

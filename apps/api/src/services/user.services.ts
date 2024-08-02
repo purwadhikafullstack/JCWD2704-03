@@ -6,7 +6,7 @@ import { transporter } from '../libs/nodemailer';
 import { SECRET_KEY } from '../configs/config';
 import { verify } from 'jsonwebtoken';
 import fs from 'fs';
-import { join } from 'path';
+import path, { join } from 'path';
 import { render } from 'mustache';
 import { prisma } from '../libs/prisma';
 import type { Prisma } from '@prisma/client';
@@ -100,11 +100,11 @@ class UserService {
     emailSubject: string,
     verify_url: string,
   ) {
-    const tokenStore: Record<string, { used: boolean }> = {};
+    // const tokenStore: Record<string, { used: boolean }> = {};
 
     const verifyToken = createToken({ id: userId }, '1hr');
 
-    tokenStore[verifyToken] = { used: false };
+    // tokenStore[verifyToken] = { used: false };
 
     const template = fs
       .readFileSync(__dirname + pathToEmailTemplate)
@@ -249,22 +249,50 @@ class UserService {
       const updatedData: Prisma.UserUpdateInput = {};
 
       if (email && email !== user.email) {
-        console.log('test 2');
-
         updatedData.email = email;
         updatedData.isVerified = false;
         updatedData.isRequestingEmailChange = true;
 
         console.log('Preparing to send verification email to:', email);
-        const sentEmail = await this.sendingEmail(
-          user.id,
-          email,
-          '/../templates/verification.html',
-          'Confirm Your Email Address For Atcasa',
-          'verify',
+
+        const baseUrl = process.env.BASE_WEB_URL || 'http://localhost:3000';
+        const token = createToken(
+          {
+            id: userId,
+            email: user.email,
+            isVerified: user.isVerified,
+            first_name: user.first_name,
+            last_name: user.last_name,
+            isRequestingEmailChange: true,
+            image_name: user.image_name,
+            role: user.role,
+            type: 'access-token',
+          },
+          '1h',
+        );
+        const verificationUrl = `${baseUrl}/auth/reverify/${token}`;
+
+        const templatePath = path.join(__dirname, '../templates/reverify.html');
+        let htmlTemplate = fs.readFileSync(templatePath, 'utf-8');
+        const html = htmlTemplate.replace(
+          /{verificationUrl}/g,
+          verificationUrl,
         );
 
-        console.log('Verification email result:', sentEmail);
+        const mailOptions = {
+          from: 'purwadhika2704@gmail.com',
+          to: email,
+          subject: 'Email Address Change Request',
+          html,
+        };
+
+        // Send the email
+        try {
+          await transporter.sendMail(mailOptions);
+          console.log('Verification email sent');
+        } catch (emailError) {
+          console.error('Error sending email:', emailError);
+        }
       }
 
       if (first_name !== undefined) {
@@ -323,6 +351,94 @@ class UserService {
     } catch (error) {
       console.error('Error in editUserProfile:', error);
       throw error;
+    }
+  }
+
+  async reverifyEmail(req: Request) {
+    const token = req.params.token as string;
+
+    console.log('Received token:', token);
+
+    if (!token) {
+      throw new Error('Token is required');
+    }
+
+    try {
+      // Decode and verify the token
+      const decodedToken = verify(token, process.env.SECRET_KEY as string) as {
+        id: string;
+        email: string;
+        isVerified: boolean;
+        first_name: string;
+        last_name: string;
+        isRequestingEmailChange: boolean;
+        image_name: string | null;
+        role: string;
+        type: string;
+        iat: number;
+        exp: number;
+      };
+
+      console.log('Decoded token:', decodedToken);
+
+      if (!decodedToken || !decodedToken.id) {
+        throw new Error('Invalid token');
+      }
+
+      const id = decodedToken.id;
+      console.log('User ID from token:', id);
+
+      // Fetch the user from the database
+      const user = await prisma.user.findUnique({
+        where: { id: id },
+      });
+
+      console.log('Fetched user:', user);
+
+      if (!user) {
+        throw new Error('User not found');
+      }
+
+      if (!user.isRequestingEmailChange) {
+        throw new Error('Invalid or expired token');
+      }
+
+      // Update the user record
+      const updatedUser = await prisma.user.update({
+        where: { id: id },
+        data: {
+          isVerified: true,
+          isRequestingEmailChange: false,
+        },
+      });
+
+      console.log('Updated user:', updatedUser);
+
+      console.log('Email verification successful for user:', id);
+
+      const newToken = createToken(
+        {
+          id: updatedUser.id,
+          email: updatedUser.email,
+          isVerified: updatedUser.isVerified,
+          first_name: updatedUser.first_name,
+          last_name: updatedUser.last_name,
+          isRequestingEmailChange: updatedUser.isRequestingEmailChange,
+          image_name: updatedUser.image_name,
+          role: updatedUser.role,
+          type: 'access-token',
+        },
+        '1h', // Adjust the expiration time as needed
+      );
+
+      return {
+        message: 'Email verified successfully',
+        token: newToken,
+        role: updatedUser.role,
+      };
+    } catch (error) {
+      console.error('Error in reverifyEmail:', error);
+      throw new Error('Internal server error');
     }
   }
 
