@@ -1,8 +1,7 @@
 'use client';
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { Formik, Field, Form, FormikProps } from 'formik';
 import * as Yup from 'yup';
-import { useRouter } from 'next/navigation';
 import { FaSearch } from 'react-icons/fa';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Spinner from 'react-bootstrap/Spinner';
@@ -10,7 +9,6 @@ import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 const ChangeDateCalendar: React.FC = () => {
-  const router = useRouter();
   const formikRef = useRef<FormikProps<any>>(null);
 
   const getTodayDate = () => {
@@ -21,8 +19,6 @@ const ChangeDateCalendar: React.FC = () => {
     return `${year}-${month}-${day}`;
   };
 
-  const [checkInDate, setCheckInDate] = useState(getTodayDate());
-
   const getTomorrowDate = () => {
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
@@ -32,9 +28,14 @@ const ChangeDateCalendar: React.FC = () => {
     return `${year}-${month}-${day}`;
   };
 
+  const getInitialDate = (param: string, defaultValue: string) => {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get(param) || defaultValue;
+  };
+
   const initialValues = {
-    checkIn: getTodayDate(),
-    checkOut: getTomorrowDate(),
+    checkIn: getInitialDate('checkIn', getTodayDate()),
+    checkOut: getInitialDate('checkOut', getTomorrowDate()),
   };
 
   const validationSchema = Yup.object({
@@ -50,6 +51,9 @@ const ChangeDateCalendar: React.FC = () => {
         },
       ),
   });
+
+  const [checkInDate, setCheckInDate] = useState(initialValues.checkIn);
+  const [checkOutDate, setCheckOutDate] = useState(initialValues.checkOut);
 
   const handleDateChange = (
     e: React.ChangeEvent<HTMLInputElement>,
@@ -72,21 +76,20 @@ const ChangeDateCalendar: React.FC = () => {
         setFieldValue(name, checkIn); // Reset to check-in date
       } else {
         setFieldValue(name, value);
+        setCheckOutDate(value);
       }
     }
-
-    // Update URL parameters dynamically
-    const updatedUrl = new URL(window.location.href);
-    updatedUrl.searchParams.set(
-      'checkIn',
-      formikRef.current?.values.checkIn || '',
-    );
-    updatedUrl.searchParams.set(
-      'checkOut',
-      formikRef.current?.values.checkOut || '',
-    );
-    window.history.replaceState({}, '', updatedUrl.toString());
   };
+
+  useEffect(() => {
+    if (formikRef.current) {
+      const { checkIn, checkOut } = formikRef.current.values;
+      const updatedUrl = new URL(window.location.href);
+      updatedUrl.searchParams.set('checkIn', checkIn);
+      updatedUrl.searchParams.set('checkOut', checkOut);
+      window.history.replaceState({}, '', updatedUrl.toString());
+    }
+  }, [checkInDate, checkOutDate]);
 
   const handleSubmit = async (values: any, { setSubmitting }: any) => {
     try {
@@ -114,19 +117,19 @@ const ChangeDateCalendar: React.FC = () => {
               innerRef={formikRef}
             >
               {({ isSubmitting, setFieldValue }) => (
-                <Form className="rounded-full text-zinc-800 bg-zinc-100 py-2 px-10 border shadow-sm">
-                  <div className="flex flex-row gap-1 items-center">
-                    <div className="font-medium text-sm px-2 text-zinc-500">
-                      Check-in
+                <Form className="rounded-xl text-zinc-800 bg-white py-4 px-4 w-80 border shadow-sm">
+                  <div className="flex flex-col gap-2 items-center">
+                    <div className="font-semibold text-sm px-2 text-black">
+                      Check-in date
                     </div>
                     <div>
                       <div className="relative">
                         <Field
                           type="date"
                           name="checkIn"
-                          className="bg-zinc-100 border-none text-gray-900 text-sm rounded-full focus:ring-zinc-100 focus:border-zinc-100 focus:shadow-lg focus:bg-white block py-3 w-30"
+                          className=" border-none text-gray-900 text-sm rounded-lg focus:ring-zinc-100 focus:border-zinc-100 focus:shadow-lg focus:bg-white block  py-2 w-full border-zinc-200 border"
                           placeholder="Select date start"
-                          defaultValue={getTodayDate()}
+                          defaultValue={initialValues.checkIn}
                           min={getTodayDate()}
                           onChange={(e: any) =>
                             handleDateChange(e, setFieldValue)
@@ -134,16 +137,17 @@ const ChangeDateCalendar: React.FC = () => {
                         />
                       </div>
                     </div>
-                    <div className="font-medium text-sm px-2 text-zinc-500">
-                      Check-out
+                    <div className="font-semibold text-sm px-2 text-black">
+                      Check-out date
                     </div>
                     <div>
                       <div className="relative">
                         <Field
                           type="date"
                           name="checkOut"
-                          className="bg-zinc-100 border-none text-gray-900 text-sm rounded-full focus:ring-zinc-100 focus:border-zinc-100 focus:shadow-lg focus:bg-white block py-3 w-30"
+                          className="border-none text-gray-900 text-sm rounded-lg focus:ring-zinc-100 focus:border-zinc-100 focus:shadow-lg focus:bg-white block py-2 w-full border-zinc-200 border"
                           placeholder="Select date end"
+                          defaultValue={initialValues.checkOut}
                           min={checkInDate}
                           onChange={(e: any) =>
                             handleDateChange(e, setFieldValue)
@@ -153,7 +157,7 @@ const ChangeDateCalendar: React.FC = () => {
                     </div>
                     <button
                       type="submit"
-                      className="bg-black p-3 hover:shadow-md rounded-full hover:bg-zinc-200 text-center flex"
+                      className="bg-black p-3 hover:shadow-md rounded-xl w-full hover:bg-zinc-200 text-center flex items-center justify-center mt-2"
                       disabled={isSubmitting}
                     >
                       {isSubmitting ? (
@@ -161,7 +165,9 @@ const ChangeDateCalendar: React.FC = () => {
                           <span className="visually-hidden">Loading...</span>
                         </Spinner>
                       ) : (
-                        <FaSearch className="text-white" />
+                        <div className="text-white text-sm px-2 font-semibold ">
+                          Change dates
+                        </div>
                       )}
                     </button>
                   </div>
