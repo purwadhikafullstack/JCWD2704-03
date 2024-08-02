@@ -74,8 +74,8 @@ export const Header = () => {
 
   return (
     <div>
-      <div className="navbar bg-base-100 border-b border-zinc-200">
-        <div className="flex justify-between w-screen px-3 lg:px-10">
+      <div className="navbar bg-base-100 border-b border-zinc-200 absolute z-50 ">
+        <div className="flex justify-between w-screen px-14 lg:px-80">
           <a href="/">
             <img
               src="https://i.ibb.co.com/Chkyq5g/ATCASA-3.png"

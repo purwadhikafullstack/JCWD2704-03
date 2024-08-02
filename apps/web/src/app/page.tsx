@@ -1,20 +1,21 @@
 import React from 'react';
-import { AppProps } from 'next/app';
-import './globals.css';
 import Footer from '@/components/Footer';
 import { Header } from '@/components/Header';
-import SearchForm from '@/components/property/SearchForm';
-import { Suspense } from 'react';
 import HomeHero from '@/components/property/HomeHero';
+import HomePromo from '@/components/property/HomePromo';
+import HomePopularDestination from '@/components/property/HomePopularDestination';
+import HomeFeaturedProperties from '@/components/property/HomeFeaturedProperties';
 
 const HomePage = () => {
   return (
-    <div>
+    <div className="mx-auto">
       <Header />
-      <HomeHero />
-      <Suspense fallback={<div>Loading search form...</div>}>
-        <SearchForm />
-      </Suspense>
+      <div className="mb-5">
+        <HomeHero />
+        <HomePromo />
+        <HomePopularDestination />
+        {/* <HomeFeaturedProperties /> */}
+      </div>
       <Footer />
     </div>
   );
