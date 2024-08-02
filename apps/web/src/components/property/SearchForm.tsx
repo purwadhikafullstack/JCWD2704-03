@@ -95,12 +95,12 @@ const SearchForm: React.FC = () => {
 
   return (
     <>
-      <div className="relative w-screen">
-        <img
+      <div className="relative">
+        {/* <img
           src="https://i.ibb.co.com/5rcMxmc/Untitled-design-4.png"
           alt=""
           className="object-cover w-full h-[400px]"
-        />
+        /> */}
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="flex justify-center">
             <Formik
