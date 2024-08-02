@@ -1,6 +1,7 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
 /* 
   @layer base {
     :root {
@@ -67,3 +68,61 @@
       @apply bg-background text-foreground;
     }
   } */
+
+.embla {
+  position: relative;
+  overflow: hidden;
+}
+
+.embla__container {
+  display: flex;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+  margin-left: -10px;
+}
+
+.embla__slide {
+  position: relative;
+  min-width: 100%;
+  padding-left: 10px;
+  overflow: hidden;
+}
+
+.embla__button {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background-color: rgba(0, 0, 0, 0.5);
+  border: none;
+  color: white;
+  padding: 10px;
+  cursor: pointer;
+}
+
+.embla__button--prev {
+  left: 10px;
+}
+
+.embla__button--next {
+  right: 10px;
+}
+
+.embla__dots {
+  display: flex;
+  justify-content: center;
+  padding-top: 10px;
+}
+
+.embla__dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: gray;
+  margin: 0 5px;
+  cursor: pointer;
+}
+
+.embla__dot.is-selected {
+  background-color: black;
+}
