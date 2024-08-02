@@ -137,10 +137,10 @@ function SearchPage({ searchParams }: { searchParams: SearchParams }) {
                         {property.name}
                       </div>
 
-                      <div className="flex gap-1 items-center text-sm lg:text-lg truncate">
+                      {/* <div className="flex gap-1 items-center text-sm lg:text-lg truncate">
                         <FaStar /> 4.0
                         <span>(50)</span>
-                      </div>
+                      </div> */}
                     </div>
 
                     <div className="lg:text-md text-sm flex gap-1 items-center">
