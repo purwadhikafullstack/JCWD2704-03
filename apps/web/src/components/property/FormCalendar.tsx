@@ -26,8 +26,6 @@ const FormCalendar: React.FC = () => {
     return `${year}-${month}-${day}`;
   };
 
-  const [checkInDate, setCheckInDate] = useState(getTodayDate());
-
   const getTomorrowDate = () => {
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
@@ -36,6 +34,9 @@ const FormCalendar: React.FC = () => {
     const day = String(tomorrow.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
   };
+
+  const [checkInDate, setCheckInDate] = useState(getTodayDate());
+  const [checkOutDate, setCheckOutDate] = useState(getTomorrowDate());
 
   const initialValues = {
     city: '',
@@ -113,12 +114,13 @@ const FormCalendar: React.FC = () => {
     if (name === 'checkIn') {
       setFieldValue(name, value);
       setCheckInDate(value);
-      // Update the min attribute for checkOut date
+      // Update the checkOut date to be the day after tomorrow
+      const newCheckOutDate = new Date(value);
+      newCheckOutDate.setDate(newCheckOutDate.getDate() + 1);
+      setCheckOutDate(newCheckOutDate.toISOString().split('T')[0]);
       formikRef.current?.setFieldValue(
         'checkOut',
-        value > formikRef.current.values.checkOut
-          ? value
-          : formikRef.current.values.checkOut,
+        newCheckOutDate.toISOString().split('T')[0],
       );
     } else if (name === 'checkOut') {
       const checkIn = formikRef.current?.values.checkIn;

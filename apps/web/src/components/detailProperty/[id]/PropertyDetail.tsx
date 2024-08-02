@@ -188,6 +188,42 @@ function PropertyDetail() {
 
     fetchReviews();
   }, [property?.id]);
+  const isPeakPeriod = (start: string, end: string): boolean => {
+    const today = new Date();
+    const startDate = new Date(start);
+    const endDate = new Date(end);
+    return today >= startDate && today <= endDate;
+  };
+  const getCurrentPrice = (roomCategory: RoomCategory) => {
+    const today = new Date();
+    const startDatePeak = roomCategory.start_date_peak
+      ? new Date(roomCategory.start_date_peak)
+      : null;
+    const endDatePeak = roomCategory.end_date_peak
+      ? new Date(roomCategory.end_date_peak)
+      : null;
+
+    if (
+      startDatePeak &&
+      endDatePeak &&
+      today >= startDatePeak &&
+      today <= endDatePeak
+    ) {
+      return roomCategory.peak_price;
+    }
+    return roomCategory.price;
+  };
+  const calculateTotalPrice = (
+    roomCategory: RoomCategory,
+    count: number,
+  ): number => {
+    const isPeak =
+      roomCategory.start_date_peak && roomCategory.end_date_peak
+        ? isPeakPeriod(roomCategory.start_date_peak, roomCategory.end_date_peak)
+        : false;
+    const peakPrice = roomCategory.peak_price ?? roomCategory.price;
+    return isPeak ? count * peakPrice : count * roomCategory.price;
+  };
 
   if (loading) {
     return (
@@ -376,7 +412,7 @@ function PropertyDetail() {
 
                     <div className="lg:flex justify-between gap-5">
                       <div className="py-3 font-medium text-lg">
-                        {formatPrice(roomCategory.price)} /room/night
+                        Price: ${getCurrentPrice(roomCategory)} /room/night
                         <div className="text-[#ED777B] font-semibold text-xs">
                           {roomCategory.remainingRooms} room available
                         </div>
@@ -405,7 +441,13 @@ function PropertyDetail() {
                           >
                             +
                           </button>
-
+                          <p>
+                            Total Price: $
+                            {calculateTotalPrice(
+                              roomCategory,
+                              roomCounts[roomCategory.id],
+                            )}
+                          </p>
                           {/* <p>
                           Total Price: $
                           {roomCounts[roomCategory.id] * roomCategory.price}
@@ -418,8 +460,10 @@ function PropertyDetail() {
                               onClick={() =>
                                 handleReserve(
                                   roomCategory.id,
-                                  roomCounts[roomCategory.id] *
-                                    roomCategory.price,
+                                  calculateTotalPrice(
+                                    roomCategory,
+                                    roomCounts[roomCategory.id],
+                                  ),
                                   selectedRoomIds[roomCategory.id],
                                 )
                               }
