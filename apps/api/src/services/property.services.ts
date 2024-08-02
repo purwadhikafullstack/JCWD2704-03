@@ -203,11 +203,32 @@ class PropertyService {
 
         include: {
           RoomCategory: true,
+          Review: {
+            include: {
+              user: true,
+            },
+          },
         },
       });
 
+      const propertiesWithRatings = properties.map((property) => {
+        const reviews = property.Review;
+        const totalRating = reviews.reduce(
+          (sum, review) => sum + review.rating,
+          0,
+        );
+        const averageRating = reviews.length
+          ? totalRating / reviews.length
+          : null;
+
+        return {
+          ...property,
+          averageRating, // Add average rating to the property
+        };
+      });
+
       console.log('Retrieved properties:', properties);
-      return properties;
+      return propertiesWithRatings;
     } catch (error) {
       console.error('Error fetching properties:', error);
       throw error;
@@ -549,15 +570,6 @@ class PropertyService {
 
     return property?.pic || null;
   }
-
-  // async renderPicRoom(req: Request) {
-  //   const data = await prisma.room.findUnique({
-  //     where: {
-  //       id: req.params.id,
-  //     },
-  //   });
-  //   return data?.pic;
-  // }
 
   async createProperty(req: Request) {
     const userId = req.user?.id;

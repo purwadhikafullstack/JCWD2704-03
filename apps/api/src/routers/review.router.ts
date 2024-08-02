@@ -24,6 +24,14 @@ export class ReviewRouter {
       '/review/:orderId',
       this.reviewController.getReviewByOrderId,
     );
+    this.router.get(
+      '/allReviews/:propertyId',
+      this.reviewController.getAllReview,
+    );
+    this.router.get(
+      '/aveReviews/:propertyId',
+      this.reviewController.getAverageReview,
+    );
   }
 
   getRouter(): Router {
