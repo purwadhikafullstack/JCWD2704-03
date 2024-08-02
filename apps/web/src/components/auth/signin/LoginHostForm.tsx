@@ -267,7 +267,7 @@ const LoginForm: React.FC = () => {
       </div>
 
       {/* Mobile View */}
-      <div className="lg:hidden flex flex-col items-center justify-center w-full">
+      <div className="lg:hidden flex flex-col items-center justify-center ">
         {/* HEADER SECTION */}
         <div className="mb-3 flex items-center justify-center flex-col">
           <Link href="/">
@@ -284,7 +284,10 @@ const LoginForm: React.FC = () => {
         </div>
 
         {/* login google */}
-        <div>
+        <div
+          className="w-80 flex flex-col justify-center
+        items-center"
+        >
           <button
             className="btn btn-outline-dark w-full"
             type="button"
@@ -312,7 +315,10 @@ const LoginForm: React.FC = () => {
           </div>
 
           {/* FORM SUBMIT EMAIL */}
-          <form onSubmit={formik.handleSubmit} className="flex flex-col w-60">
+          <form
+            onSubmit={formik.handleSubmit}
+            className="flex flex-col w-60 lg:w-[500px]"
+          >
             <div className="form-floating w-full">
               <input
                 type="email"
@@ -365,7 +371,7 @@ const LoginForm: React.FC = () => {
             </button>
           </form>
 
-          <div className="flex justify-between">
+          <div className="flex flex-col gap-2 justify-between">
             <div className="text-xs flex flex-row gap-1">
               <div>Don&apos;t have an account?</div>
               <Link

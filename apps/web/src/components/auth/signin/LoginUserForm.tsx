@@ -190,7 +190,7 @@ const LoginForm: React.FC = () => {
               {/* FORM SUBMIT EMAIL */}
               <form
                 onSubmit={formik.handleSubmit}
-                className="flex flex-col w-60 lg:w-[500px]"
+                className="flex flex-col w-60 lg:w-[500px] "
               >
                 <div className="form-floating w-full">
                   <input
