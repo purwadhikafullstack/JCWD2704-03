@@ -77,12 +77,12 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/dashboard', request.url));
   } else if (pathname === '/dashboard' && !validate) {
     return NextResponse.redirect(new URL('/', request.url));
-  } else if (
-    validate &&
-    (pathname === '/' || pathname === '/dashboard') &&
-    !is_verified
-  ) {
-    return NextResponse.redirect(new URL('/verification', request.url));
+    // } else if (
+    //   validate &&
+    //   (pathname === '/' || pathname === '/dashboard') &&
+    //   !is_verified
+    // ) {
+    //   return NextResponse.redirect(new URL('/verification', request.url));
   } else if (pathname.startsWith('/dashboard') && validate && isGuest) {
     return NextResponse.redirect(new URL('/', request.url));
   } else if (validate && pathname.startsWith('/auth')) {
