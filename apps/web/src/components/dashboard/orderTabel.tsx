@@ -81,6 +81,7 @@ function OrderTable() {
     'Name',
     'Property',
     'Room Type',
+    'Payment Method',
     'Room',
     'Reservation Date',
     'CheckIn',
@@ -127,6 +128,9 @@ function OrderTable() {
                 <td className="px-6 py-4 text-center">{order.property.name}</td>
                 <td className="px-6 py-4 text-center">
                   {order.RoomCategory.type.toUpperCase()}
+                </td>
+                <td className="px-6 py-4 text-center">
+                  {order.payment_method}
                 </td>
                 <td className="px-6 py-4 text-center">{order.total_room}</td>
                 <td className="px-6 py-4 text-center">
