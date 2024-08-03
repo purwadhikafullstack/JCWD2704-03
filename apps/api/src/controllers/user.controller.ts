@@ -202,11 +202,14 @@ export class UserController {
 
   async validateUser(req: Request, res: Response, next: NextFunction) {
     try {
-      const { access_token, isVerified } = await authService.validate(req);
+      const { access_token, isVerified, role, isRequestingEmailChange } =
+        await authService.validate(req);
 
       res.send({
         message: 'success',
         isVerified,
+        role,
+        isRequestingEmailChange,
         access_token,
       });
     } catch (error) {
