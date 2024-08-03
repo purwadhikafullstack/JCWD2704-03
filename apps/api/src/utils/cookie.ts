@@ -6,9 +6,9 @@ export const cookieOpt: CookieOptions = {
   domain: process.env.BASE_WEB_URL,
 };
 
-export const cookieHTTPonlyOpt: CookieOptions = {
-  sameSite: 'strict',
-  httpOnly: true,
-  secure: true,
-  domain: process.env.BASE_WEB_URL,
-};
+// export const cookieHTTPonlyOpt: CookieOptions = {
+//   sameSite: 'strict',
+//   httpOnly: true,
+//   secure: true,
+//   domain: process.env.BASE_WEB_URL,
+// };
