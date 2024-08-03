@@ -1,17 +1,9 @@
 'use client';
 import { axiosInstance } from '@/libs/axios.config';
+import { Sale } from '@/models/sale.model';
 import React, { useState, useEffect } from 'react';
 import { IoIosArrowForward } from 'react-icons/io';
 import { IoIosArrowBack } from 'react-icons/io';
-interface Sale {
-  user_id: string;
-  user_firstname: string;
-  property_id: string;
-  property_name: string;
-  total_price: number;
-  createdAt: string;
-  invoice_id: string;
-}
 
 const Sales: React.FC = () => {
   const [sales, setSales] = useState<Sale[]>([]);
@@ -95,7 +87,9 @@ const Sales: React.FC = () => {
                 <td className="py-2 px-4 border text-center">
                   {(page - 1) * limit + index + 1}
                 </td>
-                <td className="py-2 px-4 border">{sale.invoice_id}</td>
+                <td className="py-2 px-4 border">
+                  {sale.invoice_id.toUpperCase()}
+                </td>
                 <td className="py-2 px-4 border">{sale.user_firstname}</td>
                 <td className="py-2 px-4 border">{sale.property_id}</td>
                 <td className="py-2 px-4 border">{sale.property_name}</td>
