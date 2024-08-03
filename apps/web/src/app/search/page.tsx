@@ -7,6 +7,8 @@ type SearchParams = {
   city: string;
   checkIn: string;
   checkOut: string;
+  page?: number;
+  limit?: number;
 };
 
 interface Props {
@@ -14,13 +16,23 @@ interface Props {
 }
 
 const Search: React.FC<Props> = ({ searchParams }) => {
-  if (!searchParams.city || !searchParams.checkIn || !searchParams.checkOut) {
+  const defaultParams = {
+    page: 1,
+    limit: 10,
+  };
+  const combinedParams = { ...defaultParams, ...searchParams };
+
+  if (
+    !combinedParams.city ||
+    !combinedParams.checkIn ||
+    !combinedParams.checkOut
+  ) {
     return <div>No results</div>;
   }
 
   return (
     <>
-      <SearchPage searchParams={searchParams} />
+      <SearchPage searchParams={combinedParams} />
     </>
   );
 };

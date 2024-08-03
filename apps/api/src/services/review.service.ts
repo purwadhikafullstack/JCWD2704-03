@@ -56,6 +56,8 @@ class ReviewService {
         user: {
           select: {
             first_name: true,
+            last_name: true,
+            image_name: true,
           },
         },
       },

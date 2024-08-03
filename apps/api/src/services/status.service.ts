@@ -122,7 +122,7 @@ class StatusService {
         property_id: order.property_id,
       },
     });
-
+    console.log(isDataReviewExist);
     if (!isDataReviewExist) {
       await prisma.review.create({
         data: {

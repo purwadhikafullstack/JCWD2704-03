@@ -90,12 +90,7 @@ function CancelOrder() {
               />
             </div>
             <div className=" md:w-2/3 bg-white flex flex-col">
-              <div className="flex justify-between items-center">
-                <div className="flex items-center text-sm font-semibold">
-                  <FaStar className="mr-2" />
-                  4.96
-                </div>
-              </div>
+              <div className="flex justify-between items-center"></div>
               <h3 className="font-black text-gray-800 md:text-3xl text-xl">
                 {order.property.name}
               </h3>

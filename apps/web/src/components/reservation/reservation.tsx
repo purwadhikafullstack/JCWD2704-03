@@ -152,9 +152,6 @@ function Reservation() {
                 <h3 className="font-black text-gray-800 md:text-3xl text-xl">
                   {rooms?.type} Room
                 </h3>
-                <p className="md:text-lg text-gray-500 text-base">
-                  {rooms?.desc}
-                </p>
                 <div className="flex gap-2">
                   <IoPersonOutline className="mt-1" />
                   <div className="flex flex-row  text-blue-900">

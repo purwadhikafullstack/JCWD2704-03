@@ -72,13 +72,10 @@ export default class App {
     const roomRouter = new RoomRouter();
     const reviewRouter = new ReviewRouter();
     const salesRouter = new SalesRouter();
-    // const reservationRouter = new ReservationRouter();
 
     this.app.get('/api', (req: Request, res: Response) => {
       res.send(`Hello, Purwadhika Student API!`);
     });
-
-    // this.app.use('/sample', sampleRouter.getRouter());
 
     this.app.use('/api/users', userRouter.getRouter());
     this.app.use('/api/properties', propertyRouter.getRouter());
@@ -92,7 +89,6 @@ export default class App {
     this.app.use(express.json());
     this.app.use(express.urlencoded());
     this.app.use(cors(corsOptions));
-    // this.app.use('/api/samples', sampleRouter.getRouter());
   }
 
   public start(): void {

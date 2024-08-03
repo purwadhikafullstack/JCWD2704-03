@@ -18,7 +18,7 @@ function DeniedOrder() {
     const fetchOrders = async () => {
       try {
         const response = await axiosInstance().get(
-          `/api/reservations/${orderId}`,
+          `http://localhost:8000/api/reservations/${orderId}`,
         );
         const order: Order = response.data.data;
         setOrders(order);
@@ -42,7 +42,7 @@ function DeniedOrder() {
       if (result.isConfirmed) {
         try {
           const response = await axiosInstance().patch(
-            `/api/reservations/tenant/order/denied/${orderId}`,
+            `http://localhost:8000/api/reservations/tenant/order/denied/${orderId}`,
           );
           console.log(response.data);
           Swal.fire({
@@ -76,7 +76,7 @@ function DeniedOrder() {
       if (result.isConfirmed) {
         try {
           const response = await axiosInstance().patch(
-            `/api/reservations/tenant/order/confirmed/${orderId}`,
+            `http://localhost:8000/api/reservations/tenant/order/confirmed/${orderId}`,
           );
           console.log(response.data);
 
@@ -99,17 +99,10 @@ function DeniedOrder() {
     });
   };
   const handleSeeProofment = async () => {
-    window.open(`/api/reservations/payment/image/${orderId}`);
-  };
-  if (!order && loading) {
-    return (
-      <div className="flex justify-center items-center">
-        <Spinner animation="border" role="status" size="sm" className="me-2">
-          <span className="visually-hidden">Loading...</span>
-        </Spinner>
-      </div>
+    window.open(
+      `http://localhost:8000/api/reservations/payment/image/${orderId}`,
     );
-  }
+  };
   if (!order) return <div>No order found</div>;
   return (
     <>
@@ -127,12 +120,7 @@ function DeniedOrder() {
               />
             </div>
             <div className=" md:w-2/3 bg-white flex flex-col">
-              <div className="flex justify-between items-center">
-                <div className="flex items-center text-sm font-semibold">
-                  <FaStar className="mr-2" />
-                  4.96
-                </div>
-              </div>
+              <div className="flex justify-between items-center"></div>
               <h3 className="font-black text-gray-800 md:text-3xl text-xl">
                 {order.property.name}
               </h3>

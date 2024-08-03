@@ -21,7 +21,7 @@ function OrderTable() {
       setOrders(data);
       setTotalPages(totalPages);
       setCurrentPage(currentPage);
-      console.log(data);
+      console.log('datataa', data);
     } catch (error) {
       console.error('Error fetching order data:', error);
     }

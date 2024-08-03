@@ -1,5 +1,4 @@
-const baseUrl =
-  process.env.NEXT_PUBLIC_BASE_API_URL || 'http://localhost:8000/api';
+const baseUrl = process.env.NEXT_PUBLIC_BASE_API_URL || 'http://localhost:8000';
 
 export const imageSrc = `${baseUrl}/api/properties/image/`;
 export const imageSrcRoom = `${baseUrl}/api/rooms/image/`;

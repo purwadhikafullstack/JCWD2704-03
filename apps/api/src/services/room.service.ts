@@ -184,6 +184,8 @@ class RoomService {
     const parsedGuest =
       guest !== undefined ? parseInt(String(guest), 10) : roomCategory.guest;
 
+    const picName = shortid.generate();
+
     const roomCategoryData: Prisma.RoomCategoryUpdateInput = {
       type: type ?? roomCategory.type,
       guest: parsedGuest, // Ensure this is an integer
@@ -194,6 +196,7 @@ class RoomService {
       bed: bed ?? roomCategory.bed,
       desc: desc ?? roomCategory.desc,
       pic: buffer ?? roomCategory.pic,
+      pic_name: picName,
       peak_price:
         peak_price !== undefined
           ? parseFloat(peak_price as unknown as string)
