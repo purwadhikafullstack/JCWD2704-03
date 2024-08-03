@@ -53,7 +53,7 @@ function MyOrder() {
     const fetchOrders = async () => {
       try {
         const response = await axiosInstance().get(
-          `http://localhost:8000/api/reservations/user/myOrder`,
+          `/api/reservations/user/myOrder`,
         );
         console.log('Response data:', response.data);
         const orders: Order[] = response.data.data;

@@ -33,6 +33,7 @@ const SearchForm: React.FC = () => {
     const day = String(tomorrow.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
   };
+
   const initialValues = {
     city: '',
     checkIn: getTodayDate(),
@@ -52,18 +53,19 @@ const SearchForm: React.FC = () => {
           city: values.city,
           checkIn: values.checkIn,
           checkOut: values.checkOut,
+          page: 1, // Initial page
+          limit: 10, // Default limit
         },
       });
 
       const properties = response.data;
-      console.log('Properties:', properties);
     } catch (error) {
       console.error('Error:', error);
     }
   };
 
   const { isLoaded, loadError } = useLoadScript({
-    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '',
+    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!,
     libraries,
   });
 
@@ -86,42 +88,29 @@ const SearchForm: React.FC = () => {
     }
   }, [isLoaded]);
 
-  if (loadError) return <div>Error loading maps</div>;
-  if (!isLoaded)
-    return (
-      <div className="flex items-center justify-center h-screen flex-col">
-        <Spinner animation="border" role="status" className="me-2"></Spinner>
-        <div className="text-center p-4">
-          <span className="visually-hidden">Loading...</span>
-        </div>
-      </div>
-    );
+  if (!isLoaded) return <Spinner animation="border" />;
+
+  if (loadError) return <div>Error loading Google Maps</div>;
 
   return (
     <>
-      <div className="relative w-screen">
-        <img
+      <div className="relative">
+        {/* <img
           src="https://i.ibb.co.com/5rcMxmc/Untitled-design-4.png"
           alt=""
           className="object-cover w-full h-[400px]"
-        />
+        /> */}
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="flex justify-center">
             <Formik
-              innerRef={formikRef}
               initialValues={initialValues}
               validationSchema={validationSchema}
-              onSubmit={async (values, { setSubmitting }) => {
-                await handleSearchSubmit(values);
-                const { city, checkIn, checkOut } = values;
-                const queryParams = new URLSearchParams({
-                  city,
-                  checkIn,
-                  checkOut,
-                }).toString();
-                router.push(`/search?${queryParams}`);
-                setSubmitting(false);
+              onSubmit={(values) => {
+                router.push(
+                  `/search?city=${values.city}&checkIn=${values.checkIn}&checkOut=${values.checkOut}&page=1`,
+                );
               }}
+              innerRef={formikRef}
             >
               {({ isSubmitting, handleChange }) => (
                 <Form className="shadow-xl border-zinc-800 rounded-xl m-4 p-4 text-zinc-800 lg:w-[800px] w-96 bg-white">

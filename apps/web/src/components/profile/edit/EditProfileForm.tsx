@@ -1,6 +1,6 @@
 'use client';
 import React, { useRef, useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useFormik } from 'formik';
 import { useDispatch } from 'react-redux';
 import { useAppSelector } from '@/app/hooks';
@@ -16,16 +16,32 @@ import { login } from '@/libs/redux/slices/user.slice';
 import { CustomJwtPayload } from '@/models/user.model';
 import { updateProfile, keepLogin } from '@/libs/redux/slices/user.slice';
 import { imageSrcUser } from '@/utils/imagerender';
+import { Spinner } from 'react-bootstrap';
 
 function EditProfileForm() {
   const router = useRouter();
   const user = useAppSelector((state) => state.auth);
+  const searchParams = useSearchParams();
 
   const imageRef = useRef<HTMLInputElement>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isEmailFocused, setIsEmailFocused] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const dispatch = useDispatch();
+
+  useEffect(() => {
+    const refreshed = searchParams.get('refreshed');
+    if (refreshed === 'true') {
+      // Reload the page
+      window.location.reload();
+
+      // Update the URL to remove 'refreshed=true'
+      const url = new URL(window.location.href);
+      url.searchParams.delete('refreshed');
+      window.history.replaceState({}, '', url.toString());
+    }
+  }, [searchParams]);
 
   const initialValues = {
     image: null as string | File | null,
@@ -35,7 +51,7 @@ function EditProfileForm() {
   };
 
   const validationSchema = Yup.object().shape({
-    image: Yup.mixed().required('Picture is required'),
+    image: Yup.mixed().nullable(),
     first_name: Yup.string()
       .required('First name is required')
       .min(3, 'First name must have at least 3 characters'),
@@ -51,9 +67,8 @@ function EditProfileForm() {
     initialValues,
     validationSchema,
     onSubmit: async (values) => {
+      setLoading(true);
       try {
-        console.log('Form values:', values);
-
         const formData = new FormData();
         formData.append('first_name', values.first_name);
         formData.append('last_name', values.last_name);
@@ -62,7 +77,6 @@ function EditProfileForm() {
         if (values.image) {
           formData.append('image', values.image);
         }
-        console.log('Try editing user profile:', formData);
 
         const response = await axiosInstance().patch(
           '/api/users/edit',
@@ -75,21 +89,17 @@ function EditProfileForm() {
           },
         );
 
-        const { token, user: fetchedUser } = response.data; // Adjusted to get 'user' from the response
-        console.log(token);
+        const { token, user: fetchedUser } = response.data;
         setCookie('access_token', token);
 
-        dispatch(login(fetchedUser)); // Updated to use fetchedUser
-        // dispatch(keepLogin());
-
-        // const decodedToken = jwtDecode<any>(token);
-        // router.push(`/show/${decodedToken.user.id}`);
-        router.push(`/show/${user?.id}`);
+        dispatch(login(fetchedUser));
+        window.location.reload();
       } catch (error) {
-        console.log(error);
         if (error instanceof AxiosError) {
           alert(error.response?.data.message);
         }
+      } finally {
+        setLoading(false); // Reset loading state after submission
       }
     },
   });
@@ -100,29 +110,23 @@ function EditProfileForm() {
 
   useEffect(() => {
     if (user && user.id) {
-      console.log('User object:', user);
-
       const imgSrc = user.image_name
         ? `${imageSrcUser}${user.image_name}`
         : null;
 
-      console.log('Image source:', imgSrc);
-
       formik.setValues({
-        image: user.image_name ? imgSrc : null,
+        image: imgSrc,
         first_name: user.first_name,
         last_name: user.last_name,
         email: user.email,
       });
 
       setImagePreview(imgSrc);
-      console.log('Formik values after setting:', formik.values);
     }
   }, [user]);
 
   useEffect(() => {
     // Log the user object to check the value
-    console.log('User object:', user);
   }, [user]);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -147,6 +151,9 @@ function EditProfileForm() {
           progress: undefined,
         });
       }
+    } else {
+      formik.setFieldValue('image', null);
+      setImagePreview(null);
     }
   };
 
@@ -268,15 +275,11 @@ function EditProfileForm() {
             <div className="label">
               <span className="label-text font-semibold">Email Address</span>
             </div>
-            <div className="label text-sm mb-2 text-zinc-400">
+            <div className="label text-sm  text-zinc-400">
               Changing your e-mail address will require you to verify your
               e-mail address.
-              {user?.isRequestingEmailChange && (
-                <span className="font-semibold text-black">
-                  Resend verification e-mail
-                </span>
-              )}
             </div>
+
             <input
               type="text"
               placeholder="Type here"
@@ -292,14 +295,26 @@ function EditProfileForm() {
                 {formik.errors.email}
               </div>
             ) : null}
+            <div>
+              {' '}
+              {user?.isRequestingEmailChange && (
+                <div className="label font-semibold text-sm text-red-500">
+                  Please verify your e-mail!
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="form-group mt-4">
             <button
               type="submit"
-              className="btn btn-dark bg-neutral w-full mb-5 text-zinc-50"
+              className="btn btn-dark bg-neutral w-full mb-5 text-zinc-50 flex justify-center items-center"
             >
-              Update my profile
+              {loading ? (
+                <Spinner animation="border" size="sm" /> // Display spinner when loading
+              ) : (
+                'Update my profile'
+              )}
             </button>
           </div>
           <ToastContainer />

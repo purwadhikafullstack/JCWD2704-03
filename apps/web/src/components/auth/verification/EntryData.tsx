@@ -80,8 +80,6 @@ const EntryData = () => {
     onSubmit: async (values) => {
       setIsSubmitting(true);
       try {
-        console.log('Entry data starts');
-
         const response = await axiosInstance().patch(
           '/api/users/v3',
           {
@@ -97,10 +95,8 @@ const EntryData = () => {
           },
         );
 
-        console.log('Response:', response.data); // Log the response
-
-        const { updatedUser } = response.data; // Extract the updated user data
-        const { role } = updatedUser; // Extract the role from the updated user data
+        const { updatedUser } = response.data;
+        const { role } = updatedUser;
         if (role) {
           if (role === 'user') {
             router.push(`/auth/login/user`);
@@ -111,8 +107,6 @@ const EntryData = () => {
           throw new Error('Invalid role');
         }
       } catch (error) {
-        console.log(error);
-
         if (error instanceof AxiosError) {
           toast.error(
             error.response?.data.message ||

@@ -26,12 +26,12 @@ function DetailOrder() {
     const fetchOrders = async () => {
       try {
         const response = await axiosInstance().get(
-          `http://localhost:8000/api/reservations/${orderId}`,
+          `/api/reservations/${orderId}`,
         );
         const order: Order = response.data.data;
         setOrders(order);
         const reviewCheckResponse = await axiosInstance().get(
-          `http://localhost:8000/api/reviews/review/${orderId}`,
+          `/api/reviews/review/${orderId}`,
         );
         const reviewData = reviewCheckResponse.data.data;
 
@@ -64,7 +64,7 @@ function DetailOrder() {
       if (result.isConfirmed) {
         try {
           const response = await axiosInstance().patch(
-            `http://localhost:8000/api/reservations/user/order/cancelled/${orderId}`,
+            `/api/reservations/user/order/cancelled/${orderId}`,
           );
           console.log(response.data);
 
@@ -89,7 +89,7 @@ function DetailOrder() {
   const handleSubmitReview = async () => {
     try {
       const request = await axiosInstance().post(
-        'http://localhost:8000/api/reviews/addReview',
+        '/api/reviews/addReview',
         {
           order_id: orderId,
           review: reviewText,

@@ -16,6 +16,7 @@ export type TProperty = {
   longitude?: number;
   createdAt: Date;
   updatedAt: Date;
+  Room: Room[];
 };
 
 export interface Property extends PrismaProperty {

@@ -38,7 +38,6 @@ const LoginForm: React.FC = () => {
     onSubmit: async (values) => {
       setIsSubmitting(true);
       try {
-        console.log('Sign in as tenant starts');
         const result = await dispatch(
           tenantLogin({
             email: values.email,
@@ -46,16 +45,8 @@ const LoginForm: React.FC = () => {
           } as UserLoginPayload),
         );
         formik.resetForm();
-        if (result?.role && result?.url) {
-          if (result.role === 'tenant') {
-            router.push(result.url);
-          } else {
-            toast.error('Please log in on the guest login page.');
-          }
-        }
+        window.location.reload();
       } catch (error) {
-        console.log(error);
-
         if (error instanceof AxiosError) {
           toast.error(
             error.response?.data.message ||
@@ -75,12 +66,11 @@ const LoginForm: React.FC = () => {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: 'http://localhost:3000/auth/callback?userType=tenant',
+          redirectTo: `${process.env.NEXT_PUBLIC_BASE_WEB_URL}/auth/callback?userType=tenant`,
         },
       });
 
       if (error) {
-        console.log('Error signing in with Google:', error.message);
         return;
       }
 
@@ -90,8 +80,6 @@ const LoginForm: React.FC = () => {
           const email = user.email ?? ''; // Provide default empty string if undefined
           const { id } = user;
           const { full_name } = user.user_metadata;
-
-          console.log(session);
 
           const [first_name, last_name] = full_name.split(' ');
 
@@ -267,7 +255,7 @@ const LoginForm: React.FC = () => {
       </div>
 
       {/* Mobile View */}
-      <div className="lg:hidden flex flex-col items-center justify-center w-full">
+      <div className="lg:hidden flex flex-col items-center justify-center ">
         {/* HEADER SECTION */}
         <div className="mb-3 flex items-center justify-center flex-col">
           <Link href="/">
@@ -284,7 +272,10 @@ const LoginForm: React.FC = () => {
         </div>
 
         {/* login google */}
-        <div>
+        <div
+          className="w-80 flex flex-col justify-center
+        items-center"
+        >
           <button
             className="btn btn-outline-dark w-full"
             type="button"
@@ -312,7 +303,10 @@ const LoginForm: React.FC = () => {
           </div>
 
           {/* FORM SUBMIT EMAIL */}
-          <form onSubmit={formik.handleSubmit} className="flex flex-col w-60">
+          <form
+            onSubmit={formik.handleSubmit}
+            className="flex flex-col w-60 lg:w-[500px]"
+          >
             <div className="form-floating w-full">
               <input
                 type="email"
@@ -365,7 +359,7 @@ const LoginForm: React.FC = () => {
             </button>
           </form>
 
-          <div className="flex justify-between">
+          <div className="flex flex-col gap-2 justify-between">
             <div className="text-xs flex flex-row gap-1">
               <div>Don&apos;t have an account?</div>
               <Link

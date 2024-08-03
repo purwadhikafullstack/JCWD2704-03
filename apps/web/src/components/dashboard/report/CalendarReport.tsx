@@ -23,7 +23,6 @@ const Calendar: React.FC = () => {
           params: { year, month },
         },
       );
-      console.log(response.data.data);
       setAvailability(response.data.data);
     } catch (error) {
       console.error('Error fetching availability data:', error);
