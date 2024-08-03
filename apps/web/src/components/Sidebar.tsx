@@ -23,6 +23,15 @@ function Sidebar() {
   const handleHome = () => {
     router.push('/');
   };
+  const handleProfile = () => {
+    router.push('/profile');
+  };
+  const handleEditProfile = () => {
+    router.push('/profile/settings');
+  };
+  const handleMyOrders = () => {
+    router.push('/profile/my-order');
+  };
   return (
     <div className="flex z-50">
       <span
@@ -48,11 +57,17 @@ function Sidebar() {
             />
           </div>
         </div>
-        <div className="p-2.5 mt-3 flex items-center rounded-md px-4 duration-300 cursor-pointer hover:bg-blue-600 text-white">
+        <div
+          onClick={handleProfile}
+          className="p-2.5 mt-3 flex items-center rounded-md px-4 duration-300 cursor-pointer hover:bg-blue-600 text-white"
+        >
           <FaHouse />
           <span className="text-[15px] ml-4 text-gray-200 font-bold">Home</span>
         </div>
-        <div className="p-2.5 mt-3 flex items-center rounded-md px-4 duration-300 cursor-pointer hover:bg-blue-600 text-white">
+        <div
+          onClick={handleMyOrders}
+          className="p-2.5 mt-3 flex items-center rounded-md px-4 duration-300 cursor-pointer hover:bg-blue-600 text-white"
+        >
           <FaClipboardList />
           <span className="text-[15px] ml-4 text-gray-200 font-bold">
             Orders
@@ -60,12 +75,14 @@ function Sidebar() {
         </div>
         <div className="p-2.5 mt-3 flex items-center rounded-md px-4 duration-300 cursor-pointer hover:bg-blue-600 text-white">
           <IoPerson />
-          <span className="text-[15px] ml-4 text-gray-200 font-bold">
-            Profile
+          <span
+            onClick={handleEditProfile}
+            className="text-[15px] ml-4 text-gray-200 font-bold"
+          >
+            Setting
           </span>
         </div>
         <div className="my-4 bg-gray-600 h-[1px]"></div>
-
         <div
           className="p-2.5 mt-3 flex items-center rounded-md px-4 duration-300 cursor-pointer hover:bg-blue-600 text-white"
           onClick={handleLogout}
