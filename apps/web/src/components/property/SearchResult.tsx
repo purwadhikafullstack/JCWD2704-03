@@ -120,7 +120,7 @@ function SearchPage({ searchParams }: { searchParams: SearchParams }) {
                 href={`/property/${property.name.replace(/\s+/g, '-').toLowerCase()}?checkIn=${checkIn}&checkOut=${checkOut}`}
                 className="text-black no-underline"
               >
-                <div className="flex lg:flex-col gap-2.5 rounded-lg hover:shadow-lg cursor-pointer p-3 shadow-md w-90">
+                <div className="flex lg:flex-col gap-2.5 rounded-lg hover:shadow-lg cursor-pointer p-3 shadow-md w-90 h-100">
                   <img
                     src={`${imageSrc}${property.pic_name}`}
                     alt={property.name}
