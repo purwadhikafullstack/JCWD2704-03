@@ -26,7 +26,6 @@ interface PaymentMethodDetails {
 const Invoice = () => {
   const [order, setOrder] = useState<Order | undefined>(undefined);
   const [isShowedSnap, setIsShowedSnap] = useState(false);
-  const [loading, setLoading] = useState(true);
   const search = useSearchParams();
   const id = search.get('order_id');
   const router = useRouter();
@@ -61,11 +60,12 @@ const Invoice = () => {
       .get(`/api/reservations/${id}`)
       .then((res) => {
         setOrder(res.data.data);
+        console.log('totalll hargaa', res.data.data.total_price);
       })
+
       .catch((e) => {
         if (e instanceof AxiosError) console.log(e.response?.data);
         return undefined;
-        setLoading(false);
       });
     return () => {
       document.body.removeChild(script);
@@ -79,15 +79,6 @@ const Invoice = () => {
   const handleMyOrder = () => {
     router.push('/profile');
   };
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <Spinner animation="border" role="status">
-          <span className="visually-hidden">Loading...</span>
-        </Spinner>
-      </div>
-    );
-  }
 
   if (order === undefined) return <h4>Loading fetching order....</h4>;
   const paymentMethodDetails = order
@@ -200,10 +191,14 @@ const Invoice = () => {
         </div>
         {/* room section */}
         <div className="flex flex-col ">
-          <div className="relative flex flex-col md:flex-row md:space-x-5 space-y-3 md:space-y-0 rounded-xl shadow-lg p-3 max-w-xs md:max-w-3xl mx-auto border border-white bg-white">
+          <div className="relative flex flex-col md:flex-row md:space-x-5 space-y-3 md:space-y-0 rounded-xl shadow-md p-3 max-w-xs md:max-w-3xl mx-auto border border-white bg-white">
             <div className="w-full md:w-1/3 bg-white grid place-items-center">
               <img
-                src={`${imageSrc}${order.property.pic_name}`}
+                src={
+                  order.property.pic_name
+                    ? `${imageSrc}${order.property.pic_name}`
+                    : 'https://images.pexels.com/photos/4381392/pexels-photo-4381392.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500'
+                }
                 alt="Property Pic"
                 className="object-cover w-full h-full rounded-xl"
               />

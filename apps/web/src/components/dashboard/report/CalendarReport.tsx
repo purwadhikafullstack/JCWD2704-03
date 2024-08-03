@@ -12,7 +12,7 @@ interface AvailabilityData {
 
 const Calendar: React.FC = () => {
   const [year, setYear] = useState<number>(2024);
-  const [month, setMonth] = useState<number>(7);
+  const [month, setMonth] = useState<number>(8);
   const [availability, setAvailability] = useState<AvailabilityData>({});
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [selectedOrders, setSelectedOrders] = useState<Order[]>([]);
@@ -99,7 +99,7 @@ const Calendar: React.FC = () => {
           return (
             <div
               key={day}
-              className={`border md:p-4 cursor-pointer ${hasOrders ? 'bg-green-200' : 'bg-gray-200'}`}
+              className={`border md:p-4 cursor-pointer ${hasOrders ? 'bg-green-400' : 'bg-gray-200'}`}
               onClick={() => handleDateClick(date)}
             >
               <div className="font-bold">{day}</div>

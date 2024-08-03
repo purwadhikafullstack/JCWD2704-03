@@ -5,7 +5,6 @@ import { startExpireDenyOrdersCron } from '@/cron/denyOrder';
 import { transporter } from '@/libs/nodemailer';
 import fs from 'fs';
 import path from 'path';
-import { render } from 'mustache';
 class StatusService {
   async changeStatusOrderByTenant(req: Request) {
     const { orderId } = req.params;
@@ -39,7 +38,7 @@ class StatusService {
         .replace(/{checkOutDate}/g, checkOutDate)
         .replace(/{roomType}/g, roomType);
       const krimEmail = transporter.sendMail({
-        from: 'purwadhika2704@gmail.com',
+        from: 'atcasaco@gmail.com',
         to: userEmail,
         subject: 'Booking Denied',
         html,
@@ -79,7 +78,7 @@ class StatusService {
         .replace(/{roomType}/g, roomType);
 
       transporter.sendMail({
-        from: 'purwadhika2704@gmail.com',
+        from: 'atcasaco@gmail.com',
         to: userEmail,
         subject: 'Booking Cancelled',
         html,
@@ -158,7 +157,7 @@ class StatusService {
         .replace(/{roomType}/g, roomType);
 
       const krimEmail = transporter.sendMail({
-        from: 'purwadhika2704@gmail.com',
+        from: 'atcasaco@gmail.com',
         to: userEmail,
         subject: 'Booking Confirmation',
         html,

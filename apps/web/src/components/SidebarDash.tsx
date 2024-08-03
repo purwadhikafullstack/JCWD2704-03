@@ -31,7 +31,7 @@ function SidebarDash() {
     window.location.reload();
   };
   return (
-    <div className="flex">
+    <div className="flex z-50">
       <span
         className="sticky lg:hidden text-gray-600 text-4xl cursor-pointer"
         onClick={toggleSidebar}

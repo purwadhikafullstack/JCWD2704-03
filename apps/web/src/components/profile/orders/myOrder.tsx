@@ -7,9 +7,12 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { FaMoon } from 'react-icons/fa';
 import Spinner from 'react-bootstrap/Spinner';
+import { imageSrcRoom } from '@/utils/imagerender';
 function MyOrder() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const [checkInDate, setCheckInDate] = useState<string>('');
+  const [invoiceId, setInvoiceId] = useState<string>('');
   const router = useRouter();
   const renderStatus = (status: string, orderId: string) => {
     switch (status) {
@@ -49,24 +52,36 @@ function MyOrder() {
     router.push(`/profile/my-order/${orderId}`);
   };
 
-  useEffect(() => {
-    const fetchOrders = async () => {
-      try {
-        const response = await axiosInstance().get(
-          `/api/reservations/user/myOrder`,
-        );
-        console.log('Response data:', response.data);
-        const orders: Order[] = response.data.data;
-        setOrders(orders);
-      } catch (error) {
-        console.error('Error fetching rooms:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchOrders = async () => {
+    try {
+      const response = await axiosInstance().get(
+        '/api/reservations/user/myOrder',
+        {
+          params: {
+            checkInDate,
+            invoiceId,
+          },
+        },
+      );
+      console.log('Response data:', response.data.data);
+      const orders: Order[] = response.data.data;
+      setOrders(orders);
+    } catch (error) {
+      console.error('Error fetching orders:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  const handleSearch = () => {
+    setLoading(true);
+    fetchOrders();
+  };
+
+  useEffect(() => {
     fetchOrders();
   }, []);
+
   const calculateDurationInDays = (
     checkInDate: Date,
     checkOutDate: Date,
@@ -85,25 +100,61 @@ function MyOrder() {
   }
   return (
     <>
-      <div>
+      <div className="max-w-screen-xl">
         <div>
-          <p className="p-6 font-bold text-lg">Your Orders</p>
+          <p className="p-4 font-bold text-lg">Your Orders</p>
+          <div className="flex flex-col md:flex-row gap-3 p-4">
+            <div>
+              <div className="font-bold">Check-In Date</div>
+              <input
+                type="date"
+                value={checkInDate}
+                onChange={(e) => setCheckInDate(e.target.value)}
+                className="p-2 border border-gray-300 rounded-md"
+              />
+            </div>
+            <div>
+              <div className="font-bold">Invoice</div>
+              <input
+                type="text"
+                placeholder="Invoice ID"
+                value={invoiceId}
+                onChange={(e) => setInvoiceId(e.target.value)}
+                className="p-2 border border-gray-300 rounded-md"
+              />
+            </div>
+            <div className="md:mt-6">
+              <button
+                onClick={handleSearch}
+                className=" bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
+              >
+                Search
+              </button>
+            </div>
+          </div>
         </div>
-        <div className="flex flex-col gap-4 pb-4">
+
+        <div className="flex flex-col gap-4 pb-4 mt-10">
           {orders.map((order) => (
             <div key={order.id}>
               <div>
-                <div className="flex flex-col space-y-3 rounded-xl shadow-sm p-3 max-w-xs md:max-w-4xl mx-auto md:m-0 md:ml-6  border border-white bg-white">
-                  <div className="flex flex-row gap-5 justify-between md:justify-normal">
+                <div className="flex flex-col space-y-3 rounded-xl shadow-sm p-3 max-w-xs md:max-w-full border border-white bg-white">
+                  <div className="flex flex-row gap-5 justify-between">
                     <div>
                       <img
-                        src="https://s-light.tiket.photos/t/01E25EBZS3W0FY9GTG6C42E1SE/t_htl-mobile/tix-hotel/images-web/2020/10/28/0ddd6698-87b8-41c5-8732-0a6992564443-1603891614072-8cf982cb8d7d912e29d615edd0a503f5.jpg" // Use room.pic for the image source
+                        src={
+                          order.property.pic_name
+                            ? `${imageSrcRoom}${order.RoomCategory.pic_name}`
+                            : 'https://images.pexels.com/photos/4381392/pexels-photo-4381392.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500'
+                        }
                         alt="hotel" // Use room.type for the alt text
                         className="rounded-xl"
                         width={100}
                       />
                     </div>
-                    <div className="font-bold">{order.property.name}</div>
+                    <div className="font-bold md:text-2xl">
+                      {order.property.name}
+                    </div>
                   </div>
                   <div className="flex flex-col">
                     <div className="font-bold">
@@ -136,6 +187,10 @@ function MyOrder() {
                   )}
                   <div className="border"></div>
                   {renderStatus(order.status, order.id)}
+                  <div className="flex flex-col md:flex-row">
+                    <div className="font-bold">Invoice Id:</div>
+                    <div>{order.invoice_id} </div>
+                  </div>
                 </div>
               </div>
             </div>

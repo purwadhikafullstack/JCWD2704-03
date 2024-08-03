@@ -1,5 +1,9 @@
 import { PrismaClient } from '@prisma/client';
 import dayjs from 'dayjs';
+import fs from 'fs';
+import path from 'path';
+import nodemailer from 'nodemailer';
+import { transporter } from '@/libs/nodemailer';
 const prisma = new PrismaClient();
 
 export const startExpireOrdersCron = () => {
@@ -27,8 +31,38 @@ export const startExpireOrdersCron = () => {
             checkOut_date: new Date('1970-01-01T00:00:00Z'),
           },
         });
-      }
+        const orderDetails = await prisma.order.findUnique({
+          where: { id: unpaidOrder.id },
+          include: {
+            user: true,
+            property: true,
+            RoomCategory: true,
+          },
+        });
+        const templatePath = path.join(
+          __dirname,
+          '../templates/cancelled.html',
+        );
+        let htmlTemplate = fs.readFileSync(templatePath, 'utf-8');
 
+        if (orderDetails) {
+          const userEmail = orderDetails.user.email;
+          const propertyName = orderDetails.property.name;
+          const roomType =
+            orderDetails.RoomCategory?.type || 'Unknown Room Type';
+          const html = htmlTemplate
+            .replace(/{propertyName}/g, propertyName)
+            .replace(/{roomType}/g, roomType);
+
+          transporter.sendMail({
+            from: 'atcasaco@gmail.com',
+            to: userEmail,
+            subject: 'Booking Cancelled',
+            html,
+          });
+          console.log('kiiriim email', userEmail);
+        }
+      }
       console.log(`${unpaidOrders.length} unpaid orders cancelled.`);
     } catch (error) {
       console.error('Error cancelling unpaid orders:', error);

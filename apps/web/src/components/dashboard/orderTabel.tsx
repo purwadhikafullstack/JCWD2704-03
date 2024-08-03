@@ -148,7 +148,7 @@ function OrderTable() {
       </div>
       <div className="flex justify-between items-center py-4">
         <button
-          className="px-4 py-2 bg-gray-300 rounded-lg"
+          className="px-4 py-2 text-white bg-black rounded-lg"
           onClick={() => handlePageChange(currentPage - 1)}
           disabled={currentPage === 1}
         >
@@ -156,7 +156,7 @@ function OrderTable() {
         </button>
         <span className="text-lg">{`Page ${currentPage} of ${totalPages}`}</span>
         <button
-          className="px-4 py-2 bg-gray-300 rounded-lg"
+          className="px-4 py-2 text-white bg-black rounded-lg"
           onClick={() => handlePageChange(currentPage + 1)}
           disabled={currentPage === totalPages}
         >

@@ -10,7 +10,7 @@ const SuccessContent: React.FC = () => {
   };
 
   return (
-    <div className=" max-w-screen-xl w-screen h-screen flex justify-center items-center">
+    <div className="  w-screen flex justify-center items-center">
       <div className="flex flex-col items-center">
         <div>
           <img

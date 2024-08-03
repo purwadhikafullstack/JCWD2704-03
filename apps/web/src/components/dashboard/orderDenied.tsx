@@ -41,12 +41,10 @@ function DeniedOrder() {
     }).then(async (result) => {
       if (result.isConfirmed) {
         try {
-          setLoading(true);
           const response = await axiosInstance().patch(
             `/api/reservations/tenant/order/denied/${orderId}`,
           );
           console.log(response.data);
-
           Swal.fire({
             title: 'Deny',
             text: 'The order has been denied.',
@@ -103,7 +101,7 @@ function DeniedOrder() {
   const handleSeeProofment = async () => {
     window.open(`/api/reservations/payment/image/${orderId}`);
   };
-  if (loading) {
+  if (!order && loading) {
     return (
       <div className="flex justify-center items-center">
         <Spinner animation="border" role="status" size="sm" className="me-2">

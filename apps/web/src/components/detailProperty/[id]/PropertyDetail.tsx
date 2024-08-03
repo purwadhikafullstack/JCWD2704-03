@@ -121,6 +121,42 @@ function PropertyDetail() {
       console.log('New selected room IDs:', newRoomIds);
     }
   };
+  const isPeakPeriod = (start: string, end: string): boolean => {
+    const today = new Date();
+    const startDate = new Date(start);
+    const endDate = new Date(end);
+    return today >= startDate && today <= endDate;
+  };
+  const getCurrentPrice = (roomCategory: RoomCategory) => {
+    const today = new Date();
+    const startDatePeak = roomCategory.start_date_peak
+      ? new Date(roomCategory.start_date_peak)
+      : null;
+    const endDatePeak = roomCategory.end_date_peak
+      ? new Date(roomCategory.end_date_peak)
+      : null;
+
+    if (
+      startDatePeak &&
+      endDatePeak &&
+      today >= startDatePeak &&
+      today <= endDatePeak
+    ) {
+      return roomCategory.peak_price;
+    }
+    return roomCategory.price;
+  };
+  const calculateTotalPrice = (
+    roomCategory: RoomCategory,
+    count: number,
+  ): number => {
+    const isPeak =
+      roomCategory.start_date_peak && roomCategory.end_date_peak
+        ? isPeakPeriod(roomCategory.start_date_peak, roomCategory.end_date_peak)
+        : false;
+    const peakPrice = roomCategory.peak_price ?? roomCategory.price;
+    return isPeak ? count * peakPrice : count * roomCategory.price;
+  };
   return (
     <div>
       <div className="w-full h-80 px-4 relative">
@@ -145,7 +181,7 @@ function PropertyDetail() {
           roomCategories.map((roomCategory) => (
             <div key={roomCategory.id} className="room-category p-2 border-b">
               <h3 className="text-lg">{roomCategory.type}</h3>
-              <p>Price: ${roomCategory.price}</p>
+              <p>Price: ${getCurrentPrice(roomCategory)}</p>
               <p>{roomCategory.desc}</p>
               <p>Remaining Rooms: {roomCategory.remainingRooms}</p>
               <div className="flex flex-row items-center gap-3 text-lg">
@@ -171,7 +207,10 @@ function PropertyDetail() {
                 </button>
                 <p>
                   Total Price: $
-                  {roomCounts[roomCategory.id] * roomCategory.price}
+                  {calculateTotalPrice(
+                    roomCategory,
+                    roomCounts[roomCategory.id],
+                  )}
                 </p>
               </div>
               {roomCategory.Room.length > 0 && (
@@ -180,7 +219,10 @@ function PropertyDetail() {
                   onClick={() =>
                     handleReserve(
                       roomCategory.id,
-                      roomCounts[roomCategory.id] * roomCategory.price,
+                      calculateTotalPrice(
+                        roomCategory,
+                        roomCounts[roomCategory.id],
+                      ),
                       selectedRoomIds[roomCategory.id],
                     )
                   }
@@ -195,7 +237,7 @@ function PropertyDetail() {
         )}
       </div>
       {property && property.latitude && property.longitude && (
-        <div className="map-container p-4">
+        <div className="p-4">
           <MapComponent
             latitude={property.latitude}
             longitude={property.longitude}

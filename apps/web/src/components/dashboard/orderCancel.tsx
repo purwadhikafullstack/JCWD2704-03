@@ -41,7 +41,6 @@ function CancelOrder() {
     }).then(async (result) => {
       if (result.isConfirmed) {
         try {
-          setLoading(true);
           const response = await axiosInstance().patch(
             `/api/reservations/tenant/order/cancelled/${orderId}`,
           );
@@ -65,7 +64,7 @@ function CancelOrder() {
       }
     });
   };
-  if (loading) {
+  if (!order && loading) {
     return (
       <div className="flex justify-center items-center">
         <Spinner animation="border" role="status" size="sm" className="me-2">

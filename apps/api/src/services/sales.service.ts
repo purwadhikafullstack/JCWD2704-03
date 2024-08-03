@@ -33,21 +33,19 @@ class SalesService {
         property_id: sale.property_id,
         property_name: property?.name || 'Unknown',
         roomCategory_id: sale.roomCategory_id,
-        total_sales: sale._sum.total_price ?? 0, // Default to 0 if null
+        total_sales: sale._sum.total_price ?? 0,
         total_orders: sale._count.id,
       });
     }
 
     if (sortBy === 'total_sales') {
       result.sort((a, b) => {
-        const totalSalesA = a.total_sales ?? 0; // Default to 0 if null
-        const totalSalesB = b.total_sales ?? 0; // Default to 0 if null
+        const totalSalesA = a.total_sales ?? 0;
+        const totalSalesB = b.total_sales ?? 0;
         return order === 'asc'
           ? totalSalesA - totalSalesB
           : totalSalesB - totalSalesA;
       });
-    } else if (sortBy === 'date') {
-      // This block is omitted since we don't have date information
     }
     return result;
   }
@@ -115,7 +113,13 @@ class SalesService {
     return result;
   }
   async getAllSales(req: Request) {
-    const { order = 'asc', startDate, endDate } = req.query;
+    const {
+      order = 'asc',
+      startDate,
+      endDate,
+      page = 1,
+      limit = 10,
+    } = req.query;
 
     const dateFilter: any = {};
     if (startDate && endDate) {
@@ -124,6 +128,20 @@ class SalesService {
         lte: new Date(endDate as string),
       };
     }
+
+    const totalSales = await prisma.order.count({
+      where: {
+        status: 'success',
+        ...dateFilter,
+        property: {
+          tenant_id: req.user.id,
+        },
+      },
+    });
+
+    // Hitung nilai skip dan take
+    const skip = (Number(page) - 1) * Number(limit);
+    const take = Number(limit);
 
     const sales = await prisma.order.findMany({
       where: {
@@ -158,8 +176,9 @@ class SalesService {
           createdAt: order as 'asc' | 'desc',
         },
       ],
+      skip,
+      take,
     });
-
     const result = sales.map((sale) => ({
       user_id: sale.user_id,
       user_firstname: sale.user?.first_name,
@@ -170,7 +189,11 @@ class SalesService {
       invoice_id: sale.invoice_id,
     }));
 
-    return result;
+    return {
+      totalPages: Math.ceil(totalSales / Number(limit)),
+      currentPage: Number(page),
+      sales: result,
+    };
   }
 
   async roomAvailability(req: Request) {
@@ -200,7 +223,7 @@ class SalesService {
         property: {
           tenant_id: req.user.id,
         },
-        status: 'success', // Menambahkan kondisi status 'success'
+        status: 'success',
       },
       select: {
         id: true,

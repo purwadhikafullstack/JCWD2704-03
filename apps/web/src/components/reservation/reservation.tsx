@@ -11,6 +11,7 @@ import { FaSmoking } from 'react-icons/fa';
 import { MdOutlinePayment } from 'react-icons/md';
 import { PiForkKnifeFill } from 'react-icons/pi';
 import { IoPersonOutline } from 'react-icons/io5';
+import { imageSrcRoom } from '@/utils/imagerender';
 function Reservation() {
   const router = useRouter();
   const params = useParams();
@@ -62,8 +63,15 @@ function Reservation() {
     : 0;
 
   console.log('ini roomss', rooms);
-  const price = rooms?.price ? rooms.price : rooms?.peak_price;
+  const today = new Date();
+  const isPeak =
+    rooms?.start_date_peak &&
+    rooms?.end_date_peak &&
+    today >= new Date(rooms.start_date_peak) &&
+    today <= new Date(rooms.end_date_peak);
+  const price = isPeak ? rooms?.peak_price : rooms?.price;
   const totalPrice = (total_price || 0) * durationInDays;
+  console.log('total_price', totalPrice);
   console.log('hargaa', rooms);
 
   const handlePay = async () => {
@@ -115,7 +123,7 @@ function Reservation() {
       setPaymentMethod(selectedValue);
     }
   };
-  const isPayDisabled = !checkInDate || !checkOutDate;
+  const isPayDisabled = !checkInDate || !checkOutDate || !paymentMethod;
 
   return (
     <div className="max-w-screen-xl m-auto h-screen w-screen">
@@ -128,10 +136,14 @@ function Reservation() {
         <div className="flex flex-col">
           <div></div>
           <div className="flex flex-col pt-3 ">
-            <div className="relative flex flex-col md:flex-row md:space-x-5 space-y-3 md:space-y-0 rounded-xl shadow-sm p-3 max-w-xs md:max-w-3xl mx-auto border border-white bg-white">
-              <div className="w-full md:w-1/3 bg-white grid place-items-center">
+            <div className="relative flex flex-col md:flex-row md:space-x-5 space-y-3 sm:space-y-0 rounded-xl shadow-sm p-3 max-w-xs md:max-w-3xl mx-auto border border-white bg-white">
+              <div className="w-full h-full md:max-w-lg bg-white grid place-items-center">
                 <img
-                  src="https://images.pexels.com/photos/4381392/pexels-photo-4381392.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500"
+                  src={
+                    rooms?.pic_name
+                      ? `${imageSrcRoom}${rooms.pic_name}`
+                      : 'https://images.pexels.com/photos/4381392/pexels-photo-4381392.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500'
+                  }
                   alt="roomType"
                   className="rounded-xl"
                 />
@@ -146,7 +158,7 @@ function Reservation() {
                 <div className="flex gap-2">
                   <IoPersonOutline className="mt-1" />
                   <div className="flex flex-row  text-blue-900">
-                    {rooms?.guest}
+                    {rooms?.guest} Guest
                   </div>
                 </div>
                 <div>
@@ -200,54 +212,55 @@ function Reservation() {
         <div className="md:w-1/3">
           <div className="relative flex-row md:space-x-5 space-y-3 md:space-y-0 rounded-xl shadow-sm p-3 max-w-xs md:max-w-3xl mx-auto border border-white bg-white">
             <div className="font-semibold text-xl">Order summary</div>
-            <div className="flex justify-between">
-              <div>Price Room</div>
-
-              <div>Rp. {price?.toLocaleString() || 'N/A'}</div>
-            </div>
-            <div className="border-b my-2" />
-            <div className="flex justify-between font-semibold"></div>
-            <div className="flex justify-between text-[#ED777B]">
-              <div>{!isNaN(durationInDays) ? durationInDays : 'N/A'} night</div>
-              <div className="text-black font-semibold">
-                Rp. {!isNaN(totalPrice) ? totalPrice.toLocaleString() : 'N/A'}
+            <div className="flex flex-col gap-5 pt-5">
+              <div className="flex justify-between ">
+                <div>Price Room</div>
+                <div>Rp. {price?.toLocaleString() || 'N/A'}</div>
               </div>
-            </div>
-            <div className="flex justify-between font-semibold">
-              <div>Subtotal</div>
+              <div className="border-b my-2" />
+              <div className="flex justify-between text-[#ED777B]">
+                <div className="">
+                  {!isNaN(durationInDays) ? durationInDays : 'N/A'} night
+                </div>
+                <div className="text-black font-semibold">
+                  Rp. {!isNaN(totalPrice) ? totalPrice.toLocaleString() : 'N/A'}
+                </div>
+              </div>
+              <div className="flex justify-between font-semibold">
+                <div className="">Subtotal</div>
+                <div className="">
+                  Rp. {!isNaN(totalPrice) ? totalPrice.toLocaleString() : 'N/A'}
+                </div>
+              </div>
               <div>
-                Rp. {!isNaN(totalPrice) ? totalPrice.toLocaleString() : 'N/A'}
+                <label htmlFor="paymentMethod" className="block font-medium">
+                  Payment Method
+                </label>
+                <select
+                  id="paymentMethod"
+                  value={paymentMethod ?? ''}
+                  onChange={handlePaymentMethodChange}
+                  className="w-full mt-2 mb-4 p-2 border border-gray-300 rounded"
+                >
+                  <option value="" disabled>
+                    Select a payment method*
+                  </option>
+                  <option value="BCA">BCA</option>
+                  <option value="MANDIRI">MANDIRI</option>
+                  <option value={'gopay'}>E-Wallet (Gopay / Qris)</option>
+                </select>
               </div>
-            </div>
-            <div>
-              <label htmlFor="paymentMethod" className="block font-medium">
-                Payment Method
-              </label>
-              <select
-                id="paymentMethod"
-                value={paymentMethod ?? ''}
-                onChange={handlePaymentMethodChange}
-                className="w-full mt-2 mb-4 p-2 border border-gray-300 rounded"
-              >
-                <option value="" disabled>
-                  Select a payment method*
-                </option>
-                <option value="BCA">BCA</option>
-                <option value="MANDIRI">MANDIRI</option>
-                <option value={'gopay'}>Gopay</option>
-                <option value={'qris'}>Qris</option>
-              </select>
-            </div>
-            <div>
-              <button
-                onClick={handlePay}
-                disabled={isPayDisabled}
-                className={`w-full py-2 px-4 bg-black text-white rounded-lg font-semibold hover:bg-gray-800 ${
-                  isPayDisabled ? 'opacity-50 cursor-not-allowed' : ''
-                }`}
-              >
-                Pay Now
-              </button>
+              <div>
+                <button
+                  onClick={handlePay}
+                  disabled={isPayDisabled}
+                  className={`w-full py-2 px-4 bg-black text-white rounded-lg font-semibold hover:bg-gray-800 ${
+                    isPayDisabled ? 'opacity-50 cursor-not-allowed' : ''
+                  }`}
+                >
+                  Pay Now
+                </button>
+              </div>
             </div>
           </div>
         </div>
