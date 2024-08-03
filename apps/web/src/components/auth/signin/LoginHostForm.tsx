@@ -46,13 +46,7 @@ const LoginForm: React.FC = () => {
           } as UserLoginPayload),
         );
         formik.resetForm();
-        if (result?.role && result?.url) {
-          if (result.role === 'tenant') {
-            router.push(result.url);
-          } else {
-            toast.error('Please log in on the guest login page.');
-          }
-        }
+        window.location.reload();
       } catch (error) {
         console.log(error);
 

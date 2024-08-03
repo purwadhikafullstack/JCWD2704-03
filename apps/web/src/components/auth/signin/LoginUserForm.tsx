@@ -45,9 +45,7 @@ const LoginForm: React.FC = () => {
           } as UserLoginPayload),
         );
         formik.resetForm();
-        if (result?.role && result?.url) {
-          router.push(result.url);
-        }
+        window.location.reload();
       } catch (error) {
         console.log(error);
 

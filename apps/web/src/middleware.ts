@@ -5,12 +5,14 @@ import { User } from '@/models/user.model';
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  console.log('Middleware running on path:', request.nextUrl.pathname);
   const token = request.cookies.get('refresh_token')?.value || '';
 
   const response = NextResponse.next();
 
   const res = await fetch(
-    process.env.NEXT_PUBLIC_BASE_API_URL + 'api/users/v7',
+    `${process.env.NEXT_PUBLIC_BASE_API_URL}/api/users/v7`,
+
     {
       credentials: 'include',
       headers: {
@@ -34,13 +36,16 @@ export async function middleware(request: NextRequest) {
 
   const access_token = response.cookies.get('access_token')?.value || '';
   let decode = undefined;
-  let isUser = false;
+  let isGuest = false;
   let is_verified = false;
   try {
     decode = jwtDecode<User>(access_token);
-    // console.log(decode, 'ini decode');
+    console.log(decode, 'ini decode');
 
-    isUser = decode.role === 'user';
+    console.log('Role from token:', decode.role);
+    console.log('isVerified from token:', decode.isVerified);
+
+    isGuest = decode.role === 'user';
 
     is_verified = !!decode.isVerified && !decode.isRequestingEmailChange;
 
@@ -51,9 +56,13 @@ export async function middleware(request: NextRequest) {
 
   const validate = res ? true : false;
 
-  console.log(res, validate, is_verified);
-  console.log(pathname.startsWith('/dashboard'), validate, isUser);
-  console.log(decode?.role);
+  // console.log(res, validate, is_verified);
+  // console.log(pathname.startsWith('/dashboard'), validate, isGuest);
+  // console.log(decode?.role);
+
+  console.log('Is Guest:', isGuest);
+  console.log('Is Verified:', is_verified);
+  console.log('Pathname:', pathname);
 
   if (!token) {
     if (pathname.startsWith('/dashboard') || pathname.startsWith('/profile')) {
@@ -65,8 +74,7 @@ export async function middleware(request: NextRequest) {
     return response;
   }
 
-  // Added condition to handle redirect for the root path and dashboard path
-  if (pathname === '/' && validate && is_verified && !isUser) {
+  if (pathname === '/' && validate && is_verified && !isGuest) {
     return NextResponse.redirect(new URL('/dashboard', request.url));
   } else if (pathname === '/dashboard' && !validate) {
     return NextResponse.redirect(new URL('/', request.url));
@@ -76,24 +84,15 @@ export async function middleware(request: NextRequest) {
     !is_verified
   ) {
     return NextResponse.redirect(new URL('/verification', request.url));
-  }
-
-  // Added condition to redirect users with the 'user' role from any dashboard path
-  else if (pathname.startsWith('/dashboard') && validate && isUser) {
+  } else if (pathname.startsWith('/dashboard') && validate && isGuest) {
     return NextResponse.redirect(new URL('/', request.url));
-  }
-
-  // Handle redirection for authentication paths based on user role
-  else if (validate && pathname.startsWith('/auth')) {
-    if (!isUser) {
+  } else if (validate && pathname.startsWith('/auth')) {
+    if (!isGuest) {
       return NextResponse.redirect(new URL('/dashboard', request.url));
     }
     return NextResponse.redirect(new URL('/', request.url));
-  }
-
-  // Handle redirection for verification path based on verification status and user role
-  else if (validate && pathname === '/verification' && is_verified) {
-    if (!isUser) {
+  } else if (validate && pathname === '/verification' && is_verified) {
+    if (!isGuest) {
       return NextResponse.redirect(new URL('/dashboard', request.url));
     }
     return NextResponse.redirect(new URL('/', request.url));
@@ -101,8 +100,8 @@ export async function middleware(request: NextRequest) {
 
   if (
     validate &&
-    !isUser &&
-    (pathname.startsWith('/reservatiion') ||
+    !isGuest &&
+    (pathname.startsWith('/reservation') ||
       pathname.startsWith('/invoice') ||
       pathname.startsWith('/property') ||
       pathname.startsWith('/success') ||
