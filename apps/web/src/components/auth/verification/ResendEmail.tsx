@@ -36,7 +36,6 @@ export default function ResendEmail() {
         icon: 'success',
       });
     } catch (error) {
-      console.log('Error calling API');
       setResponseMessage('API call failed');
     } finally {
       setIsLoading(false);

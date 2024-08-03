@@ -35,14 +35,10 @@ const SignupUserForm = () => {
     onSubmit: async (values, formikHelpers) => {
       setIsSubmitting(true);
       try {
-        console.log('Sign up as user starts');
-
         await axiosInstance().post('/api/users/v1', values);
 
         router.push(`/auth/verification?email=${values.email}`);
       } catch (error) {
-        console.log(error);
-
         if (error instanceof AxiosError) {
           toast.error(
             error.response?.data.message ||
@@ -70,7 +66,6 @@ const SignupUserForm = () => {
       });
 
       if (error) {
-        console.log('Error signing in with Google:', error.message);
         return;
       }
 
@@ -79,8 +74,6 @@ const SignupUserForm = () => {
           const user = session.user;
           const { email, id } = user;
           const { full_name } = user.user_metadata;
-
-          console.log(session);
 
           if (email && id && full_name) {
             const [first_name, ...rest] = full_name.split(' ');

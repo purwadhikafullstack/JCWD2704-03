@@ -167,7 +167,6 @@ function CreateRoom() {
       if (result.isConfirmed) {
         try {
           const formData = new FormData();
-          console.log('Form Values:', values);
           formData.append('pic', values.pic as File);
           formData.append('type', values.type);
           formData.append('guest', values.guest.toString());

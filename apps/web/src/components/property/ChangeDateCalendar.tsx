@@ -102,10 +102,7 @@ const ChangeDateCalendar: React.FC = () => {
 
   const handleSubmit = async (values: any, { setSubmitting }: any) => {
     try {
-      // Optionally perform a search or other operations here
-      console.log('Search with:', values);
-      // Refresh the page with updated URL
-      window.location.href = window.location.href; // Reload the page with the new URL
+      window.location.href = window.location.href;
     } catch (error) {
       console.error('Submission error:', error);
     } finally {

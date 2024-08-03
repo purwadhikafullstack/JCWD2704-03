@@ -187,7 +187,6 @@ function UpdateRoom() {
       if (result.isConfirmed) {
         try {
           const formData = new FormData();
-          console.log('Form Values:', values);
           formData.append('pic', values.pic);
           formData.append('type', values.type);
           formData.append('guest', values.guest.toString());
@@ -253,23 +252,16 @@ function UpdateRoom() {
 
   useEffect(() => {
     const fetchRoomCat = async () => {
-      console.log('Fetching room category data for ID:', id);
       try {
         const response = await axiosInstance().get<{
           data: RoomCategory;
           currentNumberOfRooms: number;
           allNumberOfRooms: number;
         }>(`/api/rooms/detail/${roomCategoryId}`);
-        console.log('Complete API response:', response); // Log the entire response object
 
         const roomCat: RoomCategory = response.data.data; // Adjust based on actual structure
-        console.log('Fetched room category data:', roomCat);
 
         const { currentNumberOfRooms, allNumberOfRooms } = response.data.data;
-        console.log('Fetched number of rooms:', {
-          currentNumberOfRooms,
-          allNumberOfRooms,
-        });
 
         if (
           currentNumberOfRooms !== undefined &&
@@ -302,7 +294,6 @@ function UpdateRoom() {
             desc: roomCat.desc || '',
             numberOfRooms: currentNumberOfRooms || 0,
           });
-          console.log('Initial values set for formik:', formik.values);
           setInitialType(roomCat.type || '');
           setInitialBed(roomCat.bed || '');
           setInitialBreakfast(roomCat.isBreakfast || false);
@@ -311,10 +302,7 @@ function UpdateRoom() {
         }
 
         setImagePreview(imgSrc);
-        console.log('Image preview URL set:', imgSrc);
-      } catch (error) {
-        console.error('Error fetching room data:', error);
-      }
+      } catch (error) {}
     };
 
     if (id) fetchRoomCat();
@@ -322,7 +310,6 @@ function UpdateRoom() {
 
   useEffect(() => {
     if (initialType) {
-      console.log('Setting initial type:', initialType);
       formik.setFieldValue('type', initialType);
     }
   }, [initialType]);

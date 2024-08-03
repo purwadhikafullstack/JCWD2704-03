@@ -50,7 +50,6 @@ function UserShowProfile() {
     const fetchUserProfile = async () => {
       try {
         const response = await axiosInstance().get(`/api/users/pr/${id}`);
-        console.log(response.data);
 
         setUser(response.data.data);
       } catch (err: any) {

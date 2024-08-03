@@ -32,14 +32,10 @@ function SignupHostForm() {
     onSubmit: async (values, formikHelpers) => {
       setIsSubmitting(true);
       try {
-        console.log('Sign up as user starts');
-
         await axiosInstance().post('/api/users/v2', values);
 
         router.push(`/auth/verification?email=${values.email}`);
       } catch (error) {
-        console.log(error);
-
         if (error instanceof AxiosError) {
           toast.error(
             error.response?.data.message ||
@@ -66,7 +62,6 @@ function SignupHostForm() {
     });
 
     if (error) {
-      console.log('Error signing in with Google:', error.message);
       return;
     }
 

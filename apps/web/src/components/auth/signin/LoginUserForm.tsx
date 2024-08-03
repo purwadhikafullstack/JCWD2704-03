@@ -37,7 +37,6 @@ const LoginForm: React.FC = () => {
     onSubmit: async (values) => {
       setIsSubmitting(true);
       try {
-        console.log('Sign in as user starts');
         const result = await dispatch(
           userLogin({
             email: values.email,
@@ -47,8 +46,6 @@ const LoginForm: React.FC = () => {
         formik.resetForm();
         window.location.reload();
       } catch (error) {
-        console.log(error);
-
         if (error instanceof AxiosError) {
           toast.error(
             error.response?.data.message ||
@@ -73,7 +70,6 @@ const LoginForm: React.FC = () => {
       });
 
       if (error) {
-        console.log('Error signing in with Google:', error.message);
         return;
       }
 
@@ -82,8 +78,6 @@ const LoginForm: React.FC = () => {
           const user = session.user;
           const { email, id } = user;
           const { full_name } = user.user_metadata;
-
-          console.log(session);
 
           if (!email) {
             console.error('Email is undefined');

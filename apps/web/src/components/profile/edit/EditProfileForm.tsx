@@ -69,8 +69,6 @@ function EditProfileForm() {
     onSubmit: async (values) => {
       setLoading(true);
       try {
-        console.log('Form values:', values);
-
         const formData = new FormData();
         formData.append('first_name', values.first_name);
         formData.append('last_name', values.last_name);
@@ -79,7 +77,6 @@ function EditProfileForm() {
         if (values.image) {
           formData.append('image', values.image);
         }
-        console.log('Try editing user profile:', formData);
 
         const response = await axiosInstance().patch(
           '/api/users/edit',
@@ -92,19 +89,12 @@ function EditProfileForm() {
           },
         );
 
-        const { token, user: fetchedUser } = response.data; // Adjusted to get 'user' from the response
-        console.log(token);
+        const { token, user: fetchedUser } = response.data;
         setCookie('access_token', token);
 
-        dispatch(login(fetchedUser)); // Updated to use fetchedUser
-        // dispatch(keepLogin());
-
-        // const decodedToken = jwtDecode<any>(token);
-        // router.push(`/show/${decodedToken.user.id}`);
-        // router.push(`/show/${user?.id}`);
+        dispatch(login(fetchedUser));
         window.location.reload();
       } catch (error) {
-        console.log(error);
         if (error instanceof AxiosError) {
           alert(error.response?.data.message);
         }
@@ -120,13 +110,9 @@ function EditProfileForm() {
 
   useEffect(() => {
     if (user && user.id) {
-      console.log('User object:', user);
-
       const imgSrc = user.image_name
         ? `${imageSrcUser}${user.image_name}`
         : null;
-
-      console.log('Image source:', imgSrc);
 
       formik.setValues({
         image: imgSrc,
@@ -136,13 +122,11 @@ function EditProfileForm() {
       });
 
       setImagePreview(imgSrc);
-      console.log('Formik values after setting:', formik.values);
     }
   }, [user]);
 
   useEffect(() => {
     // Log the user object to check the value
-    console.log('User object:', user);
   }, [user]);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {

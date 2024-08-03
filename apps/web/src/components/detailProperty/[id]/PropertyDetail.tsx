@@ -65,21 +65,16 @@ function PropertyDetail() {
 
       const url = `${baseUrl}api/properties/detail/${name}?checkIn=${checkIn}&checkOut=${checkOut}`;
 
-      console.log(`Fetching property details from: ${url}`);
-
       try {
         const response = await axiosInstance().get(
           `api/properties/detail/${name}?checkIn=${checkIn}&checkOut=${checkOut}`,
         );
         const propertyData = response.data.data;
 
-        console.log('Property data received:', propertyData);
-
         setProperty(propertyData);
         setTenant(propertyData.tenant);
 
         const categories: RoomCategory[] = propertyData.RoomCategory || [];
-        console.log('Room categories:', categories);
         setRoomCategories(categories);
         // Initialize room counts and selected room IDs
         const initialRoomCounts: { [key: string]: number } = {};
@@ -150,11 +145,6 @@ function PropertyDetail() {
         ...roomCounts,
         [categoryId]: roomCounts[categoryId] + 1,
       });
-      console.log(
-        `Incremented room count for category ${categoryId}:`,
-        roomCounts[categoryId] + 1,
-      );
-      console.log('New selected room IDs:', newRoomIds);
     }
   };
 
@@ -173,11 +163,6 @@ function PropertyDetail() {
         ...roomCounts,
         [categoryId]: roomCounts[categoryId] - 1,
       });
-      console.log(
-        `Decremented room count for category ${categoryId}:`,
-        roomCounts[categoryId] - 1,
-      );
-      console.log('New selected room IDs:', newRoomIds);
     }
   };
 
@@ -193,13 +178,11 @@ function PropertyDetail() {
       const baseUrl =
         process.env.NEXT_PUBLIC_BASE_API_URL || `http://localhost:8000`;
       const url = `${baseUrl}api/reviews/getReviewByPropertyId/${property?.id}`;
-      console.log(`Fetching property reviews from: ${url}`);
 
       try {
         const response = await axiosInstance().get(url);
 
         const data: Review[] = response.data.data;
-        console.log('Logging response data:', data);
 
         setReviews(data);
       } catch (error) {
@@ -222,20 +205,11 @@ function PropertyDetail() {
       ? new Date(roomCategory.end_date_peak)
       : null;
 
-    console.log('Start Date Peak:', startDatePeak);
-    console.log('End Date Peak:', endDatePeak);
-    console.log('Check In Date:', checkInDate);
-    console.log('Check Out Date:', checkOutDate);
-
     if (startDatePeak === null || endDatePeak === null) {
       return roomCategory.price;
     }
 
     const isPeak = checkInDate <= endDatePeak && checkOutDate >= startDatePeak;
-
-    console.log('Is Peak:', isPeak);
-    console.log('Peak Price:', roomCategory.peak_price);
-    console.log('Standard Price:', roomCategory.price);
 
     return isPeak
       ? roomCategory.peak_price ?? roomCategory.price

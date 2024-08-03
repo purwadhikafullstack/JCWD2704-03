@@ -61,7 +61,6 @@ function SearchPage({ searchParams }: { searchParams: SearchParams }) {
         page: currentPage,
       };
       const fetchedResults = await fetchResults(finalSearchParams);
-      console.log('Fetched results:', fetchedResults); //
       setResults(fetchedResults || {});
 
       setLoading(false);

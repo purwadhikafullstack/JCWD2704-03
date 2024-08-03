@@ -59,7 +59,6 @@ const SearchForm: React.FC = () => {
       });
 
       const properties = response.data;
-      console.log('Properties:', properties);
     } catch (error) {
       console.error('Error:', error);
     }
