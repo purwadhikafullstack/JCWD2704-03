@@ -55,7 +55,7 @@ const PropertyReview = () => {
 
     fetchEventData();
   }, [propertyId]);
-  console.log('isiiii', reviews);
+
   const handleReplyChange = (reviewId: string, text: string) => {
     setReplyInput((prev) => ({
       ...prev,
