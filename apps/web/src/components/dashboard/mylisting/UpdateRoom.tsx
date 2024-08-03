@@ -26,7 +26,7 @@ interface FormValues {
   type: string;
   guest: number;
   price: number;
-  peak_price?: number;
+  peak_price?: number | null;
   start_date_peak?: Date | null;
   end_date_peak?: Date | null;
   isBreakfast: boolean;
@@ -85,7 +85,7 @@ function UpdateRoom() {
     type: '',
     guest: 2,
     price: formatNumberWithCommas('200000'),
-    peak_price: undefined,
+    peak_price: null,
     start_date_peak: null,
     end_date_peak: null,
     isBreakfast: false,
@@ -110,6 +110,8 @@ function UpdateRoom() {
       peak_price: Yup.number()
         .positive('Peak price must be positive')
         .nullable()
+
+        .transform((value) => (value === '' ? null : value))
         // .min(50000, 'Price must be greater than or equal to IDR 50,000')
         .typeError('Price must be a number'),
       start_date_peak: Yup.date().nullable(),
@@ -155,6 +157,25 @@ function UpdateRoom() {
   };
 
   const handleUpdate = async (values: FormValues) => {
+    // Perform validation
+    if (
+      values.peak_price !== null &&
+      values.peak_price !== undefined &&
+      values.peak_price > 0
+    ) {
+      if (!values.start_date_peak || !values.end_date_peak) {
+        // Show Swal alert for missing dates
+        Swal.fire({
+          title: 'Update failed',
+          text: 'Start date and end date are required when peak price is provided.',
+          icon: 'error',
+          confirmButtonText: 'OK',
+        });
+        return;
+      }
+    }
+
+    // Show confirmation dialog
     Swal.fire({
       title: 'Are you sure?',
       text: 'Do you want to post this property to your listing?',
@@ -171,18 +192,21 @@ function UpdateRoom() {
           formData.append('type', values.type);
           formData.append('guest', values.guest.toString());
           formData.append('price', removeCommas(values.price.toString()));
-          if (values.peak_price !== undefined)
+          if (values.peak_price != null) {
             formData.append('peak_price', values.peak_price.toString());
-          if (values.start_date_peak)
+          }
+          if (values.start_date_peak) {
             formData.append(
               'start_date_peak',
               new Date(values.start_date_peak).toISOString(),
             );
-          if (values.end_date_peak)
+          }
+          if (values.end_date_peak) {
             formData.append(
               'end_date_peak',
               new Date(values.end_date_peak).toISOString(),
             );
+          }
           formData.append('isBreakfast', values.isBreakfast.toString());
           formData.append('isRefunable', values.isRefunable.toString());
           formData.append('isSmoking', values.isSmoking.toString());
@@ -208,7 +232,6 @@ function UpdateRoom() {
           const errorMessage = 'An error occurred while updating the room.';
 
           if (error instanceof AxiosError) {
-            // Extract the error message from the response if available
             const apiErrorMessage =
               error.response?.data?.message || errorMessage;
             Swal.fire({
@@ -217,7 +240,6 @@ function UpdateRoom() {
               text: apiErrorMessage,
             });
           } else {
-            // Fallback if the error is not from Axios
             Swal.fire({
               icon: 'error',
               title: 'Error',
@@ -266,7 +288,7 @@ function UpdateRoom() {
             type: roomCat.type || '',
             guest: roomCat.guest || 0,
             price: roomCat.price || 0,
-            peak_price: roomCat.peak_price || 0,
+            peak_price: roomCat.peak_price,
             start_date_peak: roomCat.start_date_peak
               ? new Date(roomCat.start_date_peak)
               : null,
@@ -767,13 +789,22 @@ function UpdateRoom() {
                       <input
                         id="peak_price"
                         name="peak_price"
-                        type="string"
+                        type="text" // Use text to handle empty values more gracefully
                         className={`form-control ${formik.touched.peak_price && formik.errors.peak_price ? 'is-invalid' : ''}`}
-                        onChange={(e) =>
-                          handlePriceChange(e, formik.setFieldValue)
-                        }
+                        onChange={(e) => {
+                          // Convert empty string to null, otherwise parse as number
+                          const value =
+                            e.target.value === ''
+                              ? null
+                              : Number(e.target.value);
+                          formik.setFieldValue('peak_price', value);
+                        }}
                         onBlur={formik.handleBlur}
-                        value={formatNumberWithCommas(formik.values.peak_price)}
+                        value={
+                          formik.values.peak_price === null
+                            ? ''
+                            : formik.values.peak_price
+                        } // Display empty string for null
                       />
                     </div>
 

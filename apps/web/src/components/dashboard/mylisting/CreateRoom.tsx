@@ -140,6 +140,22 @@ function CreateRoom() {
   };
 
   const handleUpdate = async (values: FormValues) => {
+    if (
+      values.peak_price !== null &&
+      values.peak_price !== undefined &&
+      values.peak_price > 0
+    ) {
+      if (!values.start_date_peak || !values.end_date_peak) {
+        // Show Swal alert for missing dates
+        Swal.fire({
+          title: 'Update failed',
+          text: 'Start date and end date are required when peak price is provided.',
+          icon: 'error',
+          confirmButtonText: 'OK',
+        });
+        return;
+      }
+    }
     Swal.fire({
       title: 'Are you sure?',
       text: 'Do you want to add this room to your property?',
