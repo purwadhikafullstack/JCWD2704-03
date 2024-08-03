@@ -91,6 +91,15 @@ const ChangeDateCalendar: React.FC = () => {
     }
   }, [checkInDate, checkOutDate]);
 
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const checkInFromUrl = urlParams.get('checkIn') || getTodayDate();
+    const checkOutFromUrl = urlParams.get('checkOut') || getTomorrowDate();
+
+    setCheckInDate(checkInFromUrl);
+    setCheckOutDate(checkOutFromUrl);
+  }, []);
+
   const handleSubmit = async (values: any, { setSubmitting }: any) => {
     try {
       // Optionally perform a search or other operations here

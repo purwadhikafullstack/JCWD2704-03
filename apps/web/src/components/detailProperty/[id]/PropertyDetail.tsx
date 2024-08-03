@@ -98,7 +98,28 @@ function PropertyDetail() {
     };
 
     fetchPropertyDetail();
-  }, [name, checkIn, checkOut]);
+  }, [name, checkIn, checkOut, searchParams]);
+
+  const [checkInDate, setCheckInDate] = useState<Date>(new Date());
+  const [checkOutDate, setCheckOutDate] = useState<Date>(new Date());
+
+  useEffect(() => {
+    const checkInParam = searchParams.get('checkIn') || '';
+    const checkOutParam = searchParams.get('checkOut') || '';
+
+    if (checkInParam && checkOutParam) {
+      const parsedCheckInDate = new Date(checkInParam);
+      const parsedCheckOutDate = new Date(checkOutParam);
+
+      if (
+        !isNaN(parsedCheckInDate.getTime()) &&
+        !isNaN(parsedCheckOutDate.getTime())
+      ) {
+        setCheckInDate(parsedCheckInDate); // Ensure this is a Date
+        setCheckOutDate(parsedCheckOutDate); // Ensure this is a Date
+      }
+    }
+  }, [searchParams]);
 
   const handleReserve = (
     roomCategoryId: string,
@@ -188,14 +209,12 @@ function PropertyDetail() {
 
     fetchReviews();
   }, [property?.id]);
-  const isPeakPeriod = (start: string, end: string): boolean => {
-    const today = new Date();
-    const startDate = new Date(start);
-    const endDate = new Date(end);
-    return today >= startDate && today <= endDate;
-  };
-  const getCurrentPrice = (roomCategory: RoomCategory) => {
-    const today = new Date();
+
+  const getCurrentPrice = (
+    roomCategory: RoomCategory,
+    checkInDate: Date,
+    checkOutDate: Date,
+  ): number => {
     const startDatePeak = roomCategory.start_date_peak
       ? new Date(roomCategory.start_date_peak)
       : null;
@@ -203,26 +222,38 @@ function PropertyDetail() {
       ? new Date(roomCategory.end_date_peak)
       : null;
 
-    if (
-      startDatePeak &&
-      endDatePeak &&
-      today >= startDatePeak &&
-      today <= endDatePeak
-    ) {
-      return roomCategory.peak_price;
+    console.log('Start Date Peak:', startDatePeak);
+    console.log('End Date Peak:', endDatePeak);
+    console.log('Check In Date:', checkInDate);
+    console.log('Check Out Date:', checkOutDate);
+
+    if (startDatePeak === null || endDatePeak === null) {
+      return roomCategory.price;
     }
-    return roomCategory.price;
+
+    const isPeak = checkInDate <= endDatePeak && checkOutDate >= startDatePeak;
+
+    console.log('Is Peak:', isPeak);
+    console.log('Peak Price:', roomCategory.peak_price);
+    console.log('Standard Price:', roomCategory.price);
+
+    return isPeak
+      ? roomCategory.peak_price ?? roomCategory.price
+      : roomCategory.price;
   };
+
   const calculateTotalPrice = (
     roomCategory: RoomCategory,
     count: number,
+    checkInDate: Date,
+    checkOutDate: Date,
   ): number => {
-    const isPeak =
-      roomCategory.start_date_peak && roomCategory.end_date_peak
-        ? isPeakPeriod(roomCategory.start_date_peak, roomCategory.end_date_peak)
-        : false;
-    const peakPrice = roomCategory.peak_price ?? roomCategory.price;
-    return isPeak ? count * peakPrice : count * roomCategory.price;
+    const currentPrice = getCurrentPrice(
+      roomCategory,
+      checkInDate,
+      checkOutDate,
+    );
+    return count * currentPrice;
   };
 
   if (loading) {
@@ -410,16 +441,24 @@ function PropertyDetail() {
                       </div>
                     </div>
 
-                    <div className="lg:flex justify-between gap-5">
+                    <div className="lg:flex-col justify-between gap-5">
                       <div className="py-3 font-medium text-lg">
-                        Price: ${getCurrentPrice(roomCategory)} /room/night
+                        Rp
+                        {new Intl.NumberFormat().format(
+                          getCurrentPrice(
+                            roomCategory,
+                            checkInDate,
+                            checkOutDate,
+                          ),
+                        )}{' '}
+                        /room/night
                         <div className="text-[#ED777B] font-semibold text-xs">
                           {roomCategory.remainingRooms} room available
                         </div>
                       </div>
 
                       {/* SECTION BUTTON */}
-                      <div className="flex justify-between gap-3">
+                      <div className="flex justify-between gap-3 items-center">
                         <div className="flex flex-row items-center gap-3 text-lg">
                           <button
                             className="w-10 btn btn-dark"
@@ -441,18 +480,8 @@ function PropertyDetail() {
                           >
                             +
                           </button>
-                          <p>
-                            Total Price: $
-                            {calculateTotalPrice(
-                              roomCategory,
-                              roomCounts[roomCategory.id],
-                            )}
-                          </p>
-                          {/* <p>
-                          Total Price: $
-                          {roomCounts[roomCategory.id] * roomCategory.price}
-                        </p> */}
                         </div>
+
                         <div className="flex gap-2 items-center">
                           {roomCategory.Room.length > 0 && (
                             <button
@@ -463,6 +492,8 @@ function PropertyDetail() {
                                   calculateTotalPrice(
                                     roomCategory,
                                     roomCounts[roomCategory.id],
+                                    checkInDate,
+                                    checkOutDate,
                                   ),
                                   selectedRoomIds[roomCategory.id],
                                 )
@@ -471,6 +502,22 @@ function PropertyDetail() {
                               Choose
                             </button>
                           )}
+                        </div>
+
+                        <div>
+                          Total:{' '}
+                          <span className="font-medium">
+                            {' '}
+                            Rp
+                            {new Intl.NumberFormat().format(
+                              calculateTotalPrice(
+                                roomCategory,
+                                roomCounts[roomCategory.id],
+                                checkInDate,
+                                checkOutDate,
+                              ),
+                            )}{' '}
+                          </span>
                         </div>
                       </div>
                     </div>

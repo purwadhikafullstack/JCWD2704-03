@@ -4,6 +4,8 @@ import { Request } from 'express';
 import { TProperty } from '@/models/property.model';
 import sharp from 'sharp';
 import shortid from 'shortid';
+import dayjs from 'dayjs';
+import { Property } from '@prisma/client';
 
 class PropertyService {
   async getRoomAvailability(
@@ -69,6 +71,22 @@ class PropertyService {
     limit: number,
   ): Promise<any> {
     try {
+      // Fungsi untuk memeriksa apakah rentang tanggal berada dalam periode puncak
+      const isInPeakSeason = (
+        startDatePeak: dayjs.Dayjs | null,
+        endDatePeak: dayjs.Dayjs | null,
+        checkInDate: dayjs.Dayjs,
+        checkOutDate: dayjs.Dayjs,
+      ): boolean => {
+        if (!startDatePeak || !endDatePeak) {
+          return false; // Jika tidak ada periode peak season, dianggap bukan peak season
+        }
+        return (
+          checkInDate.isBefore(endDatePeak) &&
+          checkOutDate.isAfter(startDatePeak)
+        );
+      };
+
       // Find properties with pagination
       const properties = await prisma.property.findMany({
         where: {
@@ -77,9 +95,6 @@ class PropertyService {
           Room: {
             some: {
               deletedAt: null,
-              roomCategory: {
-                deletedAt: null,
-              },
               OrderRoom: {
                 none: {
                   order: {
@@ -109,50 +124,62 @@ class PropertyService {
         take: limit,
       });
 
-      // Find total properties count
-      const totalProperties = await prisma.property.count({
-        where: {
-          city: { contains: city },
-          deletedAt: null,
-          Room: {
-            some: {
-              deletedAt: null,
-              roomCategory: {
-                deletedAt: null,
-              },
-              OrderRoom: {
-                none: {
-                  order: {
-                    AND: [
-                      { checkIn_date: { lte: checkOut } },
-                      { checkOut_date: { gte: checkIn } },
-                      { status: { not: 'cancelled' } },
-                    ],
-                  },
-                },
-              },
-            },
-          },
-        },
-      });
+      console.log('Fetched Properties:', properties);
 
-      // Calculate lowest price per property
       const propertiesWithLowestPrice = properties.map((property) => {
-        const rooms = property.Room || [];
-        const lowestPrice = rooms
-          .map((room) => room.roomCategory.price) // Map prices from RoomCategory
-          .reduce((min, price) => (price < min ? price : min), Infinity); // Find the minimum price
+        let lowestPrice = Infinity;
+
+        property.Room.forEach((room) => {
+          const roomCategory = room.roomCategory;
+          const roomPrice = roomCategory?.price ?? Infinity;
+          const peakSeasonPrice = roomCategory?.peak_price ?? Infinity;
+          const startDatePeak = roomCategory?.start_date_peak
+            ? dayjs(roomCategory.start_date_peak)
+            : null;
+          const endDatePeak = roomCategory?.end_date_peak
+            ? dayjs(roomCategory.end_date_peak)
+            : null;
+
+          const currentDate = dayjs(); // Tambahkan variabel tanggal saat ini
+
+          // Gunakan check-in dan check-out untuk menentukan harga
+          if (startDatePeak && endDatePeak) {
+            if (
+              isInPeakSeason(
+                startDatePeak,
+                endDatePeak,
+                dayjs(checkIn),
+                dayjs(checkOut),
+              )
+            ) {
+              // Jika dalam peak season
+              if (peakSeasonPrice < lowestPrice) {
+                lowestPrice = peakSeasonPrice;
+              }
+            } else {
+              // Jika bukan peak season
+              if (roomPrice < lowestPrice) {
+                lowestPrice = roomPrice;
+              }
+            }
+          } else {
+            // Jika tidak ada periode peak season yang ditentukan
+            if (roomPrice < lowestPrice) {
+              lowestPrice = roomPrice;
+            }
+          }
+        });
 
         return {
           ...property,
-          lowestPrice: isFinite(lowestPrice) ? lowestPrice : null, // Add lowest price to property
+          lowestPrice: isFinite(lowestPrice) ? lowestPrice : null,
         };
       });
 
       return {
         properties: propertiesWithLowestPrice,
-        totalProperties,
-        totalPages: Math.ceil(totalProperties / limit),
+        totalProperties: properties.length,
+        totalPages: Math.ceil(properties.length / limit),
         currentPage: page,
       };
     } catch (error) {
@@ -244,102 +271,6 @@ class PropertyService {
     });
     return rooms;
   }
-
-  // async getPropertyDetail(req: Request) {
-  //   const { name } = req.params;
-  //   const { checkIn, checkOut } = req.query;
-
-  //   const formattedName = name.replace(/-/g, ' ');
-
-  //   if (!formattedName || !checkIn || !checkOut) {
-  //     throw new Error(
-  //       'Property name, check-in, and check-out dates are required',
-  //     );
-  //   }
-
-  //   // Safely get the checkIn and checkOut values
-  //   const checkInValue = Array.isArray(checkIn) ? checkIn[0] : checkIn;
-  //   const checkOutValue = Array.isArray(checkOut) ? checkOut[0] : checkOut;
-
-  //   // Check if they are strings before creating Date objects
-  //   if (typeof checkInValue !== 'string' || typeof checkOutValue !== 'string') {
-  //     throw new Error('Invalid check-in or check-out date format');
-  //   }
-
-  //   // Convert to Date objects
-  //   const checkInDateObj = new Date(checkInValue);
-  //   const checkOutDateObj = new Date(checkOutValue);
-
-  //   const data = await prisma.property.findFirst({
-  //     where: { name: formattedName },
-  //     select: {
-  //       id: true,
-  //       name: true,
-  //       desc: true,
-  //       city: true,
-  //       category: true,
-  //       address: true,
-  //       latitude: true,
-  //       longitude: true,
-  //       createdAt: true,
-  //       updatedAt: true,
-  //       RoomCategory: {
-  //         include: {
-  //           Room: {
-  //             include: {
-  //               Order: true,
-  //             },
-  //             where: {
-  //               roomCategory: {
-  //                 Order: {
-  //                   none: {
-  //                     OR: [
-  //                       {
-  //                         checkIn_date: {
-  //                           lte: checkOutDateObj,
-  //                         },
-  //                       },
-  //                       {
-  //                         checkOut_date: {
-  //                           gte: checkInDateObj,
-  //                         },
-  //                       },
-  //                     ],
-  //                   },
-  //                 },
-  //               },
-  //             },
-  //           },
-  //         },
-  //       },
-  //     },
-  //   });
-
-  //   const roomCategoriesWithAvailableRooms = data?.RoomCategory.map(
-  //     (category) => {
-  //       const totalRooms = category.Room.length;
-  //       const bookedRooms = category.Room.filter((room) => {
-  //         return room.Order.some((order) => {
-  //           const orderCheckIn = new Date(order.checkIn_date);
-  //           const orderCheckOut = new Date(order.checkOut_date);
-  //           return (
-  //             orderCheckIn <= checkOutDateObj && orderCheckOut >= checkInDateObj
-  //           );
-  //         });
-  //       }).length;
-
-  //       return {
-  //         ...category,
-  //         remainingRooms: totalRooms - bookedRooms,
-  //       };
-  //     },
-  //   );
-
-  //   return {
-  //     ...data,
-  //     RoomCategory: roomCategoriesWithAvailableRooms,
-  //   };
-  // }
 
   async getRoomByRoomId(req: Request) {
     const { id } = req.params;

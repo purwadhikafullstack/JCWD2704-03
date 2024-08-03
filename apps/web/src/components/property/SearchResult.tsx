@@ -13,6 +13,8 @@ import { FaStar } from 'react-icons/fa';
 import FormCalendar from './FormCalendar';
 import { IoSadOutline } from 'react-icons/io5';
 import { FaHouse } from 'react-icons/fa6';
+import dayjs from 'dayjs';
+import { RoomCategory } from '@/models/roomCategory.model';
 
 export type SearchParams = {
   city: string;
@@ -40,7 +42,8 @@ async function fetchResults(searchParams: SearchParams) {
 function SearchPage({ searchParams }: { searchParams: SearchParams }) {
   const [results, setResults] = useState<any>({});
   const [currentPage, setCurrentPage] = useState(searchParams.page || 1);
-  const [loading, setLoading] = useState(true); // Add loading state
+  const [loading, setLoading] = useState(true);
+  const [finalPrice, setFinalPrice] = useState<string | null>(null);
   const { checkIn: reduxCheckIn, checkOut: reduxCheckOut } = useSelector(
     (state: RootState) => state.checkInOut,
   );
@@ -58,8 +61,10 @@ function SearchPage({ searchParams }: { searchParams: SearchParams }) {
         page: currentPage,
       };
       const fetchedResults = await fetchResults(finalSearchParams);
+      console.log('Fetched results:', fetchedResults); //
       setResults(fetchedResults || {});
-      setLoading(false); // Set loading to false when data fetching is complete
+
+      setLoading(false);
     };
 
     fetchResultsAndSetState();
@@ -72,13 +77,6 @@ function SearchPage({ searchParams }: { searchParams: SearchParams }) {
   if (!searchParams.city || !checkIn || !checkOut) {
     return <div>Not found</div>;
   }
-
-  const formatPrice = (price: any) => {
-    return new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR',
-    }).format(price);
-  };
 
   return (
     <>
@@ -159,8 +157,15 @@ function SearchPage({ searchParams }: { searchParams: SearchParams }) {
 
                     <div className="text-sm lg:mt-2">
                       <span className="font-semibold">
-                        {formatPrice(property.lowestPrice)}
-                      </span>{' '}
+                        {property.lowestPrice
+                          ? new Intl.NumberFormat('id-ID', {
+                              style: 'currency',
+                              currency: 'IDR',
+                              minimumFractionDigits: 0,
+                              maximumFractionDigits: 0,
+                            }).format(property.lowestPrice)
+                          : 'Harga tidak tersedia'}{' '}
+                      </span>
                       night
                     </div>
                   </div>
