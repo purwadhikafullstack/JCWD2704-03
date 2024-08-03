@@ -512,7 +512,7 @@ class PropertyService {
     if (!file) throw new Error('No file uploaded');
     const buffer = await sharp(req.file?.buffer).png().toBuffer();
     const existingProperty = await prisma.property.findFirst({
-      where: { name },
+      where: { name, deletedAt: null },
     });
 
     if (existingProperty)

@@ -270,7 +270,7 @@ class UserService {
           },
           '1h',
         );
-        const verificationUrl = `${baseUrl}/auth/reverify/${token}`;
+        const verificationUrl = `${baseUrl}/reverify/${token}`;
 
         const templatePath = path.join(__dirname, '../templates/reverify.html');
         let htmlTemplate = fs.readFileSync(templatePath, 'utf-8');

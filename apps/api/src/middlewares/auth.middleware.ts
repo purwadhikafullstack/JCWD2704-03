@@ -7,7 +7,7 @@ export const verifyUser = (req: Request, res: Response, next: NextFunction) => {
   try {
     const token = req.headers.authorization?.replace('Bearer ', '') || '';
     req.user = verify(token, SECRET_KEY) as TUser;
-    console.log('decoded token', req.user);
+    // console.log('decoded token', req.user);
 
     next();
   } catch (error) {

@@ -15,8 +15,7 @@ class ReservationRouter {
     this.router.get('/:orderId', reservationController.getOrderByOrderId);
     this.router.get(
       '/user/myOrder',
-      verifyUser,
-      verifyBuyer,
+
       reservationController.getOrderByUserId,
     );
     this.router.get(
@@ -38,18 +37,26 @@ class ReservationRouter {
     );
     this.router.patch(
       '/tenant/order/denied/:orderId',
+      verifyUser,
+      verifyTenant,
       reservationController.changeStatusOrder,
     );
     this.router.patch(
       '/tenant/order/cancelled/:orderId',
+      verifyUser,
+      verifyTenant,
       reservationController.cancelByTenant,
     );
     this.router.patch(
       '/user/order/cancelled/:orderId',
+      verifyUser,
+      verifyBuyer,
       reservationController.cancelByUser,
     );
     this.router.patch(
       '/tenant/order/confirmed/:orderId',
+      verifyUser,
+      verifyTenant,
       reservationController.orderSuccess,
     );
     this.router.get(
@@ -58,10 +65,14 @@ class ReservationRouter {
     );
     this.router.post(
       '/createSnapMidtrans',
+      verifyUser,
+      verifyBuyer,
       reservationController.creatingSnapMidtrans,
     );
     this.router.post(
       '/updateTransaction/',
+      verifyUser,
+      verifyBuyer,
       reservationController.transferNotif,
     );
   }

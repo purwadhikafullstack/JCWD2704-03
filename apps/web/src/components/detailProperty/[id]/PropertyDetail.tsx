@@ -177,7 +177,7 @@ function PropertyDetail() {
     const fetchReviews = async () => {
       const baseUrl =
         process.env.NEXT_PUBLIC_BASE_API_URL || `http://localhost:8000`;
-      const url = `${baseUrl}api/reviews/getReviewByPropertyId/${property?.id}`;
+      const url = `${baseUrl}/api/reviews/getReviewByPropertyId/${property?.id}`;
 
       try {
         const response = await axiosInstance().get(url);

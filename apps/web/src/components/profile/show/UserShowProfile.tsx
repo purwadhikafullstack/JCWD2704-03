@@ -111,10 +111,10 @@ function UserShowProfile() {
   return (
     <>
       <div className="flex justify-center">
-        <div className="lg:p-10 p-10 max-w-screen-2xl">
+        <div className="lg:p-10 p-10 w-3/4">
           <div className="flex lg:flex-row lg:justify-between flex-col tracking-tighter gap-4 lg:gap-5">
             {/* CARD PROFILE */}
-            <div className="rounded-2xl shadow-lg p-2 flex flex-row lg:w-full lg:h-80">
+            <div className="rounded-2xl shadow-lg p-2 flex flex-row lg:w-1/2 lg:h-80">
               <div className="flex flex-row w-full justify-between items-center px-10 lg:h-72 gap-5">
                 {/* IMAGE & NAME*/}
                 <div className="flex flex-col items-center gap-3">

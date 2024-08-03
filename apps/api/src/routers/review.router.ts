@@ -1,4 +1,6 @@
 import { ReviewController } from '@/controllers/review.controller';
+import { verifyUser } from '@/middlewares/auth.middleware';
+import { verifyBuyer, verifyTenant } from '@/middlewares/role.middleware';
 import { Router } from 'express';
 
 export class ReviewRouter {
@@ -18,10 +20,22 @@ export class ReviewRouter {
       '/getReviewByUserId/:userId',
       this.reviewController.getReviewByUserId,
     );
-    this.router.post('/reviewReply/:reviewId', this.reviewController.addReply);
-    this.router.post('/addReview/', this.reviewController.addReview);
+    this.router.post(
+      '/reviewReply/:reviewId',
+      verifyUser,
+      verifyTenant,
+      this.reviewController.addReply,
+    );
+    this.router.post(
+      '/addReview/',
+      verifyUser,
+      verifyBuyer,
+      this.reviewController.addReview,
+    );
     this.router.get(
       '/review/:orderId',
+      verifyUser,
+      verifyBuyer,
       this.reviewController.getReviewByOrderId,
     );
     this.router.get(

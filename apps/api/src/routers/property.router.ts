@@ -68,6 +68,12 @@ export class PropertyRouter {
       blobUploader().single('pic'),
       this.propertyController.updateProperty,
     );
+    this.router.patch(
+      '/del/:propertyId',
+      verifyUser,
+      verifyTenant,
+      this.propertyController.deleteProperty,
+    );
   }
 
   getRouter(): Router {

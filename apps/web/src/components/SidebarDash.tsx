@@ -30,8 +30,12 @@ function SidebarDash() {
     router.push('/');
     window.location.reload();
   };
+
+  const handleSettings = () => {
+    router.push('/dashboard/settings');
+  };
   return (
-    <div className="flex">
+    <div className="flex z-50">
       <span
         className="sticky lg:hidden text-gray-600 text-4xl cursor-pointer"
         onClick={toggleSidebar}
@@ -72,10 +76,13 @@ function SidebarDash() {
             Property
           </span>
         </div>
-        <div className="p-2.5 mt-3 flex items-center rounded-md px-4 duration-300 cursor-pointer hover:bg-blue-600 text-white">
+        <div
+          onClick={handleSettings}
+          className="p-2.5 mt-3 flex items-center rounded-md px-4 duration-300 cursor-pointer hover:bg-blue-600 text-white"
+        >
           <IoPerson />
           <span className="text-[15px] ml-4 text-gray-200 font-bold">
-            Profile
+            Settings
           </span>
         </div>
         <div

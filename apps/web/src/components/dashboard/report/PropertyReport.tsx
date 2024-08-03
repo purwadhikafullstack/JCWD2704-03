@@ -1,14 +1,7 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import { axiosInstance } from '@/libs/axios.config';
-
-interface Sale {
-  property_id: string;
-  property_name: string;
-  roomCategory_id: string;
-  total_sales: number;
-  total_orders: number;
-}
+import { Sale } from '@/models/sale.model';
 
 const PropertyReport: React.FC = () => {
   const [sales, setSales] = useState<Sale[]>([]);
@@ -47,7 +40,7 @@ const PropertyReport: React.FC = () => {
           <tr className="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
             <th className="py-2 px-4 border">No</th>
             <th className="py-2 px-4 border ">Property Name</th>
-            <th className="py-2 px-4 border">Room Category ID</th>
+            <th className="py-2 px-4 border">Room Category</th>
             <th className="py-2 px-4 border">Total Orders</th>
             <th
               className="py-2 px-4 border"

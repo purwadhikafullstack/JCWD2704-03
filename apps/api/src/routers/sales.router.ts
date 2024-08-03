@@ -33,6 +33,8 @@ export class SalesRouter {
     );
     this.router.get(
       '/availabilityReport',
+      verifyUser,
+      verifyTenant,
       this.salesController.getAvailability,
     );
   }

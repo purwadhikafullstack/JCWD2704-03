@@ -73,17 +73,16 @@ export async function middleware(request: NextRequest) {
     }
     return response;
   }
-
   if (pathname === '/' && validate && is_verified && !isGuest) {
     return NextResponse.redirect(new URL('/dashboard', request.url));
   } else if (pathname === '/dashboard' && !validate) {
     return NextResponse.redirect(new URL('/', request.url));
-  } else if (
-    validate &&
-    (pathname === '/' || pathname === '/dashboard') &&
-    !is_verified
-  ) {
-    return NextResponse.redirect(new URL('/verification', request.url));
+    // } else if (
+    //   validate &&
+    //   (pathname === '/' || pathname === '/dashboard') &&
+    //   !is_verified
+    // ) {
+    //   return NextResponse.redirect(new URL('/verification', request.url));
   } else if (pathname.startsWith('/dashboard') && validate && isGuest) {
     return NextResponse.redirect(new URL('/', request.url));
   } else if (validate && pathname.startsWith('/auth')) {
@@ -105,7 +104,8 @@ export async function middleware(request: NextRequest) {
       pathname.startsWith('/invoice') ||
       pathname.startsWith('/property') ||
       pathname.startsWith('/success') ||
-      pathname.startsWith('/profile'))
+      pathname.startsWith('/profile') ||
+      pathname.startsWith('/show'))
   ) {
     return NextResponse.redirect(new URL('/dashboard', request.url));
   }
@@ -120,6 +120,7 @@ export async function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     '/',
+    '/show/:path*',
     '/auth/:path*',
     '/verification',
     '/dashboard/:path*',
