@@ -227,12 +227,38 @@ class PropertyService {
 
       const properties = await prisma.property.findMany({
         where: { tenant_id: id, deletedAt: null },
-
-        include: {
+        select: {
+          id: true,
+          tenant_id: true,
+          name: true,
+          category: true,
+          pic_name: true,
+          desc: true,
+          city: true,
+          address: true,
+          latitude: true,
+          longitude: true,
+          createdAt: true,
+          updatedAt: true,
+          deletedAt: true,
           RoomCategory: true,
           Review: {
-            include: {
-              user: true,
+            select: {
+              id: true,
+              review: true,
+              reply: true,
+              rating: true,
+              createdAt: true,
+              updatedAt: true,
+              user: {
+                select: {
+                  id: true,
+                  email: true,
+                  first_name: true,
+                  last_name: true,
+                  image_name: true,
+                },
+              },
             },
           },
         },

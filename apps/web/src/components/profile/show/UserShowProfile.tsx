@@ -12,6 +12,7 @@ import { RootState } from '@/libs/redux/store';
 import dayjs from 'dayjs';
 import { User } from '@/models/user.model';
 import { Spinner } from 'react-bootstrap';
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 interface Review {
   id: string;
@@ -54,18 +55,15 @@ function UserShowProfile() {
         setUser(response.data.data);
       } catch (err: any) {
         setError(err.message);
-      } finally {
-        setLoading(false);
       }
     };
-
-    // setLoading(true);
 
     const fetchUserProperties = async () => {
       try {
         const response = await axiosInstance().get(
           `/api/properties/prop/${id}`,
         );
+        console.log('fetching props');
         const properties = response.data.data;
         setProperties(properties);
 
@@ -86,7 +84,7 @@ function UserShowProfile() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen">
+      <div className="flex justify-center items-center h-screen">
         <Spinner animation="border" />
       </div>
     );
@@ -179,7 +177,7 @@ function UserShowProfile() {
                             <FaStar />
                           </span>
                         </div>
-                        <div className="text-xs font-medium">Avg Rating</div>
+                        <div className="text-xs font-medium">Av. Rating</div>
                       </div>
 
                       {/* LISTING */}
@@ -198,7 +196,7 @@ function UserShowProfile() {
             <hr />
 
             <div className="lg:w-2/3 flex flex-col gap-3">
-              <div className="lg:w-2/3 flex flex-col gap-3">
+              <div className=" flex flex-col gap-3">
                 {/* TENANT'S REVIEWS */}
                 <div>
                   <div className="text-lg font-medium">
@@ -208,7 +206,7 @@ function UserShowProfile() {
                   {reviews.length === 0 ? (
                     <p>No reviews available.</p>
                   ) : (
-                    <div className="flex lg:flex-wrap gap-4 py-4 overflow-x-auto ">
+                    <div className="flex gap-4 py-4 overflow-x-auto">
                       {reviews.map((review) => (
                         <div
                           key={review.id}
@@ -259,7 +257,7 @@ function UserShowProfile() {
                                   )}
                                 </div>
                                 <div>•</div>
-                                <div className="">
+                                <div className="w-28">
                                   {dayjs(review.createdAt).format(
                                     'DD MMMM YYYY',
                                   )}

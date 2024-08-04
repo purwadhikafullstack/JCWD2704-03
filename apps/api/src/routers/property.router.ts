@@ -26,10 +26,6 @@ export class PropertyRouter {
     );
     this.router.get('/room/:id', this.propertyController.getRoomById);
     this.router.get('/image/:picName', this.propertyController.renderPicProp);
-    // this.router.get(
-    //   '/room/image/:roomId',
-    //   this.propertyController.renderPicRoom,
-    // );
     this.router.post(
       '/',
       verifyUser,
