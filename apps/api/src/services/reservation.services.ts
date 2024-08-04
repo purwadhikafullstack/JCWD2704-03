@@ -43,7 +43,6 @@ class ReservationService {
     const checkInDateFilter = checkInDate
       ? new Date(checkInDate as string)
       : undefined;
-    console.log('Check-In Date Filter:', checkInDateFilter);
     const data = await prisma.order.findMany({
       where: {
         user_id: req.user?.id,
