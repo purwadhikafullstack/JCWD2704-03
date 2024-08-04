@@ -18,6 +18,7 @@ export interface Order {
   payment_date: string;
   status: string;
   token_midTrans: string;
+  cancel_date: string;
   createdAt: string;
   updatedAt: string;
   invoice_id: string;

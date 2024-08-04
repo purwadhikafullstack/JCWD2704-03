@@ -191,8 +191,6 @@ function UpdateProperty() {
         );
         const property: Property = response.data.data;
 
-        console.log('Fetched property:', property);
-
         const imgSrc = `${imageSrc}${property.pic_name}`;
 
         if (property.id) {
@@ -214,9 +212,7 @@ function UpdateProperty() {
         }
 
         setImagePreview(imgSrc);
-      } catch (error) {
-        console.log(error);
-      }
+      } catch (error) {}
     };
 
     fetchEvent();

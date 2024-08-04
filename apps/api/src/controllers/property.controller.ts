@@ -25,20 +25,25 @@ export class PropertyController {
   // }
 
   async searchProperties(req: Request, res: Response, next: NextFunction) {
-    const { city, checkIn, checkOut } = req.query;
+    const { city, checkIn, checkOut, page = '1', limit = '10' } = req.query;
 
     try {
       if (!city || !checkIn || !checkOut) {
         throw new Error('City, checkIn, and checkOut are required.');
       }
 
-      const properties = await propertyServices.searchProperties(
+      const pageNumber = parseInt(page as string, 10);
+      const limitNumber = parseInt(limit as string, 10);
+
+      const result = await propertyServices.searchProperties(
         city as string,
         new Date(checkIn as string),
         new Date(checkOut as string),
+        pageNumber,
+        limitNumber,
       );
 
-      res.status(200).json({ properties });
+      res.status(200).json(result);
     } catch (error) {
       next(error);
     }
@@ -186,6 +191,17 @@ export class PropertyController {
       await propertyServices.updateProperty(req);
       return res.send({
         message: 'Your listing has been updated',
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async deleteProperty(req: Request, res: Response, next: NextFunction) {
+    try {
+      await propertyServices.deleteProperty(req);
+      return res.send({
+        message: 'Your listing has been deleted',
       });
     } catch (error) {
       next(error);

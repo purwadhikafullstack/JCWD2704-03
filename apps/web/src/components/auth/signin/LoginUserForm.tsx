@@ -37,7 +37,6 @@ const LoginForm: React.FC = () => {
     onSubmit: async (values) => {
       setIsSubmitting(true);
       try {
-        console.log('Sign in as user starts');
         const result = await dispatch(
           userLogin({
             email: values.email,
@@ -45,12 +44,8 @@ const LoginForm: React.FC = () => {
           } as UserLoginPayload),
         );
         formik.resetForm();
-        if (result?.role && result?.url) {
-          router.push(result.url);
-        }
+        window.location.reload();
       } catch (error) {
-        console.log(error);
-
         if (error instanceof AxiosError) {
           toast.error(
             error.response?.data.message ||
@@ -70,12 +65,11 @@ const LoginForm: React.FC = () => {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: 'http://localhost:3000/auth/callback?userType=user',
+          redirectTo: `${process.env.NEXT_PUBLIC_BASE_WEB_URL}/auth/callback?userType=user`,
         },
       });
 
       if (error) {
-        console.log('Error signing in with Google:', error.message);
         return;
       }
 
@@ -84,8 +78,6 @@ const LoginForm: React.FC = () => {
           const user = session.user;
           const { email, id } = user;
           const { full_name } = user.user_metadata;
-
-          console.log(session);
 
           if (!email) {
             console.error('Email is undefined');
@@ -190,7 +182,7 @@ const LoginForm: React.FC = () => {
               {/* FORM SUBMIT EMAIL */}
               <form
                 onSubmit={formik.handleSubmit}
-                className="flex flex-col w-60 lg:w-[500px]"
+                className="flex flex-col w-60 lg:w-[500px] "
               >
                 <div className="form-floating w-full">
                   <input

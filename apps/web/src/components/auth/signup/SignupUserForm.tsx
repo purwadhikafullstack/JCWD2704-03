@@ -35,14 +35,10 @@ const SignupUserForm = () => {
     onSubmit: async (values, formikHelpers) => {
       setIsSubmitting(true);
       try {
-        console.log('Sign up as user starts');
-
         await axiosInstance().post('/api/users/v1', values);
 
         router.push(`/auth/verification?email=${values.email}`);
       } catch (error) {
-        console.log(error);
-
         if (error instanceof AxiosError) {
           toast.error(
             error.response?.data.message ||
@@ -60,53 +56,16 @@ const SignupUserForm = () => {
   const isSubmitDisabled =
     !isChecked || !formik.values.email || !!formik.errors.email;
 
-  // const handleGoogleSignIn = async () => {
-  //   const { data, error } = await supabase.auth.signInWithOAuth({
-  //     provider: 'google',
-  //     options: {
-  //       redirectTo: 'http://localhost:3000/auth/callback?userType=user',
-  //     },
-  //   });
-
-  //   if (error) {
-  //     console.log('Error signing in with Google:', error.message);
-  //     return;
-  //   }
-
-  //   supabase.auth.onAuthStateChange(async (event, session) => {
-  //     if (event === 'SIGNED_IN' && session) {
-  //       const user = session.user;
-  //       const { email, id } = user;
-  //       const { full_name } = user.user_metadata;
-
-  //       const [first_name, last_name] = full_name.split(' ');
-
-  //       try {
-  //         await axiosInstance().post('/api/users/v4', {
-  //           email,
-  //           social_id: id,
-  //           first_name,
-  //           last_name,
-  //           role: 'user',
-  //         });
-  //       } catch (error) {
-  //         console.error('Error logging in with Google:', error);
-  //       }
-  //     }
-  //   });
-  // };
-
   const handleGoogleSignIn = async (dispatch: any) => {
     try {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: 'http://localhost:3000/auth/callback?userType=user',
+          redirectTo: `${process.env.NEXT_PUBLIC_BASE_WEB_URL}/auth/callback?userType=user`,
         },
       });
 
       if (error) {
-        console.log('Error signing in with Google:', error.message);
         return;
       }
 
@@ -115,8 +74,6 @@ const SignupUserForm = () => {
           const user = session.user;
           const { email, id } = user;
           const { full_name } = user.user_metadata;
-
-          console.log(session);
 
           if (email && id && full_name) {
             const [first_name, ...rest] = full_name.split(' ');

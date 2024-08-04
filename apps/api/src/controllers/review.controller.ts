@@ -52,4 +52,24 @@ export class ReviewController {
       next(error);
     }
   }
+  async getAllReview(req: Request, res: Response, next: NextFunction) {
+    try {
+      const data = await reviewService.getAllReviews(req);
+      return res.send({
+        data,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+  async getAverageReview(req: Request, res: Response, next: NextFunction) {
+    try {
+      const data = await reviewService.getAverageRating(req);
+      return res.send({
+        data,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
 }

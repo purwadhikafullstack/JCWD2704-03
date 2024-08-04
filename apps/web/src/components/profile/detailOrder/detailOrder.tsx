@@ -9,7 +9,8 @@ import { FaMoon, FaStar } from 'react-icons/fa';
 import Swal from 'sweetalert2';
 import FormPaymentProofComponent from '@/components/invoice/uploadPayment';
 import ReviewModal from '../reviewModal';
-
+import Spinner from 'react-bootstrap/Spinner';
+import { imageSrc } from '@/utils/imagerender';
 function DetailOrder() {
   const [order, setOrders] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
@@ -26,12 +27,12 @@ function DetailOrder() {
     const fetchOrders = async () => {
       try {
         const response = await axiosInstance().get(
-          `http://localhost:8000/api/reservations/${orderId}`,
+          `/api/reservations/${orderId}`,
         );
         const order: Order = response.data.data;
         setOrders(order);
         const reviewCheckResponse = await axiosInstance().get(
-          `http://localhost:8000/api/reviews/review/${orderId}`,
+          `/api/reviews/review/${orderId}`,
         );
         const reviewData = reviewCheckResponse.data.data;
 
@@ -46,6 +47,8 @@ function DetailOrder() {
         console.log('isi review', reviewData);
       } catch (error) {
         console.error('Error fetching rooms:', error);
+      } finally {
+        setLoading(false); // Set loading ke false setelah data diambil atau terjadi error
       }
     };
 
@@ -64,7 +67,7 @@ function DetailOrder() {
       if (result.isConfirmed) {
         try {
           const response = await axiosInstance().patch(
-            `http://localhost:8000/api/reservations/user/order/cancelled/${orderId}`,
+            `/api/reservations/user/order/cancelled/${orderId}`,
           );
           console.log(response.data);
 
@@ -86,10 +89,13 @@ function DetailOrder() {
       }
     });
   };
+  const handleInvoice = (orderId: string) => {
+    router.push(`/invoice?order_id=${orderId}`);
+  };
   const handleSubmitReview = async () => {
     try {
       const request = await axiosInstance().post(
-        'http://localhost:8000/api/reviews/addReview',
+        '/api/reviews/addReview',
         {
           order_id: orderId,
           review: reviewText,
@@ -114,9 +120,19 @@ function DetailOrder() {
       console.error('Error submitting review:', error);
     }
   };
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center">
+        <Spinner animation="border" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </Spinner>
+      </div>
+    );
+  }
   const disableCancel = order?.status === 'success';
   if (!order) return <div>No order found</div>;
   const showButton = dayjs(order.checkOut_date).isBefore(dayjs());
+  ('https://images.pexels.com/photos/4381392/pexels-photo-4381392.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500');
   return (
     <>
       <div className=" flex flex-col gap-3">
@@ -125,7 +141,11 @@ function DetailOrder() {
           <div className="flex flex-row gap-3 rounded-xl shadow-md border p-2 bg-white ">
             <div className=" bg-white grid place-items-center">
               <img
-                src="https://images.pexels.com/photos/4381392/pexels-photo-4381392.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500"
+                src={
+                  order.property.pic_name
+                    ? `${imageSrc}${order.property.pic_name}`
+                    : 'https://images.pexels.com/photos/4381392/pexels-photo-4381392.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500'
+                }
                 alt="vacation"
                 className="rounded-xl"
                 width={200}
@@ -133,12 +153,6 @@ function DetailOrder() {
               />
             </div>
             <div className=" md:w-2/3 bg-white flex flex-col">
-              <div className="flex justify-between items-center">
-                <div className="flex items-center text-sm font-semibold">
-                  <FaStar className="mr-2" />
-                  4.96
-                </div>
-              </div>
               <h3 className="font-black text-gray-800 md:text-3xl text-xl">
                 {order.property.name}
               </h3>
@@ -155,7 +169,7 @@ function DetailOrder() {
                 <div className="flex flex-col text-right">
                   <div>Order ID: </div>
                   <div className="text-gray-200 text-sm">
-                    {order.id.toUpperCase()}
+                    {order.invoice_id.toUpperCase()}
                   </div>
                 </div>
                 {/* checkIn checkOut */}
@@ -200,9 +214,9 @@ function DetailOrder() {
                   </div>
                   <div className="border border-dashed"></div>
                   <div>
-                    <div className="font-bold">Facilities</div>
+                    <div className="font-bold">Address</div>
                     <div className=" text-gray-400">
-                      {order.RoomCategory.desc}
+                      {order.property.address} {order.property.city}
                     </div>
                   </div>
                 </div>
@@ -223,13 +237,15 @@ function DetailOrder() {
           >
             Cancel Order
           </button>
-          <button
-            type="button"
-            className="focus:outline-none w-48 text-white font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-90"
-            // onClick={handleCancelOrder}
-          >
-            invoice
-          </button>
+          {order.status !== 'success' ? (
+            <button
+              type="button"
+              className="focus:outline-none w-48 text-white font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-90"
+              onClick={() => handleInvoice(order.id)}
+            >
+              invoice
+            </button>
+          ) : null}
           <FormPaymentProofComponent order={order} />
           {showButton && !hasReview && review && (
             <button

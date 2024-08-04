@@ -74,8 +74,8 @@ export const Header = () => {
 
   return (
     <div>
-      <div className="navbar bg-base-100 border-b border-zinc-200">
-        <div className="flex justify-between w-screen px-3 lg:px-10">
+      <div className="navbar bg-base-100 border-b border-zinc-200  z-50 ">
+        <div className="flex justify-between w-screen px-14 lg:px-80">
           <a href="/">
             <img
               src="https://i.ibb.co.com/Chkyq5g/ATCASA-3.png"
@@ -88,10 +88,10 @@ export const Header = () => {
             <div className="flex flex-row gap-4 items-center justify-center">
               {!loggedinUser.first_name && (
                 <button
-                  className="font-semibold text-sm hidden lg:flex hover:text-[#ED777B] hover:border-b-2"
+                  className="font-semibold text-sm hidden lg:flex hover:text-[#ED777B] "
                   onClick={tenantRegisterButton}
                 >
-                  Become a property host
+                  Start hosting
                 </button>
               )}
 

@@ -7,6 +7,9 @@ import { connect } from 'ngrok';
 import { startExpireOrdersCron } from '@/cron/expiredOrder';
 import { server } from 'typescript';
 import crypto from 'crypto';
+import { transporter } from '@/libs/nodemailer';
+import path from 'path';
+import fs from 'fs';
 
 const midTransClient = require('midtrans-client');
 class ReservationService {
@@ -36,10 +39,19 @@ class ReservationService {
     return data;
   }
   async getOrderByUserId(req: Request) {
-    // const staticUserId = 'clyvb46sr00013amly571vgjq';
+    const { checkInDate, invoiceId } = req.query;
+    const checkInDateFilter = checkInDate
+      ? new Date(checkInDate as string)
+      : undefined;
+    console.log('Check-In Date Filter:', checkInDateFilter);
     const data = await prisma.order.findMany({
-      // where: { user_id: req.user?.id },
-      where: { user_id: req.user?.id },
+      where: {
+        user_id: req.user?.id,
+        ...(invoiceId && { invoice_id: invoiceId as string }),
+        ...(checkInDateFilter && {
+          checkIn_date: checkInDateFilter,
+        }),
+      },
       orderBy: {
         updatedAt: 'desc',
       },
@@ -59,7 +71,6 @@ class ReservationService {
     const data = await prisma.order.findMany({
       where: {
         property: {
-          // tenant_id: 'clyvb46sq00003amlkg2sh5i4',
           tenant_id: req.user?.id,
         },
       },
@@ -106,7 +117,6 @@ class ReservationService {
     roomIdsArray = [...new Set(roomIdsArray)];
     console.log('Number of rooms:', roomIdsArray.length);
     console.log('Room IDs:', roomIdsArray);
-    // Cek apakah sudah ada order dengan detail yang sama
     const existingOrder = await prisma.order.findFirst({
       where: {
         user_id: user_id,
@@ -152,16 +162,6 @@ class ReservationService {
       console.error('Check-out date must be after check-in date!');
     }
 
-    // console.log('berapa kamar yang di minta', roomIdsArray.length());
-    let adjustedTotalPrice;
-    if (room.roomCategory.peak_price) {
-      adjustedTotalPrice =
-        durationInDays * roomIdsArray.length * room.roomCategory.peak_price;
-    } else {
-      adjustedTotalPrice =
-        durationInDays * roomIdsArray.length * room.roomCategory.price;
-    }
-
     const order = await prisma.order.create({
       data: {
         user: { connect: { id: user_id } },
@@ -169,7 +169,7 @@ class ReservationService {
         RoomCategory: { connect: { id: roomCategory_id } },
         checkIn_date: new Date(checkIn_date),
         checkOut_date: new Date(checkOut_date),
-        total_price: adjustedTotalPrice,
+        total_price,
         invoice_id: generateInvoice(property_id),
         payment_method,
         status,
@@ -185,28 +185,6 @@ class ReservationService {
     await prisma.orderRoom.createMany({
       data: orderRooms,
     });
-    // setTimeout(
-    //   async () => {
-    //     const expireOrder = await prisma.order.findUnique({
-    //       where: { id: order.id },
-    //       include: { OrderRoom: true },
-    //     });
-    //     if (expireOrder && expireOrder.status === 'pending_payment') {
-    //       // Cancel the order
-    //       await prisma.$transaction([
-    //         prisma.order.update({
-    //           where: { id: expireOrder.id },
-    //           data: {
-    //             status: 'cancelled',
-    //             checkIn_date: new Date('1970-01-01T00:00:00Z'),
-    //             checkOut_date: new Date('1970-01-01T00:00:00Z'),
-    //           },
-    //         }),
-    //       ]);
-    //     }
-    //   },
-    //   60 * 60 * 1000,
-    // );
     let cronStarted = false;
     if (!cronStarted) {
       startExpireOrdersCron();
@@ -262,7 +240,6 @@ class ReservationService {
         gross_amount: totalPrice,
       },
     };
-    console.log('tipene totalprice', typeof totalPrice);
     const token = await snap.createTransactionToken(payload);
     if (token) {
       await prisma.order.update({
@@ -274,7 +251,6 @@ class ReservationService {
   }
 
   async updateStatusBasedOnMidtransResponse(order_id: string, data: any) {
-    console.log('coba update midtrans');
     const hash = crypto
       .createHash('sha512')
       .update(
@@ -282,7 +258,6 @@ class ReservationService {
       )
       .digest('hex');
     if (data.signature_key !== hash) {
-      console.log('masuk error decode hash');
       return {
         status: 'error',
         message: 'Invalid Signature key',
@@ -291,9 +266,8 @@ class ReservationService {
     let responseData = null;
     let transactionStatus = data.transaction_status;
     let fraudStatus = data.fraud_status;
-
+    let paymentMethod = data.payment_type;
     if (transactionStatus == 'capture') {
-      console.log('masuk capture');
       if (fraudStatus == 'accept') {
         const transaction = await prisma.order.update({
           where: { id: order_id },
@@ -301,7 +275,7 @@ class ReservationService {
             payment_date: moment.tz('Asia/Jakarta').format(),
             status: 'success',
             updatedAt: new Date(),
-            payment_method: 'MANDIRI',
+            payment_method: paymentMethod,
           },
         });
         responseData = transaction;
@@ -314,9 +288,38 @@ class ReservationService {
           payment_date: moment.tz('Asia/Jakarta').format(),
           status: 'success',
           updatedAt: new Date(),
-          payment_method: 'MANDIRI',
+          payment_method: paymentMethod,
         },
       });
+      const templatePath = path.join(__dirname, '../templates/confirm.html');
+      let htmlTemplate = fs.readFileSync(templatePath, 'utf-8');
+      const orderDetails = await prisma.order.findUnique({
+        where: { id: order_id },
+        include: {
+          user: true,
+          property: true,
+          RoomCategory: true,
+        },
+      });
+      if (orderDetails) {
+        const userEmail = orderDetails.user.email;
+        const propertyName = orderDetails.property.name;
+        const roomType = orderDetails.RoomCategory?.type || 'Unknown Room Type';
+        const checkInDate = orderDetails.checkIn_date.toLocaleDateString();
+        const checkOutDate = orderDetails.checkOut_date.toLocaleDateString();
+        const html = htmlTemplate
+          .replace(/{propertyName}/g, propertyName)
+          .replace(/{checkInDate}/g, checkInDate)
+          .replace(/{checkOutDate}/g, checkOutDate)
+          .replace(/{roomType}/g, roomType);
+
+        const krimEmail = transporter.sendMail({
+          from: 'atcasaco@gmail.com',
+          to: userEmail,
+          subject: 'Booking Confirmation',
+          html,
+        });
+      }
       responseData = transaction;
     } else if (
       transactionStatus == 'cancel' ||
@@ -329,7 +332,7 @@ class ReservationService {
           payment_date: moment.tz('Asia/Jakarta').format(),
           status: 'cancelled',
           updatedAt: new Date(),
-          payment_method: 'MANDIRI',
+          payment_method: paymentMethod,
         },
       });
       responseData = transaction;
@@ -340,7 +343,7 @@ class ReservationService {
           payment_date: moment.tz('Asia/Jakarta').format(),
           status: 'pending_payment',
           updatedAt: new Date(),
-          payment_method: 'MANDIRI',
+          payment_method: paymentMethod,
         },
       });
       responseData = transaction;
