@@ -242,10 +242,10 @@ function PropertyDetailHost() {
       <div className="rooms">
         {property.RoomCategory && property.RoomCategory.length > 0 ? (
           <div className="bg-white p-4 rounded-lg shadow-md">
-            <div className="flex overflow-x-scroll space-x-4">
+            <div className="flex justify-center overflow-x-scroll space-x-4">
               {property.RoomCategory.map((category) => (
                 <div
-                  className="bg-zinc-100 rounded-2xl my-2 overflow-hidden flex-none w-96"
+                  className="bg-zinc-100 rounded-2xl my-2 overflow-hidden flex-none w-2/5"
                   key={category.id}
                 >
                   <img
@@ -315,16 +315,20 @@ function PropertyDetailHost() {
                       </div>
 
                       {category.peak_price && (
-                        <div>
+                        <div className="flex flex-col mt-4">
+                          <div className="mb-2 font-semibold text-lg">
+                            {' '}
+                            Peak Season Rate
+                          </div>
                           <div className="flex flex-row gap-1 mb-2">
-                            <div>Peak Price:</div>
+                            <div>Price:</div>
                             <span className="font-bold">
                               Rp. {category.peak_price.toLocaleString()}
                             </span>{' '}
                             <span>/room/night</span>
                           </div>
                           <div className="flex flex-row gap-1 mb-2">
-                            <div>Start Date for Peak:</div>
+                            <div>Start Date:</div>
                             {category.start_date_peak
                               ? new Date(
                                   category.start_date_peak,
@@ -332,7 +336,7 @@ function PropertyDetailHost() {
                               : 'N/A'}
                           </div>
                           <div className="flex flex-row gap-1 mb-2">
-                            <div>End Date for Peak:</div>
+                            <div>End Date:</div>
                             {category.end_date_peak
                               ? new Date(
                                   category.end_date_peak,

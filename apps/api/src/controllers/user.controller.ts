@@ -1,6 +1,7 @@
 import { type NextFunction, type Response, type Request } from 'express';
 import usersServices from '@/services/user.services';
 import authService from '@/services/auth.service';
+import { cookiesOpt } from '@/utils/cookie';
 
 export class UserController {
   async userRegisterEmail(req: Request, res: Response, next: NextFunction) {
@@ -66,8 +67,8 @@ export class UserController {
       const { accessToken, refreshToken } =
         await authService.userGoogleLogin(req);
       res
-        .cookie('access_token', accessToken)
-        .cookie('refresh_token', refreshToken)
+        .cookie('access_token', accessToken, cookiesOpt)
+        .cookie('refresh_token', refreshToken, cookiesOpt)
         .status(200)
         .send({
           message: 'New user has logged in using Google Login',
@@ -82,8 +83,8 @@ export class UserController {
       const { accessToken, refreshToken } =
         await authService.tenantGoogleLogin(req);
       res
-        .cookie('access_token', accessToken)
-        .cookie('refresh_token', refreshToken)
+        .cookie('access_token', accessToken, cookiesOpt)
+        .cookie('refresh_token', refreshToken, cookiesOpt)
         .status(200)
         .send({
           message: 'New tenant has logged in using Google Login',
@@ -100,12 +101,8 @@ export class UserController {
 
       if (role === 'user') {
         res
-          .cookie('access_token', accessToken, {
-            secure: process.env.NODE_ENV === 'production',
-          })
-          .cookie('refresh_token', refreshToken, {
-            secure: process.env.NODE_ENV === 'production',
-          })
+          .cookie('access_token', accessToken, cookiesOpt)
+          .cookie('refresh_token', refreshToken, cookiesOpt)
           .send({
             message: 'Login as user',
             role: 'user',
@@ -141,12 +138,8 @@ export class UserController {
 
       if (role === 'tenant') {
         res
-          .cookie('access_token', accessToken, {
-            secure: process.env.NODE_ENV === 'production',
-          })
-          .cookie('refresh_token', refreshToken, {
-            secure: process.env.NODE_ENV === 'production',
-          })
+          .cookie('access_token', accessToken, cookiesOpt)
+          .cookie('refresh_token', refreshToken, cookiesOpt)
           .send({
             message: 'Login as tenant',
             role: 'tenant',
@@ -220,9 +213,7 @@ export class UserController {
   async editUserProfile(req: Request, res: Response, next: NextFunction) {
     try {
       const result = await usersServices.editUserProfile(req);
-      res.cookie('access_token', result.token, {
-        secure: process.env.NODE_ENV === 'production',
-      });
+      res.cookie('access_token', result.token, cookiesOpt);
       res.status(200).json({
         message: 'User profile data has been updated',
         user: result.user,
@@ -236,9 +227,7 @@ export class UserController {
   async reverifyEmail(req: Request, res: Response) {
     try {
       const result = await usersServices.reverifyEmail(req);
-      res.cookie('access_token', result.token, {
-        secure: process.env.NODE_ENV === 'production',
-      });
+      res.cookie('access_token', result.token, cookiesOpt);
       res.status(200).json({
         message: 'User email has been verified',
         token: result.token,

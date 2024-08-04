@@ -27,6 +27,11 @@ interface RoomPriceProps {
   checkOut: string;
 }
 
+interface PriceInfo {
+  price: number;
+  isPeak: boolean;
+}
+
 function PropertyDetail() {
   const { name } = useParams();
   const router = useRouter();
@@ -197,7 +202,7 @@ function PropertyDetail() {
     roomCategory: RoomCategory,
     checkInDate: Date,
     checkOutDate: Date,
-  ): number => {
+  ): PriceInfo => {
     const startDatePeak = roomCategory.start_date_peak
       ? new Date(roomCategory.start_date_peak)
       : null;
@@ -206,14 +211,17 @@ function PropertyDetail() {
       : null;
 
     if (startDatePeak === null || endDatePeak === null) {
-      return roomCategory.price;
+      return { price: roomCategory.price, isPeak: false };
     }
 
     const isPeak = checkInDate <= endDatePeak && checkOutDate >= startDatePeak;
 
-    return isPeak
-      ? roomCategory.peak_price ?? roomCategory.price
-      : roomCategory.price;
+    return {
+      price: isPeak
+        ? roomCategory.peak_price ?? roomCategory.price
+        : roomCategory.price,
+      isPeak,
+    };
   };
 
   const calculateTotalPrice = (
@@ -222,12 +230,8 @@ function PropertyDetail() {
     checkInDate: Date,
     checkOutDate: Date,
   ): number => {
-    const currentPrice = getCurrentPrice(
-      roomCategory,
-      checkInDate,
-      checkOutDate,
-    );
-    return count * currentPrice;
+    const { price } = getCurrentPrice(roomCategory, checkInDate, checkOutDate);
+    return count * price;
   };
 
   if (loading) {
@@ -325,179 +329,190 @@ function PropertyDetail() {
           {/* SECTION ROOM */}
           <div className="rooms flex flex-col gap-4">
             {roomCategories.length > 0 ? (
-              roomCategories.map((roomCategory) => (
-                <div
-                  key={roomCategory.id}
-                  className="room-category p-3 shadow-sm flex items-center gap-4 rounded-lg text-sm"
-                >
-                  <div className="">
-                    <img
-                      src={`${imageSrcRoom}${roomCategory?.pic_name}`}
-                      alt="Room picture"
-                      className="w-40 h-40  lg:w-80  lg:h-72 object-cover rounded-lg"
-                    />
-                  </div>
+              roomCategories.map((roomCategory) => {
+                const { price, isPeak } = getCurrentPrice(
+                  roomCategory,
+                  checkInDate,
+                  checkOutDate,
+                );
+                const isDisabled =
+                  roomCounts[roomCategory.id] === 0 ||
+                  roomCategory.remainingRooms === 0;
 
-                  <div className="flex flex-col gap-1">
-                    <div className="text-xl font-semibold">
-                      {roomCategory.type} Room
+                return (
+                  <div
+                    key={roomCategory.id}
+                    className="room-category p-3 shadow-sm flex items-center gap-4 rounded-lg text-sm"
+                  >
+                    <div className="">
+                      <img
+                        src={`${imageSrcRoom}${roomCategory?.pic_name}`}
+                        alt="Room picture"
+                        className="w-40 h-40 lg:w-80 lg:h-72 object-cover rounded-lg"
+                      />
                     </div>
 
-                    {/* DESCRIPTION ROOM */}
-                    <div className="w-full max-w-md overflow-hidden pb-3">
-                      <div className="w-full">
-                        {showFullDesc
-                          ? roomCategory.desc
-                          : `${roomCategory.desc.substring(0, 100)}...`}
+                    <div className="flex flex-col gap-1">
+                      <div className="text-xl font-semibold">
+                        {roomCategory.type} Room
                       </div>
-                      <div>
-                        {roomCategory.desc.length > 100 && (
-                          <button
-                            onClick={toggleDescription}
-                            className="text-black font-semibold underline mt-2"
-                          >
-                            {showFullDesc ? 'Show Less' : 'Show More'}
-                          </button>
-                        )}
-                      </div>
-                    </div>
 
-                    <div className="flex gap-1 items-center">
-                      <div>
-                        <IoPersonOutline />
-                      </div>
-                      <div>{roomCategory.guest} guests</div>
-                    </div>
-
-                    <div className="flex gap-1 items-center">
-                      <div>
-                        <IoBedOutline />
-                      </div>
-                      <div>1 {roomCategory.bed} bed</div>
-                    </div>
-
-                    <div
-                      className={`flex gap-1 items-center ${roomCategory.isBreakfast ? '' : 'text-zinc-400'}`}
-                    >
-                      <div>
-                        <PiForkKnife />
-                      </div>
-                      <div>
-                        {roomCategory.isBreakfast
-                          ? 'Breakfast included'
-                          : 'Breakfast is not included'}
-                      </div>
-                    </div>
-
-                    <div
-                      className={`flex gap-1 items-center ${roomCategory.isSmoking ? '' : 'text-zinc-400'}`}
-                    >
-                      <div>
-                        <TbSmoking />
-                      </div>
-                      <div>
-                        {roomCategory.isSmoking
-                          ? 'Smoking allowed'
-                          : 'Smoking is not allowed'}
-                      </div>
-                    </div>
-
-                    <div
-                      className={`flex gap-1 items-center ${roomCategory.isRefunable ? '' : 'text-zinc-400'}`}
-                    >
-                      <div>
-                        <MdOutlinePayment />
-                      </div>
-                      <div>
-                        {roomCategory.isRefunable
-                          ? 'Refundable order'
-                          : 'Non-refundable order'}
-                      </div>
-                    </div>
-
-                    <div className="lg:flex-col justify-between gap-5">
-                      <div className="py-3 font-medium text-lg">
-                        Rp
-                        {new Intl.NumberFormat().format(
-                          getCurrentPrice(
-                            roomCategory,
-                            checkInDate,
-                            checkOutDate,
-                          ),
-                        )}{' '}
-                        /room/night
-                        <div className="text-[#ED777B] font-semibold text-xs">
-                          {roomCategory.remainingRooms} room available
+                      {/* DESCRIPTION ROOM */}
+                      <div className="w-full max-w-md overflow-hidden pb-3">
+                        <div className="w-full">
+                          {showFullDesc
+                            ? roomCategory.desc
+                            : `${roomCategory.desc.substring(0, 100)}...`}
                         </div>
-                      </div>
-
-                      {/* SECTION BUTTON */}
-                      <div className="flex justify-between gap-3 items-center">
-                        <div className="flex flex-row items-center gap-3 text-lg">
-                          <button
-                            className="w-10 btn btn-dark"
-                            onClick={() => handleDecrement(roomCategory)}
-                            disabled={roomCounts[roomCategory.id] <= 1}
-                          >
-                            -
-                          </button>
-                          <div>{roomCounts[roomCategory.id]}</div>
-                          <button
-                            className="w-10 btn btn-dark"
-                            onClick={() => handleIncrement(roomCategory)}
-                            disabled={
-                              !roomCategory.remainingRooms ||
-                              roomCounts[roomCategory.id] >=
-                                roomCategory.remainingRooms ||
-                              roomCounts[roomCategory.id] >= 3
-                            }
-                          >
-                            +
-                          </button>
-                        </div>
-
-                        <div className="flex gap-2 items-center">
-                          {roomCategory.Room.length > 0 && (
+                        <div>
+                          {roomCategory.desc.length > 100 && (
                             <button
-                              className="btn btn-dark"
-                              onClick={() =>
-                                handleReserve(
-                                  roomCategory.id,
-                                  calculateTotalPrice(
-                                    roomCategory,
-                                    roomCounts[roomCategory.id],
-                                    checkInDate,
-                                    checkOutDate,
-                                  ),
-                                  selectedRoomIds[roomCategory.id],
-                                )
-                              }
+                              onClick={toggleDescription}
+                              className="text-black font-semibold underline mt-2"
                             >
-                              Choose
+                              {showFullDesc ? 'Show Less' : 'Show More'}
                             </button>
                           )}
                         </div>
+                      </div>
 
+                      <div className="flex gap-1 items-center">
                         <div>
-                          Total:{' '}
-                          <span className="font-medium">
-                            {' '}
-                            Rp
-                            {new Intl.NumberFormat().format(
-                              calculateTotalPrice(
-                                roomCategory,
-                                roomCounts[roomCategory.id],
-                                checkInDate,
-                                checkOutDate,
-                              ),
-                            )}{' '}
-                          </span>
+                          <IoPersonOutline />
+                        </div>
+                        <div>{roomCategory.guest} guests</div>
+                      </div>
+
+                      <div className="flex gap-1 items-center">
+                        <div>
+                          <IoBedOutline />
+                        </div>
+                        <div>1 {roomCategory.bed} bed</div>
+                      </div>
+
+                      <div
+                        className={`flex gap-1 items-center ${roomCategory.isBreakfast ? '' : 'text-zinc-400'}`}
+                      >
+                        <div>
+                          <PiForkKnife />
+                        </div>
+                        <div>
+                          {roomCategory.isBreakfast
+                            ? 'Breakfast included'
+                            : 'Breakfast is not included'}
+                        </div>
+                      </div>
+
+                      <div
+                        className={`flex gap-1 items-center ${roomCategory.isSmoking ? '' : 'text-zinc-400'}`}
+                      >
+                        <div>
+                          <TbSmoking />
+                        </div>
+                        <div>
+                          {roomCategory.isSmoking
+                            ? 'Smoking allowed'
+                            : 'Smoking is not allowed'}
+                        </div>
+                      </div>
+
+                      <div
+                        className={`flex gap-1 items-center ${roomCategory.isRefunable ? '' : 'text-zinc-400'}`}
+                      >
+                        <div>
+                          <MdOutlinePayment />
+                        </div>
+                        <div>
+                          {roomCategory.isRefunable
+                            ? 'Refundable order'
+                            : 'Non-refundable order'}
+                        </div>
+                      </div>
+
+                      <div className="lg:flex-col justify-between gap-5 py-3">
+                        {isPeak && (
+                          <div className="text-[#a54649] font-semibold text-xs">
+                            Higher rate during high demand season!
+                          </div>
+                        )}
+                        <div className=" font-medium text-lg pb-3">
+                          Rp
+                          {new Intl.NumberFormat().format(price)} /room/night
+                          <div className="text-[#ED777B] font-semibold text-xs">
+                            {roomCategory.remainingRooms} room available
+                          </div>
+                        </div>
+
+                        {/* SECTION BUTTON */}
+                        <div className="flex justify-between gap-3 items-center">
+                          <div className="flex flex-row items-center gap-3 text-lg">
+                            <button
+                              className="w-10 btn btn-dark"
+                              onClick={() => handleDecrement(roomCategory)}
+                              disabled={roomCounts[roomCategory.id] <= 1}
+                            >
+                              -
+                            </button>
+                            <div>{roomCounts[roomCategory.id]}</div>
+                            <button
+                              className="w-10 btn btn-dark"
+                              onClick={() => handleIncrement(roomCategory)}
+                              disabled={
+                                !roomCategory.remainingRooms ||
+                                roomCounts[roomCategory.id] >=
+                                  roomCategory.remainingRooms ||
+                                roomCounts[roomCategory.id] >= 3
+                              }
+                            >
+                              +
+                            </button>
+                          </div>
+
+                          <div className="flex gap-2 items-center">
+                            {roomCategory.Room.length > 0 && (
+                              <button
+                                className="btn btn-dark"
+                                onClick={() =>
+                                  handleReserve(
+                                    roomCategory.id,
+                                    calculateTotalPrice(
+                                      roomCategory,
+                                      roomCounts[roomCategory.id],
+                                      checkInDate,
+                                      checkOutDate,
+                                    ),
+                                    selectedRoomIds[roomCategory.id],
+                                  )
+                                }
+                                disabled={isDisabled}
+                              >
+                                Choose
+                              </button>
+                            )}
+                          </div>
+
+                          <div>
+                            Total:{' '}
+                            <span className="font-medium">
+                              {' '}
+                              Rp
+                              {new Intl.NumberFormat().format(
+                                calculateTotalPrice(
+                                  roomCategory,
+                                  roomCounts[roomCategory.id],
+                                  checkInDate,
+                                  checkOutDate,
+                                ),
+                              )}{' '}
+                              /room
+                            </span>
+                          </div>
                         </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))
+                );
+              })
             ) : (
               <p>No room categories available.</p>
             )}
