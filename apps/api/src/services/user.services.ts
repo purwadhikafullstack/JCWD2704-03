@@ -344,7 +344,7 @@ class UserService {
           ...updatedUserInfo,
           type: 'access-token',
         },
-        '15m',
+        '1h',
       );
 
       return { user: updatedUserInfo, token: newToken };

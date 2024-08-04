@@ -33,7 +33,7 @@ function Sidebar() {
     router.push('/profile/my-order');
   };
   return (
-    <div className="flex z-50">
+    <div className="flex z-50 tracking-tighter">
       <span
         className="sticky lg:hidden text-gray-600 text-4xl cursor-pointer"
         onClick={toggleSidebar}
@@ -41,55 +41,65 @@ function Sidebar() {
         <RxHamburgerMenu className="px-2 bg-gray-50 rounded-md" />
       </span>
       <div
-        className={`fixed lg:static top-0 bottom-0 lg:flex lg:flex-col p-2 w-[300px] overflow-y-auto text-center bg-gray-900 ${isSidebarOpen ? '' : 'hidden lg:block'}`}
+        className={`fixed lg:static top-0 bottom-0 lg:flex lg:flex-col p-2 w-[300px] overflow-y-auto text-center bg-zinc-100 ${isSidebarOpen ? '' : 'hidden lg:block'}`}
       >
-        <div className="text-gray-100 text-xl">
-          <div className="p-2.5 mt-1 flex items-center">
-            <img
-              src="https://i.ibb.co.com/wz56gwV/ATCASA-2.png"
-              alt="Logo"
-              width={150}
-              onClick={handleHome}
-            />
+        <div className=" text-xl">
+          <div className="p-3 mt-2 flex items-center">
+            <img src="https://i.imgur.com/rWDq04n.png" alt="Logo" width={150} />
             <IoMdClose
               className="cursor-pointer ml-auto lg:hidden"
               onClick={toggleSidebar}
             />
           </div>
         </div>
+        <hr />
+
         <div
-          onClick={handleProfile}
-          className="p-2.5 mt-3 flex items-center rounded-md px-4 duration-300 cursor-pointer hover:bg-blue-600 text-white"
+          onClick={handleHome}
+          className="p-2.5 mt-3 flex items-center rounded-full px-4 duration-300 cursor-pointer hover:bg-zinc-300 text-black"
         >
-          <FaHouse />
-          <span className="text-[15px] ml-4 text-gray-200 font-bold">Home</span>
-        </div>
-        <div
-          onClick={handleMyOrders}
-          className="p-2.5 mt-3 flex items-center rounded-md px-4 duration-300 cursor-pointer hover:bg-blue-600 text-white"
-        >
-          <FaClipboardList />
-          <span className="text-[15px] ml-4 text-gray-200 font-bold">
-            Orders
+          <div className="text-xl">
+            <FaHouse />
+          </div>
+          <span className="text-[15px] ml-4 font-semibold text-black hover:text-white ">
+            Home
           </span>
         </div>
-        <div className="p-2.5 mt-3 flex items-center rounded-md px-4 duration-300 cursor-pointer hover:bg-blue-600 text-white">
-          <IoPerson />
+
+        <div className="p-2.5 mt-3 flex items-center rounded-full px-4 duration-300 cursor-pointer  hover:bg-zinc-300  text-black">
+          <div className="text-xl">
+            <FaClipboardList />
+          </div>
           <span
-            onClick={handleEditProfile}
-            className="text-[15px] ml-4 text-gray-200 font-bold"
+            onClick={handleMyOrders}
+            className="text-[15px] ml-4 text-black font-semibold"
           >
-            Setting
+            Reservation history
           </span>
         </div>
-        <div className="my-4 bg-gray-600 h-[1px]"></div>
+
         <div
-          className="p-2.5 mt-3 flex items-center rounded-md px-4 duration-300 cursor-pointer hover:bg-blue-600 text-white"
+          className="p-2.5 mt-3 flex items-center rounded-full px-4 duration-300 cursor-pointer  hover:bg-zinc-300  text-black"
+          onClick={handleEditProfile}
+        >
+          <div className="text-xl">
+            <IoPerson />
+          </div>
+          <span className="text-[15px] ml-4 text-black font-semibold">
+            Profile settings
+          </span>
+        </div>
+
+        <div
+          className="p-2.5 mt-3 flex items-center rounded-full px-4 duration-300 cursor-pointer  hover:bg-zinc-300  text-black"
           onClick={handleLogout}
         >
-          <IoLogOut />
-          <span className="text-[15px] ml-4 text-gray-200 font-bold">
-            Logout
+          {' '}
+          <div className="text-xl">
+            <IoLogOut />
+          </div>
+          <span className="text-[15px] ml-4 text-black font-semibold">
+            Log out
           </span>
         </div>
       </div>

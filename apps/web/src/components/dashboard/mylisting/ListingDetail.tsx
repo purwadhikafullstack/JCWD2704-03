@@ -3,6 +3,9 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { axiosInstance } from '@/libs/axios.config';
 import { Property } from '@/models/property.model';
+import { Spinner } from 'react-bootstrap';
+import 'bootstrap/dist/css/bootstrap.min.css';
+
 function ListingDetail() {
   const params = useParams();
   const { propertyId } = params;
@@ -34,12 +37,21 @@ function ListingDetail() {
     router.push(`/dashboard/my-property/review/${propertyId}`);
   };
 
-  if (loading) return <p>Loading...</p>;
+  if (loading)
+    return (
+      <>
+        <div className="flex justify-center items-center h-64">
+          <Spinner animation="border" role="status">
+            <span className="visually-hidden">Loading...</span>
+          </Spinner>
+        </div>
+      </>
+    );
   if (error) return <p>{error}</p>;
   console.log(property?.name);
 
   return (
-    <div>
+    <div className="tracking-tighter">
       <h1>Property Details</h1>
       {property ? (
         <div>
