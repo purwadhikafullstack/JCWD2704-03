@@ -5,6 +5,7 @@ import dayjs from 'dayjs';
 import { Review } from '@/models/review.modal';
 import { axiosInstance } from '@/libs/axios.config';
 import { useParams } from 'next/navigation';
+import Swal from 'sweetalert2';
 
 const PropertyReview = () => {
   const censorUsername = (name: string) => {
@@ -63,27 +64,51 @@ const PropertyReview = () => {
     }));
   };
   const handleReplySubmit = async (reviewId: string) => {
-    try {
-      await axiosInstance().post(`/api/reviews/reviewReply/${reviewId}`, {
-        reviewId: reviewId,
-        reply: replyInput[reviewId],
-        propertyId: propertyId,
-      });
-      // Perbarui tampilan balasan setelah pengiriman berhasil
-      setReplies((prev) => ({
-        ...prev,
-        [reviewId]: replyInput[reviewId],
-      }));
-      setReplyInput((prev) => ({
-        ...prev,
-        [reviewId]: '',
-      }));
-      setShowReplyInput((prev) => ({
-        ...prev,
-        [reviewId]: false,
-      }));
-    } catch (error) {
-      console.error('Terjadi kesalahan saat mengirim balasan', error);
+    const result = await Swal.fire({
+      title: 'Are you sure?',
+      text: "You won't be able to revert this!",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Yes, upload it!',
+    });
+
+    if (result.isConfirmed) {
+      try {
+        await axiosInstance().post(`/api/reviews/reviewReply/${reviewId}`, {
+          reviewId: reviewId,
+          reply: replyInput[reviewId],
+          propertyId: propertyId,
+        });
+        // Perbarui tampilan balasan setelah pengiriman berhasil
+        setReplies((prev) => ({
+          ...prev,
+          [reviewId]: replyInput[reviewId],
+        }));
+        setReplyInput((prev) => ({
+          ...prev,
+          [reviewId]: '',
+        }));
+        setShowReplyInput((prev) => ({
+          ...prev,
+          [reviewId]: false,
+        }));
+        Swal.fire({
+          title: 'Submitted!',
+          text: 'Your reply has been submitted.',
+          icon: 'success',
+          confirmButtonText: 'OK',
+        });
+      } catch (error) {
+        console.error('Terjadi kesalahan saat mengirim balasan', error);
+        Swal.fire({
+          title: 'Gagal Mengirim Balasan',
+          text: 'Terjadi kesalahan saat mengirim balasan Anda. Silakan coba lagi.',
+          icon: 'error',
+          confirmButtonText: 'OK',
+        });
+      }
     }
   };
   return (

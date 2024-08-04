@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react';
 import { FaMoon, FaStar } from 'react-icons/fa';
 import Swal from 'sweetalert2';
 import Spinner from 'react-bootstrap/Spinner';
+import { imageSrcRoom } from '@/utils/imagerender';
 
 function DeniedOrder() {
   const [order, setOrders] = useState<Order | null>(null);
@@ -24,6 +25,8 @@ function DeniedOrder() {
         setOrders(order);
       } catch (error) {
         console.error('Error fetching rooms:', error);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -103,6 +106,18 @@ function DeniedOrder() {
       `http://localhost:8000/api/reservations/payment/image/${orderId}`,
     );
   };
+  if (loading) {
+    return (
+      <>
+        {' '}
+        <div className="flex justify-center items-center h-64">
+          <Spinner animation="border" role="status">
+            <span className="visually-hidden">Loading...</span>
+          </Spinner>
+        </div>
+      </>
+    );
+  }
   if (!order) return <div>No order found</div>;
   return (
     <>
@@ -112,7 +127,11 @@ function DeniedOrder() {
           <div className="flex flex-row gap-3 rounded-xl shadow-md border p-2 bg-white ">
             <div className=" bg-white grid place-items-center">
               <img
-                src="https://images.pexels.com/photos/4381392/pexels-photo-4381392.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500"
+                src={
+                  order.property.pic_name
+                    ? `${imageSrcRoom}${order.RoomCategory.pic_name}`
+                    : 'https://images.pexels.com/photos/4381392/pexels-photo-4381392.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500'
+                }
                 alt="vacation"
                 className="rounded-xl"
                 width={200}
@@ -183,10 +202,8 @@ function DeniedOrder() {
                   </div>
                   <div className="border border-dashed"></div>
                   <div>
-                    <div className="font-bold">Facilities</div>
-                    <div className=" text-gray-400">
-                      {order.RoomCategory.desc}
-                    </div>
+                    <div className="font-bold">Payment Method</div>
+                    <div className=" text-gray-400">{order.payment_method}</div>
                   </div>
                 </div>
               </div>
