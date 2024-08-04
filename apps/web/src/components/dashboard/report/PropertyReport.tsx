@@ -2,12 +2,13 @@
 import React, { useState, useEffect } from 'react';
 import { axiosInstance } from '@/libs/axios.config';
 import { Sale } from '@/models/sale.model';
+import Spinner from 'react-bootstrap/Spinner';
 
 const PropertyReport: React.FC = () => {
   const [sales, setSales] = useState<Sale[]>([]);
   const [sortBy, setSortBy] = useState<string>('total_sales');
   const [order, setOrder] = useState<string>('asc');
-
+  const [loading, setLoading] = useState(true);
   useEffect(() => {
     fetchSales();
   }, [sortBy, order]);
@@ -20,6 +21,8 @@ const PropertyReport: React.FC = () => {
       setSales(response.data.data);
     } catch (error) {
       console.error('Error fetching sales data', error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -31,7 +34,15 @@ const PropertyReport: React.FC = () => {
       setOrder('asc');
     }
   };
-
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center">
+        <Spinner animation="border" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </Spinner>
+      </div>
+    );
+  }
   return (
     <div className=" overflow-x-auto">
       <h1 className="text-2xl font-bold mb-4">Property Report</h1>
