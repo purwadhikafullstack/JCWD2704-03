@@ -12,6 +12,7 @@ import { MdOutlinePayment } from 'react-icons/md';
 import { PiForkKnifeFill } from 'react-icons/pi';
 import { IoPersonOutline } from 'react-icons/io5';
 import { imageSrcRoom } from '@/utils/imagerender';
+
 function Reservation() {
   const router = useRouter();
   const params = useParams();
@@ -177,7 +178,7 @@ function Reservation() {
                     {rooms?.isSmoking === true ? (
                       <div className="flex gap-2 flex-row">
                         <FaSmoking className="mt-1" />
-                        <div className=" text-blue-900">Smoking</div>
+                        <div className=" text-blue-900">Smoking allowed</div>
                       </div>
                     ) : (
                       <div className="flex gap-2 flex-row">
@@ -192,12 +193,12 @@ function Reservation() {
                       <div className="flex gap-2">
                         <MdOutlinePayment className="mt-1" />
                         <div className="font-semibold text-blue-900">
-                          Refunable
+                          Refundable
                         </div>
                       </div>
                     ) : (
                       <div>
-                        <div className="font-semibold">Non-refunable</div>
+                        <div className="font-semibold">Non-refundable</div>
                       </div>
                     )}
                   </div>
