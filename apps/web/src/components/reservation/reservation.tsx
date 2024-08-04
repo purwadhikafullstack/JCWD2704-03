@@ -12,6 +12,7 @@ import { MdOutlinePayment } from 'react-icons/md';
 import { PiForkKnifeFill } from 'react-icons/pi';
 import { IoPersonOutline } from 'react-icons/io5';
 import { imageSrcRoom } from '@/utils/imagerender';
+import Spinner from 'react-bootstrap/Spinner';
 
 function Reservation() {
   const router = useRouter();
@@ -21,6 +22,7 @@ function Reservation() {
   const [order, setOrder] = useState<Order | null>(null);
   const [roomCount, setRoomCount] = useState(1);
   const [paymentMethod, setPaymentMethod] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
   const total_room = roomCount;
   const buyer = useAppSelector((state) => state.auth) as User;
   const searchParams = useSearchParams();
@@ -50,6 +52,8 @@ function Reservation() {
         console.log(data);
       } catch (error) {
         console.error('Error fetching rooms:', error);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -125,9 +129,20 @@ function Reservation() {
     }
   };
   const isPayDisabled = !checkInDate || !checkOutDate || !paymentMethod;
-
+  if (loading) {
+    return (
+      <>
+        {' '}
+        <div className="flex justify-center items-center h-64">
+          <Spinner animation="border" role="status">
+            <span className="visually-hidden">Loading...</span>
+          </Spinner>
+        </div>
+      </>
+    );
+  }
   return (
-    <div className="max-w-screen-xl m-auto h-screen w-screen">
+    <div className="max-w-screen-xl mb-5">
       <div>
         <h1 className="text-2xl md:text-3xl font-bold md:py-6 p-6">
           Detail Reservation

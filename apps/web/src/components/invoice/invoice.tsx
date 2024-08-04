@@ -16,7 +16,7 @@ import PaymentInstruction from './paymentInstructions';
 import { LuMapPin } from 'react-icons/lu';
 import { FaHotel } from 'react-icons/fa';
 import Spinner from 'react-bootstrap/Spinner';
-
+import 'bootstrap/dist/css/bootstrap.min.css';
 interface PaymentMethodDetails {
   method: string;
   va: string;
@@ -26,6 +26,7 @@ interface PaymentMethodDetails {
 const Invoice = () => {
   const [order, setOrder] = useState<Order | undefined>(undefined);
   const [isShowedSnap, setIsShowedSnap] = useState(false);
+  const [loading, setLoading] = useState(true);
   const search = useSearchParams();
   const id = search.get('order_id');
   const router = useRouter();
@@ -62,7 +63,6 @@ const Invoice = () => {
         setOrder(res.data.data);
         console.log('totalll hargaa', res.data.data.total_price);
       })
-
       .catch((e) => {
         if (e instanceof AxiosError) console.log(e.response?.data);
         return undefined;
@@ -80,17 +80,26 @@ const Invoice = () => {
     router.push('/profile');
   };
 
-  if (order === undefined) return <h4>Loading fetching order....</h4>;
+  if (order === undefined)
+    return (
+      <>
+        {' '}
+        <div className="flex justify-center items-center h-64">
+          <Spinner animation="border" role="status">
+            <span className="visually-hidden">Loading...</span>
+          </Spinner>
+        </div>
+      </>
+    );
   const paymentMethodDetails = order
     ? paymentMethodMap[order.payment_method]
     : undefined;
-
   return (
     <>
       <div className="font-bold text-xl ml-6 my-6 md:text-3xl md:mt-3 md:mb-0 text-blue-600">
         Detail Pemesanan
       </div>
-      <div className="flex flex-col-reverse gap-4 md:flex-row md:gap-16 w-screen md:justify-center  md:p-8 ">
+      <div className="flex flex-col-reverse gap-4 md:flex-row md:gap-16 w-screen md:justify-center md:p-8 ">
         <div>
           {/* SECTION PEMBAYARAN */}
           <div className="relative flex flex-col md:max-w-3xl gap-4 space-y-3 rounded-xl shadow-md p-3 max-w-xs  mx-auto border border-white bg-white">

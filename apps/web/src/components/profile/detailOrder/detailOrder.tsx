@@ -93,33 +93,58 @@ function DetailOrder() {
     router.push(`/invoice?order_id=${orderId}`);
   };
   const handleSubmitReview = async () => {
-    try {
-      const request = await axiosInstance().post(
-        '/api/reviews/addReview',
-        {
-          order_id: orderId,
-          review: reviewText,
-          rating: rating,
-        },
-        {
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        },
-      );
-      console.log('Review submitted successfully:', request.data);
-      setIsReviewSubmitted(true);
-      console.log(
-        'Submitting review with rating:',
-        rating,
-        'and text:',
-        reviewText,
-      );
-      // Close the modal after submission
-    } catch (error) {
-      console.error('Error submitting review:', error);
-    }
+    Swal.fire({
+      title: 'Are you sure?',
+      text: "You won't be able to revert this!",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Yes, upload it!',
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          const request = await axiosInstance().post(
+            '/api/reviews/addReview',
+            {
+              order_id: orderId,
+              review: reviewText,
+              rating: rating,
+            },
+            {
+              headers: {
+                'Content-Type': 'application/json',
+              },
+            },
+          );
+          console.log('Review submitted successfully:', request.data);
+          setIsReviewSubmitted(true);
+          console.log(
+            'Submitting review with rating:',
+            rating,
+            'and text:',
+            reviewText,
+          );
+
+          Swal.fire({
+            title: 'Submitted!',
+            text: 'Your review has been submitted.',
+            icon: 'success',
+          }).then(() => {
+            setShowReviewModal(false); // Close the modal after submission
+          });
+        } catch (error) {
+          Swal.fire({
+            title: 'Error',
+            text: 'There was an error submitting your review.',
+            icon: 'error',
+          });
+          console.error('Error submitting review:', error);
+        }
+      }
+    });
   };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center">
@@ -167,7 +192,7 @@ function DetailOrder() {
             <div>
               <div className="flex flex-col gap-4">
                 <div className="flex flex-col text-right">
-                  <div>Order ID: </div>
+                  <div>Invoice ID: </div>
                   <div className="text-gray-200 text-sm">
                     {order.invoice_id.toUpperCase()}
                   </div>
@@ -250,7 +275,7 @@ function DetailOrder() {
           {showButton && !hasReview && review && (
             <button
               type="button"
-              className={`focus:outline-none w-48 text-white font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 ${
+              className={`focus:outline-none w-48 text-white font-medium mt-8 rounded-lg text-sm px-5 py-2.5 me-2 mb-2 ${
                 isReviewSubmitted || hasReview
                   ? 'bg-gray-500 cursor-not-allowed'
                   : 'bg-green-700 hover:bg-green-800 focus:ring-4 focus:ring-green-300 dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-90'

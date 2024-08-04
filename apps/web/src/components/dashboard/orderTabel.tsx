@@ -4,11 +4,14 @@ import dayjs from 'dayjs';
 import { Order } from '@/models/reservation.model';
 import { axiosInstance } from '@/libs/axios.config';
 import { useRouter, useSearchParams } from 'next/navigation';
+import Spinner from 'react-bootstrap/Spinner';
+import { set } from 'cypress/types/lodash';
 
 function OrderTable() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [loading, setLoading] = useState(true);
   const [limit, setLimit] = useState(10);
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -24,6 +27,8 @@ function OrderTable() {
       console.log('datataa', data);
     } catch (error) {
       console.error('Error fetching order data:', error);
+    } finally {
+      setLoading(false);
     }
   };
   useEffect(() => {
@@ -82,13 +87,20 @@ function OrderTable() {
     'Property',
     'Room Type',
     'Payment Method',
-    'Room',
     'Reservation Date',
     'CheckIn',
     'CheckOut',
     'Status',
   ];
-
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center">
+        <Spinner animation="border" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </Spinner>
+      </div>
+    );
+  }
   return (
     <div className="flex flex-col gap-6 max-w-screen-xl tracking-tighter">
       <div>
@@ -138,7 +150,6 @@ function OrderTable() {
                 <td className="px-6 py-4 text-center">
                   {order.payment_method}
                 </td>
-                <td className="px-6 py-4 text-center">{order.total_room}</td>
                 <td className="px-6 py-4 text-center">
                   {formatDate(order.payment_date)}
                 </td>

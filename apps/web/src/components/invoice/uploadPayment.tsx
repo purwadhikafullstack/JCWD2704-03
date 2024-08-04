@@ -45,27 +45,46 @@ function FormPaymentProofComponent({ order }: { order: Order }) {
       });
       return;
     }
-    const formData = new FormData();
-    formData.append('payment_proof', file);
-    try {
-      const response = await axiosInstance().patch(
-        `/api/reservations/${order.id}`,
-        formData,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        },
-      );
-      setMessage(response.data.message);
-      router.push('/success');
-    } catch (error) {
-      setMessage('Failed to upload payment proof. Please try again.');
-    }
+    Swal.fire({
+      title: 'Are you sure?',
+      text: "You won't be able to revert this!",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Yes, upload it!',
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        const formData = new FormData();
+        formData.append('payment_proof', file);
+
+        try {
+          const response = await axiosInstance().patch(
+            `/api/reservations/${order.id}`,
+            formData,
+            {
+              headers: {
+                'Content-Type': 'multipart/form-data',
+              },
+            },
+          );
+          router.push('/success');
+        } catch (error) {
+          setMessage('Failed to upload payment proof. Please try again.');
+          Swal.fire({
+            title: 'Failed!',
+            text: 'Failed to upload payment proof. Please try again.',
+            icon: 'error',
+          });
+        }
+      }
+    });
   };
 
   const statusExpired =
-    order.status === 'cancelled' || order.status === 'success';
+    order.status === 'cancelled' ||
+    order.status === 'success' ||
+    order.status === 'awaiting_confirmation';
   return (
     <form onSubmit={handleSubmit}>
       <div className="w-full max-w-xs mt-4 p-4 border border-gray-300 rounded-lg">

@@ -27,6 +27,11 @@ interface RoomPriceProps {
   checkOut: string;
 }
 
+interface PriceInfo {
+  price: number;
+  isPeak: boolean;
+}
+
 function PropertyDetail() {
   const { name } = useParams();
   const router = useRouter();
@@ -197,7 +202,7 @@ function PropertyDetail() {
     roomCategory: RoomCategory,
     checkInDate: Date,
     checkOutDate: Date,
-  ): number => {
+  ): PriceInfo => {
     const startDatePeak = roomCategory.start_date_peak
       ? new Date(roomCategory.start_date_peak)
       : null;
@@ -206,14 +211,17 @@ function PropertyDetail() {
       : null;
 
     if (startDatePeak === null || endDatePeak === null) {
-      return roomCategory.price;
+      return { price: roomCategory.price, isPeak: false };
     }
 
     const isPeak = checkInDate <= endDatePeak && checkOutDate >= startDatePeak;
 
-    return isPeak
-      ? roomCategory.peak_price ?? roomCategory.price
-      : roomCategory.price;
+    return {
+      price: isPeak
+        ? roomCategory.peak_price ?? roomCategory.price
+        : roomCategory.price,
+      isPeak,
+    };
   };
 
   const calculateTotalPrice = (
@@ -222,12 +230,8 @@ function PropertyDetail() {
     checkInDate: Date,
     checkOutDate: Date,
   ): number => {
-    const currentPrice = getCurrentPrice(
-      roomCategory,
-      checkInDate,
-      checkOutDate,
-    );
-    return count * currentPrice;
+    const { price } = getCurrentPrice(roomCategory, checkInDate, checkOutDate);
+    return count * price;
   };
 
   if (loading) {
@@ -326,6 +330,11 @@ function PropertyDetail() {
           <div className="rooms flex flex-col gap-4">
             {roomCategories.length > 0 ? (
               roomCategories.map((roomCategory) => {
+                const { price, isPeak } = getCurrentPrice(
+                  roomCategory,
+                  checkInDate,
+                  checkOutDate,
+                );
                 const isDisabled =
                   roomCounts[roomCategory.id] === 0 ||
                   roomCategory.remainingRooms === 0;
@@ -420,17 +429,15 @@ function PropertyDetail() {
                         </div>
                       </div>
 
-                      <div className="lg:flex-col justify-between gap-5">
-                        <div className="py-3 font-medium text-lg">
+                      <div className="lg:flex-col justify-between gap-5 py-3">
+                        {isPeak && (
+                          <div className="text-[#a54649] font-semibold text-xs">
+                            Higher rate during high demand season!
+                          </div>
+                        )}
+                        <div className=" font-medium text-lg pb-3">
                           Rp
-                          {new Intl.NumberFormat().format(
-                            getCurrentPrice(
-                              roomCategory,
-                              checkInDate,
-                              checkOutDate,
-                            ),
-                          )}{' '}
-                          /room/night
+                          {new Intl.NumberFormat().format(price)} /room/night
                           <div className="text-[#ED777B] font-semibold text-xs">
                             {roomCategory.remainingRooms} room available
                           </div>
@@ -497,6 +504,7 @@ function PropertyDetail() {
                                   checkOutDate,
                                 ),
                               )}{' '}
+                              /room
                             </span>
                           </div>
                         </div>
