@@ -543,64 +543,66 @@ function PropertyDetail() {
               {reviews.length === 0 ? (
                 <p>No reviews available.</p>
               ) : (
-                <div className="flex flex-wrap">
-                  {reviews.map((review) => (
-                    <div
-                      key={review.id}
-                      className="w-80 border-2 rounded-xl shadow-md flex flex-col gap-2 p-3"
-                    >
-                      <div className="flex gap-2 items-center">
-                        {/* IMAGE USERR */}
-                        {review.user.image_name ? (
-                          <div className=" w-10 h-10 object-cover rounded-full ">
-                            <img
-                              src={`${imageSrcUser}${review.user.image_name}`}
-                              alt="User Avatar"
-                              className="w-10 h-10 object-cover rounded-full "
-                            />
+                <div className=" overflow-x-auto py-2">
+                  <div className="flex gap-3">
+                    {reviews.map((review) => (
+                      <div
+                        key={review.id}
+                        className="w-[300px] h-full bg-white border-2 rounded-xl shadow-md flex flex-col gap-2 p-3 "
+                      >
+                        <div className="flex gap-2 items-center">
+                          {/* IMAGE USERR */}
+                          {review.user.image_name ? (
+                            <div className=" w-10 h-10 object-cover rounded-full ">
+                              <img
+                                src={`${imageSrcUser}${review.user.image_name}`}
+                                alt="User Avatar"
+                                className="w-10 h-10 object-cover rounded-full "
+                              />
+                            </div>
+                          ) : (
+                            <div className="w-10 h-10 object-cover rounded-full ">
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 32 32"
+                                aria-hidden="true"
+                                role="presentation"
+                                focusable="false"
+                                className="w-full h-full"
+                              >
+                                <path d="M16 .7C7.56.7.7 7.56.7 16S7.56 31.3 16 31.3 31.3 24.44 31.3 16 24.44.7 16 .7zm0 28c-4.02 0-7.6-1.88-9.93-4.81a12.43 12.43 0 0 1 6.45-4.4A6.5 6.5 0 0 1 9.5 14a6.5 6.5 0 0 1 13 0 6.51 6.51 0 0 1-3.02 5.5 12.42 12.42 0 0 1 6.45 4.4A12.67 12.67 0 0 1 16 28.7z"></path>
+                              </svg>
+                            </div>
+                          )}
+
+                          <div className="flex flex-col">
+                            <div className="font-semibold">
+                              {review.user.first_name} {review.user.last_name}
+                            </div>
                           </div>
-                        ) : (
-                          <div className="w-10 h-10 object-cover rounded-full ">
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              viewBox="0 0 32 32"
-                              aria-hidden="true"
-                              role="presentation"
-                              focusable="false"
-                              className="w-full h-full"
-                            >
-                              <path d="M16 .7C7.56.7.7 7.56.7 16S7.56 31.3 16 31.3 31.3 24.44 31.3 16 24.44.7 16 .7zm0 28c-4.02 0-7.6-1.88-9.93-4.81a12.43 12.43 0 0 1 6.45-4.4A6.5 6.5 0 0 1 9.5 14a6.5 6.5 0 0 1 13 0 6.51 6.51 0 0 1-3.02 5.5 12.42 12.42 0 0 1 6.45 4.4A12.67 12.67 0 0 1 16 28.7z"></path>
-                            </svg>
+                        </div>
+
+                        {review.rating && (
+                          <div className="flex gap-1 items-center text-sm">
+                            <div className="flex text-xs">
+                              {Array.from(
+                                { length: review.rating },
+                                (_, index) => (
+                                  <FaStar key={index} />
+                                ),
+                              )}
+                            </div>
+                            <div>•</div>
+                            <div className="w-32">
+                              {dayjs(review.createdAt).format('DD MMMM YYYY')}
+                            </div>
                           </div>
                         )}
 
-                        <div className="flex flex-col">
-                          <div className="font-semibold">
-                            {review.user.first_name} {review.user.last_name}
-                          </div>
-                        </div>
+                        <div>{review.review}</div>
                       </div>
-
-                      {review.rating && (
-                        <div className="flex gap-1 items-center text-sm">
-                          <div className="flex text-xs">
-                            {Array.from(
-                              { length: review.rating },
-                              (_, index) => (
-                                <FaStar key={index} />
-                              ),
-                            )}
-                          </div>
-                          <div>•</div>
-                          <div className="">
-                            {dayjs(review.createdAt).format('DD MMMM YYYY')}
-                          </div>
-                        </div>
-                      )}
-
-                      <div>{review.review}</div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
