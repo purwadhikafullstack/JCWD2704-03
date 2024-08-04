@@ -128,6 +128,7 @@ function UpdateRoom() {
     onSubmit: async (values: FormValues) => {
       try {
         await handleUpdate(values);
+        console.log(values);
       } catch (error) {
         console.error(error);
         if (error instanceof AxiosError) {
@@ -187,6 +188,7 @@ function UpdateRoom() {
       if (result.isConfirmed) {
         try {
           const formData = new FormData();
+
           formData.append('pic', values.pic);
           formData.append('type', values.type);
           formData.append('guest', values.guest.toString());
@@ -213,6 +215,7 @@ function UpdateRoom() {
           formData.append('desc', values.desc);
           formData.append('numberOfRooms', values.numberOfRooms.toString());
 
+          console.log('FormData contents:', Array.from(formData.entries()));
           await axiosInstance().patch(
             `/api/rooms/edit/${roomCategoryId}`,
             formData,
@@ -341,6 +344,20 @@ function UpdateRoom() {
     event?: React.SyntheticEvent,
   ) => {
     formik.setFieldValue(field, date);
+  };
+
+  const handleBreakfastChange = () => {
+    const newValue = !formik.values.isBreakfast;
+    console.log('Previous isBreakfast value:', formik.values.isBreakfast);
+    console.log('Updating isBreakfast to:', newValue);
+    formik.setFieldValue('isBreakfast', newValue);
+  };
+
+  const handleSmokingChange = () => {
+    const newValue = !formik.values.isSmoking;
+    console.log('Previous isSmoking value:', formik.values.isSmoking);
+    console.log('Updating isSmoking to:', newValue);
+    formik.setFieldValue('isSmoking', newValue);
   };
 
   return (
@@ -594,12 +611,7 @@ function UpdateRoom() {
                           ? 'border-2 border-zinc-600 bg-zinc-200'
                           : ''
                       }`}
-                      onClick={() =>
-                        formik.setFieldValue(
-                          'isBreakfast',
-                          !formik.values.isBreakfast,
-                        )
-                      }
+                      onClick={handleBreakfastChange}
                     >
                       <div className="text-3xl">
                         <PiForkKnife />
@@ -613,12 +625,7 @@ function UpdateRoom() {
                           ? 'border-2 border-zinc-600 bg-zinc-200'
                           : ''
                       }`}
-                      onClick={() =>
-                        formik.setFieldValue(
-                          'isSmoking',
-                          !formik.values.isSmoking,
-                        )
-                      }
+                      onClick={handleSmokingChange}
                     >
                       <div className="text-3xl">
                         <LiaSmokingSolid />
