@@ -11,7 +11,7 @@ export default async function sendBookingReminders(orderId: string) {
     const order = await prisma.order.findUnique({
       where: {
         id: orderId,
-        status: 'awaiting_confirmation',
+        status: 'success',
       },
       include: {
         user: true,
@@ -21,7 +21,10 @@ export default async function sendBookingReminders(orderId: string) {
     if (!order) {
       throw new Error('Order not found');
     }
-    const templatePath = path.join(__dirname, 'checkinreminder.html');
+    const templatePath = path.join(
+      __dirname,
+      '../templates/checkinreminder.html',
+    );
     let htmlTemplate = fs.readFileSync(templatePath, 'utf-8');
 
     htmlTemplate = htmlTemplate.replace('{propertyName}', order.property.name);
@@ -41,11 +44,6 @@ export default async function sendBookingReminders(orderId: string) {
       const hours = 23;
       const dayOfMonth = date.getUTCDate() - 1;
       const month = date.getUTCMonth() + 1;
-      // const second = 10;
-      // const minute = 59;
-      // const hours = 23;
-      // const dayOfMonth = date.getUTCDate() - 1;
-      // const month = date.getUTCMonth() + 1;
       return `${second} ${minute} ${hours} ${dayOfMonth} ${month} *`;
     }
     console.log(getCronExpression(targetDate));
@@ -55,7 +53,7 @@ export default async function sendBookingReminders(orderId: string) {
       () => {
         console.log('masuk function');
         const krimEmail = transporter.sendMail({
-          from: 'purwadhika2704@gmail.com',
+          from: 'atcasaco@gmail.com',
           to: order.user.email,
           subject: 'Booking Reminder',
           html: htmlTemplate,

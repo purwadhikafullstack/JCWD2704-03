@@ -9,7 +9,13 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import MapComponent from '@/components/map/ComponentMap';
 import { imageSrc, imageSrcRoom } from '@/utils/imagerender';
 import Swal from 'sweetalert2';
-
+import { FaEdit } from 'react-icons/fa';
+import { MdDelete } from 'react-icons/md';
+import { IoIosBed } from 'react-icons/io';
+import { PiForkKnifeFill } from 'react-icons/pi';
+import { FaSmoking } from 'react-icons/fa';
+import { MdPayment } from 'react-icons/md';
+import { FaPerson } from 'react-icons/fa6';
 function PropertyDetailHost() {
   const { id } = useParams();
   const [property, setProperty] = useState<Property | null>(null);
@@ -29,7 +35,14 @@ function PropertyDetailHost() {
         const response = await axiosInstance().get(
           `/api/properties/myDetail/${id}`,
         );
-        setProperty(response.data.data);
+
+        const property = response.data.data;
+        setProperty(property);
+        // setProperty(response.data.data);
+        console.log('dattaa proop', response.data.data);
+        console.log('name', property?.name);
+        console.log('pic name', property?.pic_name);
+        console.log(imageSrc);
       } catch (err) {
         setError('Failed to fetch property details');
         console.error('Error fetching property details:', err);
@@ -155,148 +168,184 @@ function PropertyDetailHost() {
   };
 
   return (
-    <div>
-      <div className="w-full h-80 px-4 relative">
-        <img
-          src={
-            property.pic_name
-              ? `${imageSrc}${property.pic_name}`
-              : 'https://default-image-url.jpg'
-          }
-          alt={property.name || 'Property Image'}
-          className="object-cover w-full h-full rounded-xl"
-        />
+    <div className="container flex flex-col  gap-9">
+      <div>
+        {property && (
+          <img
+            src={`${imageSrc}${property.pic_name}`}
+            alt="Property Image"
+            className="sobject-cover w-full h-full rounded-xl"
+          />
+        )}
       </div>
-      <div className="property-details p-4">
-        <h1 className="text-2xl font-bold">{property.name}</h1>
-        <p>{property.desc}</p>
-        <p>
-          <strong>Address:</strong> {property.address || 'N/A'}
+      <div className="bg-white p-6 rounded-lg shadow-md mb-4">
+        <h1 className="text-2xl md:text-3xl font-bold mb-2">{property.name}</h1>
+        <p className="text-gray-700 mb-2">{property.desc}</p>
+        <p className="mb-2">
+          <div className="font-semibold">Address:</div>{' '}
+          {property.address || 'N/A'}
         </p>
-        <p>
-          <strong>City:</strong> {property.city || 'N/A'}
+        <p className="mb-2">
+          <div className="font-semibold">City:</div> {property.city || 'N/A'}
         </p>
-        <p>
-          <strong>Posted at:</strong>{' '}
+        <p className="mb-2">
+          <div className="font-semibold">Posted at:</div>{' '}
           {property.createdAt
             ? new Date(property.createdAt).toLocaleDateString()
             : 'N/A'}
         </p>
         <p>
-          <strong>Last updated At:</strong>{' '}
+          <div className="font-semibold">Last updated At:</div>{' '}
           {property.updatedAt
             ? new Date(property.updatedAt).toLocaleDateString()
             : 'N/A'}
         </p>
       </div>
 
-      <div className="flex flex-row gap-3">
-        <button className="btn btn-dark" onClick={handleEditProperty}>
-          Edit property
+      <div className="flex justify-center flex-wrap gap-4 mb-4">
+        <button
+          className="bg-gray-800 text-white py-2 px-4  w-52 rounded-lg hover:bg-gray-700"
+          onClick={handleEditProperty}
+        >
+          Edit Property
         </button>
         <button
-          className="btn btn-dark"
+          className="bg-red-600 text-white py-2 px-4  w-52 rounded-lg hover:bg-red-500"
           onClick={() => handleDeleteProperty(property.id)}
         >
-          Delete property
-        </button>
-        <button className="btn btn-dark" onClick={handleAddRoomCategory}>
-          Add room category
+          Delete Property
         </button>
         <button
-          className="text-blue-500"
+          className="bg-blue-600 text-white py-2 px-4 w-52 rounded-lg hover:bg-blue-500"
+          onClick={handleAddRoomCategory}
+        >
+          Add Room Category
+        </button>
+        <button
+          className="bg-green-600 text-white py-2 px-4  w-52 rounded-lg hover:bg-green-500"
           onClick={() => property?.id && handleReviewProperty(property.id)}
         >
           See Reviews
         </button>
       </div>
-      {property.RoomCategory && property.RoomCategory.length > 0 ? (
-        <div className="room-categories p-4">
-          <h2 className="text-xl font-bold">Room Categories</h2>
-          <div className="row">
-            {property.RoomCategory.map((category: RoomCategoryWithCount) => (
-              <div className="col-md-4 mb-4" key={category.id}>
-                <div className="card w-full">
-                  <h5 className="card-title">{category.type}</h5>
+
+      <div className="rooms">
+        {property.RoomCategory && property.RoomCategory.length > 0 ? (
+          <div className="bg-white p-4 rounded-lg shadow-md">
+            <h2 className="text-xl md:text-2xl font-bold mb-4">
+              Room Categories
+            </h2>
+            <div className="flex overflow-x-scroll space-x-4">
+              {property.RoomCategory.map((category) => (
+                <div
+                  className="bg-slate-50 rounded-2xl my-2 shadow-md overflow-hidden flex-none w-96"
+                  key={category.id}
+                >
                   <img
                     src={
                       category.pic_name
                         ? `${imageSrcRoom}${category.pic_name}`
-                        : 'https://default-room-image-url.jpg'
+                        : 'https://ik.imagekit.io/tvlk/blog/2022/06/Hotel-di-Jakarta-dengan-Balkon-Somerset-Sudirman-Jakarta-2-1024x683.jpeg?tr=dpr-2,w-675'
                     }
                     alt={category.type || 'Room Category Image'}
-                    className="card-img-top h-32 object-cover"
+                    className="w-full h-40 object-cover"
                   />
-                  <div className="card-body">
-                    <p className="card-text">
-                      <strong>Description:</strong> {category.desc}
-                    </p>
-                    <p className="card-text">
-                      <strong>Price:</strong> ${category.price}
-                    </p>
-                    <p className="card-text">
-                      <strong>Peak Price:</strong> $
-                      {category.peak_price || 'N/A'}
-                    </p>
-                    <p className="card-text">
-                      <strong>Start Date for Peak:</strong>{' '}
+                  <div className="p-4">
+                    <h5 className="text-2xl md:text-xl font-bold mb-2">
+                      {category.type} Room
+                    </h5>
+                    <div className="flex flex-row gap-1 mb-2">
+                      <IoIosBed className="mt-1" />
+                      <div>{category.bed.toUpperCase()}</div>
+                    </div>
+                    <div className="flex flex-row gap-1 mb-2">
+                      <PiForkKnifeFill className="mt-1" />
+                      {category.isBreakfast ? (
+                        <div>Breakfast Included</div>
+                      ) : (
+                        <div>Breakfast Not Included</div>
+                      )}
+                    </div>
+                    <div className="flex flex-row gap-1 mb-2">
+                      <MdPayment className="mt-1" />
+                      {category.isRefunable ? (
+                        <div>Refundable</div>
+                      ) : (
+                        <div>Not Refundable</div>
+                      )}
+                    </div>
+                    <div className="flex flex-row gap-1 mb-2">
+                      <FaSmoking className="mt-1" />{' '}
+                      {category.isSmoking ? (
+                        <div>Smoking Allowed</div>
+                      ) : (
+                        <div>Smoking is not allowed.</div>
+                      )}
+                    </div>
+                    <div className="flex flex-row gap-1 mb-2">
+                      <FaPerson className="mt-1" />
+                      <div>{category.guest} Guest </div>
+                    </div>
+                    <div className="flex flex-row gap-1 mb-2">
+                      <div>Price:</div> Rp. {category.price.toLocaleString()}
+                    </div>
+                    <div className="flex flex-row gap-1 mb-2">
+                      <div>Peak Price:</div> Rp.
+                      {category.peak_price?.toLocaleString() || null}
+                    </div>
+                    <div className="flex flex-row gap-1 mb-2">
+                      <div>Start Date for Peak:</div>{' '}
                       {category.start_date_peak
                         ? new Date(
                             category.start_date_peak,
                           ).toLocaleDateString()
                         : 'N/A'}
-                    </p>
-                    <p className="card-text">
-                      <strong>End Date for Peak:</strong>{' '}
+                    </div>
+                    <div className="flex flex-row gap-1 mb-2">
+                      <div>End Date for Peak:</div>{' '}
                       {category.end_date_peak
                         ? new Date(category.end_date_peak).toLocaleDateString()
                         : 'N/A'}
-                    </p>
-                    <p className="card-text">
-                      <strong>Guest Capacity:</strong> {category.guest}
-                    </p>
-                    <p className="card-text">
-                      <strong>Bed Type:</strong> {category.bed}
-                    </p>
-                    <p className="card-text">
-                      <strong>Breakfast Included:</strong>{' '}
-                      {category.isBreakfast ? 'Yes' : 'No'}
-                    </p>
-                    <p className="card-text">
-                      <strong>Refundable:</strong>{' '}
-                      {category.isRefunable ? 'Yes' : 'No'}
-                    </p>
-                    <p className="card-text">
-                      <strong>Smoking Allowed:</strong>{' '}
-                      {category.isSmoking ? 'Yes' : 'No'}
-                    </p>
-                    <button
-                      className="btn btn-primary me-2"
-                      onClick={() => handleEditRoomCategory(category.id)}
-                    >
-                      Edit Room Category
-                    </button>
-                    <button
-                      className="btn btn-danger"
-                      onClick={() => handleDeleteRoomCategory(category.id)}
-                    >
-                      Delete Room Category
-                    </button>
+                    </div>
+                    <div className="mb-2">
+                      <div>Description:</div> {category.desc}
+                    </div>
+                    <div className="flex flex-row gap-1">
+                      <div className="font-semibold">Total Rooms: </div>
+                      <div className="font-bold">{category.roomCount}</div>
+                    </div>
+                    <div className="flex flex-row gap-1">
+                      <div className="font-semibold">Remaining room: </div>
+                      <div className="font-bold">{category.remainingRooms}</div>
+                    </div>
+                    <div className="flex gap-2 mt-4">
+                      <button
+                        className="bg-blue-600 text-white py-1 px-3 rounded-lg hover:bg-blue-500"
+                        onClick={() => handleEditRoomCategory(category.id)}
+                      >
+                        <FaEdit />
+                      </button>
+                      <button
+                        className="bg-red-600 text-white py-1 px-3 rounded-lg hover:bg-red-500"
+                        onClick={() => handleDeleteRoomCategory(category.id)}
+                      >
+                        <MdDelete />
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
-      ) : (
-        <div className="no-rooms p-4 text-center">
-          <h2 className="text-xl font-bold">No Room Categories</h2>
-          <p>You have no rooms! Make a room category and add rooms now.</p>
-        </div>
-      )}
+        ) : (
+          <div className="bg-white p-6 rounded-lg shadow-md text-center">
+            <p>No room categories available.</p>
+          </div>
+        )}
+      </div>
 
       {property.latitude && property.longitude && (
-        <div className="map-container p-4">
+        <div className="p-4">
           <MapComponent
             latitude={property.latitude}
             longitude={property.longitude}

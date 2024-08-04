@@ -377,9 +377,10 @@ class AuthService {
       email: true,
       first_name: true,
       last_name: true,
-      image: true,
       isVerified: true,
       role: true,
+      isRequestingEmailChange: true,
+      image_name: true,
     };
 
     const data = await prisma.user.findUnique({
@@ -391,7 +392,12 @@ class AuthService {
 
     const access_token = createToken(data, '1hr');
 
-    return { access_token, isVerified: data?.isVerified };
+    return {
+      access_token,
+      isVerified: data?.isVerified,
+      isRequestingEmailChange: data?.isRequestingEmailChange,
+      role: data?.role,
+    };
   }
 }
 

@@ -21,6 +21,7 @@ function OrderTable() {
       setOrders(data);
       setTotalPages(totalPages);
       setCurrentPage(currentPage);
+      console.log('datataa', data);
     } catch (error) {
       console.error('Error fetching order data:', error);
     }
@@ -80,6 +81,7 @@ function OrderTable() {
     'Name',
     'Property',
     'Room Type',
+    'Payment Method',
     'Room',
     'Reservation Date',
     'CheckIn',
@@ -88,7 +90,7 @@ function OrderTable() {
   ];
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6 max-w-screen-xl">
       <div className=" text-3xl font-semibold pb-3 text-[#263C94] mt-10">
         All Transaction
       </div>
@@ -127,6 +129,9 @@ function OrderTable() {
                 <td className="px-6 py-4 text-center">
                   {order.RoomCategory.type.toUpperCase()}
                 </td>
+                <td className="px-6 py-4 text-center">
+                  {order.payment_method}
+                </td>
                 <td className="px-6 py-4 text-center">{order.total_room}</td>
                 <td className="px-6 py-4 text-center">
                   {formatDate(order.payment_date)}
@@ -147,7 +152,7 @@ function OrderTable() {
       </div>
       <div className="flex justify-between items-center py-4">
         <button
-          className="px-4 py-2 bg-gray-300 rounded-lg"
+          className="px-4 py-2 text-white bg-black rounded-lg"
           onClick={() => handlePageChange(currentPage - 1)}
           disabled={currentPage === 1}
         >
@@ -155,7 +160,7 @@ function OrderTable() {
         </button>
         <span className="text-lg">{`Page ${currentPage} of ${totalPages}`}</span>
         <button
-          className="px-4 py-2 bg-gray-300 rounded-lg"
+          className="px-4 py-2 text-white bg-black rounded-lg"
           onClick={() => handlePageChange(currentPage + 1)}
           disabled={currentPage === totalPages}
         >

@@ -123,7 +123,6 @@ function CreateProperty() {
             }
           }
 
-          console.log('Form values:', values);
           const formData = new FormData();
           formData.append('name', values.name);
           formData.append('desc', values.desc);
@@ -136,7 +135,6 @@ function CreateProperty() {
           if (values.pic) {
             formData.append('pic', values.pic);
           }
-          console.log('Try creating listing:', formData);
 
           await axiosInstance().post('/api/properties', formData);
 

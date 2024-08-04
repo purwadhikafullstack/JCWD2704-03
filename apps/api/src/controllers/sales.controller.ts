@@ -17,7 +17,6 @@ export class SalesController {
   async getSales(req: Request, res: Response, next: NextFunction) {
     try {
       const data = await salesChartCalendarServices.getSales(req);
-      console.log(data);
       return res.send({
         data,
       });
@@ -28,7 +27,6 @@ export class SalesController {
   async getSalesByUserId(req: Request, res: Response, next: NextFunction) {
     try {
       const data = await salesService.getSalesByUser(req);
-      console.log(data);
       return res.send({
         data,
       });
@@ -39,7 +37,6 @@ export class SalesController {
   async getAllSales(req: Request, res: Response, next: NextFunction) {
     try {
       const data = await salesService.getAllSales(req);
-      console.log(data);
       return res.send({
         data,
       });
@@ -50,7 +47,6 @@ export class SalesController {
   async getAvailability(req: Request, res: Response, next: NextFunction) {
     try {
       const data = await salesService.roomAvailability(req);
-      console.log(data);
       return res.send({
         data,
       });

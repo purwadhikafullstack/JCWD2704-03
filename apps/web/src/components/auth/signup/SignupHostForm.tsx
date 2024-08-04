@@ -32,14 +32,10 @@ function SignupHostForm() {
     onSubmit: async (values, formikHelpers) => {
       setIsSubmitting(true);
       try {
-        console.log('Sign up as user starts');
-
         await axiosInstance().post('/api/users/v2', values);
 
         router.push(`/auth/verification?email=${values.email}`);
       } catch (error) {
-        console.log(error);
-
         if (error instanceof AxiosError) {
           toast.error(
             error.response?.data.message ||
@@ -61,12 +57,11 @@ function SignupHostForm() {
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: 'http://localhost:3000/auth/callback?userType=tenant',
+        redirectTo: `${process.env.NEXT_PUBLIC_BASE_WEB_URL}/auth/callback?userType=tenant`,
       },
     });
 
     if (error) {
-      console.log('Error signing in with Google:', error.message);
       return;
     }
 

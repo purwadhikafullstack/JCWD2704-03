@@ -1,21 +1,18 @@
 'use client';
 import { axiosInstance } from '@/libs/axios.config';
+import { Sale } from '@/models/sale.model';
 import React, { useState, useEffect } from 'react';
-interface Sale {
-  user_id: string;
-  user_firstname: string;
-  property_id: string;
-  property_name: string;
-  total_price: number;
-  createdAt: string;
-}
+import { IoIosArrowForward } from 'react-icons/io';
+import { IoIosArrowBack } from 'react-icons/io';
 
 const Sales: React.FC = () => {
   const [sales, setSales] = useState<Sale[]>([]);
   const [order, setOrder] = useState('asc');
   const [startDate, setStartDate] = useState('');
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
   const [endDate, setEndDate] = useState('');
-
+  const [totalPages, setTotalPages] = useState(1);
   const fetchSales = async () => {
     try {
       const response = await axiosInstance().get('/api/sales/all', {
@@ -23,9 +20,13 @@ const Sales: React.FC = () => {
           order,
           startDate,
           endDate,
+          page,
+          limit,
         },
       });
-      setSales(response.data.data);
+      setSales(response.data.data.sales);
+      console.log('data all sales', response.data.data);
+      setTotalPages(response.data.data.totalPages);
     } catch (error) {
       console.error('Error fetching sales data:', error);
     }
@@ -33,9 +34,12 @@ const Sales: React.FC = () => {
 
   useEffect(() => {
     fetchSales();
-  }, [order, startDate, endDate]);
+  }, [order, startDate, endDate, page, limit]);
   const handleSortOrder = () => {
     setOrder((prevOrder) => (prevOrder === 'asc' ? 'desc' : 'asc'));
+  };
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage);
   };
   return (
     <div className="">
@@ -67,7 +71,7 @@ const Sales: React.FC = () => {
           <thead>
             <tr className="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
               <th className="py-2 px-4 border">No</th>
-              <th className="py-2 px-4 border">User ID</th>
+              <th className="py-2 px-4 border">Invoice ID</th>
               <th className="py-2 px-4 border">User First Name</th>
               <th className="py-2 px-4 border">Property ID</th>
               <th className="py-2 px-4 border">Property Name</th>
@@ -80,8 +84,12 @@ const Sales: React.FC = () => {
           <tbody>
             {sales.map((sale, index) => (
               <tr key={index}>
-                <td className="py-2 px-4 border text-center">{index + 1}</td>
-                <td className="py-2 px-4 border">{sale.user_id}</td>
+                <td className="py-2 px-4 border text-center">
+                  {(page - 1) * limit + index + 1}
+                </td>
+                <td className="py-2 px-4 border">
+                  {sale.invoice_id.toUpperCase()}
+                </td>
                 <td className="py-2 px-4 border">{sale.user_firstname}</td>
                 <td className="py-2 px-4 border">{sale.property_id}</td>
                 <td className="py-2 px-4 border">{sale.property_name}</td>
@@ -93,6 +101,25 @@ const Sales: React.FC = () => {
             ))}
           </tbody>
         </table>
+      </div>
+      <div className="flex justify-between items-center mt-4">
+        <button
+          onClick={() => handlePageChange(page - 1)}
+          disabled={page === 1}
+          className="px-4 py-2 bg-black text-white rounded disabled:opacity-50"
+        >
+          <IoIosArrowBack />
+        </button>
+        <span className="text-gray-700">
+          Page {page} of {totalPages}
+        </span>
+        <button
+          onClick={() => handlePageChange(page + 1)}
+          disabled={page === totalPages}
+          className="px-4 py-2 bg-black text-white rounded disabled:opacity-50"
+        >
+          <IoIosArrowForward />
+        </button>
       </div>
     </div>
   );

@@ -43,6 +43,7 @@ export class UserRouter {
       blobUploader().single('image'),
       this.userController.editUserProfile,
     );
+    this.router.get('/reverify/:token', this.userController.reverifyEmail);
     this.router.get('/image/:imageName', this.userController.renderPicUser);
     this.router.get('/pr/:id', this.userController.getProfileByTenantId);
   }

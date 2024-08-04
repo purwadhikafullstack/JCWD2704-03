@@ -56,7 +56,6 @@ const ChangePassword = () => {
         throw new Error('Invalid role');
       }
     } catch (error) {
-      console.log(error);
       toast.error('Error');
     }
   };

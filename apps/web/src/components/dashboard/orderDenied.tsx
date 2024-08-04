@@ -6,6 +6,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { FaMoon, FaStar } from 'react-icons/fa';
 import Swal from 'sweetalert2';
+import Spinner from 'react-bootstrap/Spinner';
 
 function DeniedOrder() {
   const [order, setOrders] = useState<Order | null>(null);
@@ -44,7 +45,6 @@ function DeniedOrder() {
             `http://localhost:8000/api/reservations/tenant/order/denied/${orderId}`,
           );
           console.log(response.data);
-
           Swal.fire({
             title: 'Deny',
             text: 'The order has been denied.',
@@ -120,12 +120,7 @@ function DeniedOrder() {
               />
             </div>
             <div className=" md:w-2/3 bg-white flex flex-col">
-              <div className="flex justify-between items-center">
-                <div className="flex items-center text-sm font-semibold">
-                  <FaStar className="mr-2" />
-                  4.96
-                </div>
-              </div>
+              <div className="flex justify-between items-center"></div>
               <h3 className="font-black text-gray-800 md:text-3xl text-xl">
                 {order.property.name}
               </h3>
