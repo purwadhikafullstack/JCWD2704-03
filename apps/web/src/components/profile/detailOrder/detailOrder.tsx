@@ -192,7 +192,7 @@ function DetailOrder() {
             <div>
               <div className="flex flex-col gap-4">
                 <div className="flex flex-col text-right">
-                  <div>Order ID: </div>
+                  <div>Invoice ID: </div>
                   <div className="text-gray-200 text-sm">
                     {order.invoice_id.toUpperCase()}
                   </div>
@@ -275,7 +275,7 @@ function DetailOrder() {
           {showButton && !hasReview && review && (
             <button
               type="button"
-              className={`focus:outline-none w-48 text-white font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 ${
+              className={`focus:outline-none w-48 text-white font-medium mt-8 rounded-lg text-sm px-5 py-2.5 me-2 mb-2 ${
                 isReviewSubmitted || hasReview
                   ? 'bg-gray-500 cursor-not-allowed'
                   : 'bg-green-700 hover:bg-green-800 focus:ring-4 focus:ring-green-300 dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-90'
