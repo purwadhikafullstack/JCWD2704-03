@@ -45,7 +45,6 @@ function CancelOrder() {
           const response = await axiosInstance().patch(
             `/api/reservations/tenant/order/cancelled/${orderId}`,
           );
-          console.log(response.data);
 
           Swal.fire({
             title: 'Cancelled',

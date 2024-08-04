@@ -63,7 +63,6 @@ function UserShowProfile() {
         const response = await axiosInstance().get(
           `/api/properties/prop/${id}`,
         );
-        console.log('fetching props');
         const properties = response.data.data;
         setProperties(properties);
 

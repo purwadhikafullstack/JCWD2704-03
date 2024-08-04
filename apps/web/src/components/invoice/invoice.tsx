@@ -48,11 +48,9 @@ const Invoice = () => {
   useEffect(() => {
     const snapScript = 'https://app.sandbox.midtrans.com/snap/snap.js';
     const clientKey = process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY;
-    console.log(clientKey);
     const script = document.createElement('script');
     script.src = snapScript;
     if (clientKey) {
-      console.log('masok', clientKey);
       script.setAttribute('data-client-key', clientKey);
       script.async = true;
       document.body.appendChild(script);
@@ -61,7 +59,6 @@ const Invoice = () => {
       .get(`/api/reservations/${id}`)
       .then((res) => {
         setOrder(res.data.data);
-        console.log('totalll hargaa', res.data.data.total_price);
       })
       .catch((e) => {
         if (e instanceof AxiosError) console.log(e.response?.data);

@@ -32,24 +32,14 @@ function Reservation() {
   const roomIds = searchParams.get('Ids')?.replace(/-/g, ',').split(',') || [];
   const total_price = parseFloat(searchParams.get('total') || '0');
 
-  console.log(checkInDate, checkOutDate);
-
-  console.log('ini roomIds', roomIds);
-
   useEffect(() => {
     const fetchRoom = async () => {
       try {
-        console.log(id);
-
         const response = await axiosInstance().get(
           `/api/properties/room/${id}`,
         );
         const { data } = response.data;
-
-        console.log('Response:', response.data);
-
         setRooms(data);
-        console.log(data);
       } catch (error) {
         console.error('Error fetching rooms:', error);
       } finally {
@@ -67,7 +57,6 @@ function Reservation() {
     ? Math.ceil(diff / (1000 * 3600 * 24))
     : 0;
 
-  console.log('ini roomss', rooms);
   const today = new Date();
   const isPeak =
     rooms?.start_date_peak &&
@@ -76,8 +65,6 @@ function Reservation() {
     today <= new Date(rooms.end_date_peak);
   const price = isPeak ? rooms?.peak_price : rooms?.price;
   const totalPrice = (total_price || 0) * durationInDays;
-  console.log('total_price', totalPrice);
-  console.log('hargaa', rooms);
 
   const handlePay = async () => {
     const data = {
@@ -91,19 +78,14 @@ function Reservation() {
       total_price: totalPrice,
     };
 
-    console.log('data to be sent:', data);
     try {
-      console.log(buyerId);
-
       const response = await axiosInstance().post('/api/reservations', data);
-      console.log('order successful', response);
       const orderData = response.data.data;
       if (!orderData || !orderData.id) {
         throw new Error('id is undefined');
       }
       setOrder(orderData);
       const orderId = orderData.id;
-      console.log('ID from recent order:', orderId);
       const dataMidtrans = {
         order_id: orderId,
         total_price: totalPrice,
@@ -112,7 +94,6 @@ function Reservation() {
         .post(`/api/reservations/createSnapMidtrans`, dataMidtrans)
         .then((res) => res.data)
         .catch((error) => console.log(error));
-      console.log(createMidtrans);
       router.push(`/invoice?order_id=${orderId}`);
     } catch (error) {
       console.error('Error placing order:', error);

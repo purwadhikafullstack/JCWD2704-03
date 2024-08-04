@@ -39,12 +39,10 @@ function DetailOrder() {
         if (reviewData && reviewData.length > 0) {
           const review = reviewData[0];
           setHasReview(review.rating > 0);
-          console.log('isi review', review);
         }
         if (reviewData.length == 0) {
           setReview(false);
         }
-        console.log('isi review', reviewData);
       } catch (error) {
         console.error('Error fetching rooms:', error);
       } finally {
@@ -69,7 +67,6 @@ function DetailOrder() {
           const response = await axiosInstance().patch(
             `/api/reservations/user/order/cancelled/${orderId}`,
           );
-          console.log(response.data);
 
           Swal.fire({
             title: 'Cancelled',
@@ -117,14 +114,7 @@ function DetailOrder() {
               },
             },
           );
-          console.log('Review submitted successfully:', request.data);
           setIsReviewSubmitted(true);
-          console.log(
-            'Submitting review with rating:',
-            rating,
-            'and text:',
-            reviewText,
-          );
 
           Swal.fire({
             title: 'Submitted!',

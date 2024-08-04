@@ -32,7 +32,6 @@ const UserReport: React.FC = () => {
         const response = await axiosInstance().get('/api/sales/UserSales', {
           params: { sortBy, order },
         });
-        console.log(response.data.data);
         setSales(response.data.data);
       } catch (error) {
         console.error('Error fetching sales data', error);

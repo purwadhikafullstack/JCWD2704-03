@@ -27,7 +27,6 @@ const Sales: React.FC = () => {
         },
       });
       setSales(response.data.data.sales);
-      console.log('data all sales', response.data.data);
       setTotalPages(response.data.data.totalPages);
     } catch (error) {
       console.error('Error fetching sales data:', error);

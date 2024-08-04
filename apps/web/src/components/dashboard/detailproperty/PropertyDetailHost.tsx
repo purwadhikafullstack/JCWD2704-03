@@ -43,10 +43,6 @@ function PropertyDetailHost() {
         const property = response.data.data;
         setProperty(property);
         // setProperty(response.data.data);
-        console.log('dattaa proop', response.data.data);
-        console.log('name', property?.name);
-        console.log('pic name', property?.pic_name);
-        console.log(imageSrc);
       } catch (err) {
         setError('Failed to fetch property details');
         console.error('Error fetching property details:', err);
@@ -96,14 +92,9 @@ function PropertyDetailHost() {
 
     if (result.isConfirmed) {
       try {
-        console.log(`Attempting to delete property with ID: ${id}`);
-
         const response = await axiosInstance().patch(
           `/api/properties/del/${id}`,
         );
-
-        console.log('Response Status:', response.status);
-        console.log('Response Data:', response.data);
 
         if (response.status === 200) {
           Swal.fire('Deleted!', 'The property has been deleted.', 'success');

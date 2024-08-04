@@ -47,7 +47,6 @@ function DeniedOrder() {
           const response = await axiosInstance().patch(
             `http://localhost:8000/api/reservations/tenant/order/denied/${orderId}`,
           );
-          console.log(response.data);
           Swal.fire({
             title: 'Deny',
             text: 'The order has been denied.',
@@ -81,7 +80,6 @@ function DeniedOrder() {
           const response = await axiosInstance().patch(
             `http://localhost:8000/api/reservations/tenant/order/confirmed/${orderId}`,
           );
-          console.log(response.data);
 
           Swal.fire({
             title: 'Confirm',
