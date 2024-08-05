@@ -4,11 +4,14 @@ import dayjs from 'dayjs';
 import { Order } from '@/models/reservation.model';
 import { axiosInstance } from '@/libs/axios.config';
 import { useRouter, useSearchParams } from 'next/navigation';
+import Spinner from 'react-bootstrap/Spinner';
+import { set } from 'cypress/types/lodash';
 
 function OrderTable() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [loading, setLoading] = useState(true);
   const [limit, setLimit] = useState(10);
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -21,9 +24,10 @@ function OrderTable() {
       setOrders(data);
       setTotalPages(totalPages);
       setCurrentPage(currentPage);
-      console.log('datataa', data);
     } catch (error) {
       console.error('Error fetching order data:', error);
+    } finally {
+      setLoading(false);
     }
   };
   useEffect(() => {
@@ -82,21 +86,34 @@ function OrderTable() {
     'Property',
     'Room Type',
     'Payment Method',
-    'Room',
     'Reservation Date',
     'CheckIn',
     'CheckOut',
     'Status',
   ];
-
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center">
+        <Spinner animation="border" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </Spinner>
+      </div>
+    );
+  }
   return (
-    <div className="flex flex-col gap-6 max-w-screen-xl">
-      <div className=" text-3xl font-semibold pb-3 text-[#263C94] mt-10">
-        All Transaction
+    <div className="flex flex-col gap-6 max-w-screen-xl tracking-tighter">
+      <div>
+        <div className="font-semibold text-2xl pt-4 mb-2">Welcome back!</div>
+        <div className="font-semibold text-xl pt-4 mb-2">Your reservations</div>
+
+        <div className="text-zinc-500 mb-2">
+          Review your past reservations here to manage bookings and track guest
+          experiences.
+        </div>
       </div>
       <div className="overflow-x-auto">
         <table className="w-full text-sm border text-left rtl:text-right text-gray-500 dark:text-gray-400">
-          <thead className="text-sm text-center text-gray-700  bg-gray-200 dark:bg-gray-700 dark:text-gray-400">
+          <thead className="text-sm text-center text-zinc-800  bg-zinc-200 dark:bg-gray-700 dark:text-gray-400">
             <tr>
               {headers.map((header) => (
                 <th
@@ -132,7 +149,6 @@ function OrderTable() {
                 <td className="px-6 py-4 text-center">
                   {order.payment_method}
                 </td>
-                <td className="px-6 py-4 text-center">{order.total_room}</td>
                 <td className="px-6 py-4 text-center">
                   {formatDate(order.payment_date)}
                 </td>

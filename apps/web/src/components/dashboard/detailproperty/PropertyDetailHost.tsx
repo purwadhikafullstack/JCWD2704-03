@@ -16,6 +16,10 @@ import { PiForkKnifeFill } from 'react-icons/pi';
 import { FaSmoking } from 'react-icons/fa';
 import { MdPayment } from 'react-icons/md';
 import { FaPerson } from 'react-icons/fa6';
+import dayjs from 'dayjs';
+import { Spinner } from 'react-bootstrap';
+import 'bootstrap/dist/css/bootstrap.min.css';
+
 function PropertyDetailHost() {
   const { id } = useParams();
   const [property, setProperty] = useState<Property | null>(null);
@@ -39,10 +43,6 @@ function PropertyDetailHost() {
         const property = response.data.data;
         setProperty(property);
         // setProperty(response.data.data);
-        console.log('dattaa proop', response.data.data);
-        console.log('name', property?.name);
-        console.log('pic name', property?.pic_name);
-        console.log(imageSrc);
       } catch (err) {
         setError('Failed to fetch property details');
         console.error('Error fetching property details:', err);
@@ -55,7 +55,16 @@ function PropertyDetailHost() {
   }, [id]);
 
   if (loading) {
-    return <div>Loading...</div>;
+    return (
+      <>
+        {' '}
+        <div className="flex justify-center items-center h-64">
+          <Spinner animation="border" role="status">
+            <span className="visually-hidden">Loading...</span>
+          </Spinner>
+        </div>
+      </>
+    );
   }
 
   if (error) {
@@ -83,14 +92,9 @@ function PropertyDetailHost() {
 
     if (result.isConfirmed) {
       try {
-        console.log(`Attempting to delete property with ID: ${id}`);
-
         const response = await axiosInstance().patch(
           `/api/properties/del/${id}`,
         );
-
-        console.log('Response Status:', response.status);
-        console.log('Response Data:', response.data);
 
         if (response.status === 200) {
           Swal.fire('Deleted!', 'The property has been deleted.', 'success');
@@ -119,7 +123,6 @@ function PropertyDetailHost() {
   };
 
   const handleDeleteRoomCategory = async (categoryId: string) => {
-    // Show confirmation dialog
     const result = await Swal.fire({
       title: 'Are you sure?',
       text: 'This will permanently delete the room category!',
@@ -130,16 +133,13 @@ function PropertyDetailHost() {
       confirmButtonText: 'Yes, delete it!',
     });
 
-    // If the user confirmed
     if (result.isConfirmed) {
       try {
-        // Send a PATCH request to perform a soft delete
         const response = await axiosInstance().patch(
           `/api/rooms/d/${categoryId}`,
         );
 
         if (response.status === 200) {
-          // Successfully deleted, handle success
           Swal.fire(
             'Deleted!',
             'The room category has been deleted.',
@@ -148,11 +148,9 @@ function PropertyDetailHost() {
 
           window.location.reload();
         } else {
-          // Handle unexpected response status
           Swal.fire('Failed!', 'Failed to delete room category.', 'error');
         }
       } catch (error) {
-        // Handle error
         console.error('Error deleting room category:', error);
         Swal.fire(
           'Error!',
@@ -168,38 +166,41 @@ function PropertyDetailHost() {
   };
 
   return (
-    <div className="container flex flex-col  gap-9">
-      <div>
-        {property && (
-          <img
-            src={`${imageSrc}${property.pic_name}`}
-            alt="Property Image"
-            className="sobject-cover w-full h-full rounded-xl"
-          />
-        )}
-      </div>
-      <div className="bg-white p-6 rounded-lg shadow-md mb-4">
-        <h1 className="text-2xl md:text-3xl font-bold mb-2">{property.name}</h1>
-        <p className="text-gray-700 mb-2">{property.desc}</p>
-        <p className="mb-2">
+    <div className="container flex flex-col  gap-4 tracking-tighter">
+      <div className="bg-white p-6 rounded-lg flex flex-col gap-3">
+        <div>
+          {property && (
+            <img
+              src={`${imageSrc}${property.pic_name}`}
+              alt="Property Image"
+              className="sobject-cover w-full h-80 object-cover rounded-xl"
+            />
+          )}
+        </div>
+
+        <div className="text-2xl md:text-3xl font-bold ">{property.name}</div>
+        <div className="text-gray-700">{property.desc}</div>
+        <div className="">
           <div className="font-semibold">Address:</div>{' '}
           {property.address || 'N/A'}
-        </p>
-        <p className="mb-2">
+        </div>
+        <div className="">
           <div className="font-semibold">City:</div> {property.city || 'N/A'}
-        </p>
-        <p className="mb-2">
-          <div className="font-semibold">Posted at:</div>{' '}
-          {property.createdAt
-            ? new Date(property.createdAt).toLocaleDateString()
-            : 'N/A'}
-        </p>
-        <p>
-          <div className="font-semibold">Last updated At:</div>{' '}
-          {property.updatedAt
-            ? new Date(property.updatedAt).toLocaleDateString()
-            : 'N/A'}
-        </p>
+        </div>
+        <div className="flex gap-5 mt-10">
+          <p className="mb-2">
+            <div className="font-semibold">Posted at:</div>{' '}
+            {property.createdAt
+              ? dayjs(property.createdAt).format('HH:mm DD MMMM YYYY ')
+              : 'N/A'}
+          </p>
+          <p>
+            <div className="font-semibold">Last updated at:</div>{' '}
+            {property.updatedAt
+              ? dayjs(property.updatedAt).format('HH:mm DD MMMM YYYY')
+              : 'N/A'}
+          </p>
+        </div>
       </div>
 
       <div className="flex justify-center flex-wrap gap-4 mb-4">
@@ -232,13 +233,10 @@ function PropertyDetailHost() {
       <div className="rooms">
         {property.RoomCategory && property.RoomCategory.length > 0 ? (
           <div className="bg-white p-4 rounded-lg shadow-md">
-            <h2 className="text-xl md:text-2xl font-bold mb-4">
-              Room Categories
-            </h2>
-            <div className="flex overflow-x-scroll space-x-4">
+            <div className="flex justify-center overflow-x-scroll space-x-4">
               {property.RoomCategory.map((category) => (
                 <div
-                  className="bg-slate-50 rounded-2xl my-2 shadow-md overflow-hidden flex-none w-96"
+                  className="bg-zinc-100 rounded-2xl my-2 overflow-hidden flex-none w-2/5"
                   key={category.id}
                 >
                   <img
@@ -254,73 +252,112 @@ function PropertyDetailHost() {
                     <h5 className="text-2xl md:text-xl font-bold mb-2">
                       {category.type} Room
                     </h5>
+
+                    <div className="mb-2">{category.desc}</div>
                     <div className="flex flex-row gap-1 mb-2">
                       <IoIosBed className="mt-1" />
-                      <div>{category.bed.toUpperCase()}</div>
-                    </div>
-                    <div className="flex flex-row gap-1 mb-2">
-                      <PiForkKnifeFill className="mt-1" />
-                      {category.isBreakfast ? (
-                        <div>Breakfast Included</div>
-                      ) : (
-                        <div>Breakfast Not Included</div>
-                      )}
-                    </div>
-                    <div className="flex flex-row gap-1 mb-2">
-                      <MdPayment className="mt-1" />
-                      {category.isRefunable ? (
-                        <div>Refundable</div>
-                      ) : (
-                        <div>Not Refundable</div>
-                      )}
-                    </div>
-                    <div className="flex flex-row gap-1 mb-2">
-                      <FaSmoking className="mt-1" />{' '}
-                      {category.isSmoking ? (
-                        <div>Smoking Allowed</div>
-                      ) : (
-                        <div>Smoking is not allowed.</div>
-                      )}
+                      <div>
+                        {' '}
+                        {category.bed.charAt(0).toUpperCase() +
+                          category.bed.slice(1).toLowerCase()}{' '}
+                        Bed
+                      </div>
                     </div>
                     <div className="flex flex-row gap-1 mb-2">
                       <FaPerson className="mt-1" />
                       <div>{category.guest} Guest </div>
                     </div>
                     <div className="flex flex-row gap-1 mb-2">
-                      <div>Price:</div> Rp. {category.price.toLocaleString()}
+                      <PiForkKnifeFill className="mt-1" />
+                      {category.isBreakfast ? (
+                        <div>Breakfast included</div>
+                      ) : (
+                        <div>Breakfast not included</div>
+                      )}
                     </div>
                     <div className="flex flex-row gap-1 mb-2">
-                      <div>Peak Price:</div> Rp.
-                      {category.peak_price?.toLocaleString() || null}
+                      <FaSmoking className="mt-1" />{' '}
+                      {category.isSmoking ? (
+                        <div>Smoking allowed</div>
+                      ) : (
+                        <div>Smoking not allowed</div>
+                      )}
                     </div>
                     <div className="flex flex-row gap-1 mb-2">
-                      <div>Start Date for Peak:</div>{' '}
-                      {category.start_date_peak
-                        ? new Date(
-                            category.start_date_peak,
-                          ).toLocaleDateString()
-                        : 'N/A'}
+                      <MdPayment className="mt-1" />
+                      {category.isRefunable ? (
+                        <div>Refundable order</div>
+                      ) : (
+                        <div>Non-refundable order</div>
+                      )}
                     </div>
-                    <div className="flex flex-row gap-1 mb-2">
-                      <div>End Date for Peak:</div>{' '}
-                      {category.end_date_peak
-                        ? new Date(category.end_date_peak).toLocaleDateString()
-                        : 'N/A'}
+
+                    <div className="flex flex-col mt-4">
+                      <div className="mb-2 font-semibold text-lg">
+                        {' '}
+                        Room Pricing
+                      </div>
+                      <div className="flex flex-row gap-1 mb-2">
+                        <div>Price:</div>{' '}
+                        <span className="font-bold">
+                          Rp. {category.price.toLocaleString()}{' '}
+                        </span>{' '}
+                        <span>/room/night</span>
+                      </div>
+
+                      {category.peak_price && (
+                        <div className="flex flex-col mt-4">
+                          <div className="mb-2 font-semibold text-lg">
+                            {' '}
+                            Peak Season Rate
+                          </div>
+                          <div className="flex flex-row gap-1 mb-2">
+                            <div>Price:</div>
+                            <span className="font-bold">
+                              Rp. {category.peak_price.toLocaleString()}
+                            </span>{' '}
+                            <span>/room/night</span>
+                          </div>
+                          <div className="flex flex-row gap-1 mb-2">
+                            <div>Start Date:</div>
+                            {category.start_date_peak
+                              ? new Date(
+                                  category.start_date_peak,
+                                ).toLocaleDateString()
+                              : 'N/A'}
+                          </div>
+                          <div className="flex flex-row gap-1 mb-2">
+                            <div>End Date:</div>
+                            {category.end_date_peak
+                              ? new Date(
+                                  category.end_date_peak,
+                                ).toLocaleDateString()
+                              : 'N/A'}
+                          </div>
+                        </div>
+                      )}
                     </div>
-                    <div className="mb-2">
-                      <div>Description:</div> {category.desc}
+
+                    <div className="flex flex-col mt-4">
+                      <div className="mb-2 font-semibold text-lg">
+                        {' '}
+                        Room Number
+                      </div>
+                      <div className="flex flex-row gap-1 mb-2">
+                        <div className="">Total rooms: </div>
+                        <div className="font-bold">{category.roomCount}</div>
+                      </div>
+                      <div className="flex flex-row gap-1">
+                        <div className="">Available rooms: </div>
+                        <div className="font-bold">
+                          {category.remainingRooms}
+                        </div>
+                      </div>
                     </div>
-                    <div className="flex flex-row gap-1">
-                      <div className="font-semibold">Total Rooms: </div>
-                      <div className="font-bold">{category.roomCount}</div>
-                    </div>
-                    <div className="flex flex-row gap-1">
-                      <div className="font-semibold">Remaining room: </div>
-                      <div className="font-bold">{category.remainingRooms}</div>
-                    </div>
+
                     <div className="flex gap-2 mt-4">
                       <button
-                        className="bg-blue-600 text-white py-1 px-3 rounded-lg hover:bg-blue-500"
+                        className="bg-black text-white py-1 px-3 rounded-lg hover:bg-blue-500"
                         onClick={() => handleEditRoomCategory(category.id)}
                       >
                         <FaEdit />
@@ -339,18 +376,24 @@ function PropertyDetailHost() {
           </div>
         ) : (
           <div className="bg-white p-6 rounded-lg shadow-md text-center">
-            <p>No room categories available.</p>
+            <p>No room categories available. Create now!</p>
           </div>
         )}
       </div>
 
       {property.latitude && property.longitude && (
-        <div className="p-4">
-          <MapComponent
-            latitude={property.latitude}
-            longitude={property.longitude}
-          />
-        </div>
+        <>
+          <div className="p-4">
+            <div className="font-semibold text-xl pb-2">Location</div>
+            <div className="text-zinc-500 mb-4">
+              To change your location, you need to update your property address.
+            </div>
+            <MapComponent
+              latitude={property.latitude}
+              longitude={property.longitude}
+            />
+          </div>
+        </>
       )}
     </div>
   );

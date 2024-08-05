@@ -168,15 +168,19 @@ class RoomService {
       buffer = await sharp(file.buffer).png().toBuffer();
     }
     const parsedIsBreakfast =
-      isBreakfast !== undefined
-        ? Boolean(isBreakfast)
-        : roomCategory.isBreakfast;
+      (typeof isBreakfast === 'boolean'
+        ? isBreakfast
+        : isBreakfast === 'true') || false;
+
     const parsedIsRefunable =
-      isRefunable !== undefined
-        ? Boolean(isRefunable)
-        : roomCategory.isRefunable;
+      (typeof isRefunable === 'boolean'
+        ? isRefunable
+        : isRefunable === 'true') || false;
+
     const parsedIsSmoking =
-      isSmoking !== undefined ? Boolean(isSmoking) : roomCategory.isSmoking;
+      (typeof isSmoking === 'boolean' ? isSmoking : isSmoking === 'true') ||
+      false;
+
     const parsedPrice =
       price !== undefined
         ? parseFloat(price as unknown as string)

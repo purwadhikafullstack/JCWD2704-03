@@ -37,10 +37,6 @@ const SalesPage: React.FC = () => {
   return (
     <div>
       <h1>Sales Data</h1>
-      <div className="flex gap-3">
-        <button onClick={() => setPeriod('month')}>Monthly</button>
-        <button onClick={() => setPeriod('week')}>Weekly</button>
-      </div>
       <div>
         <SalesChart data={salesData} period={period} />
       </div>

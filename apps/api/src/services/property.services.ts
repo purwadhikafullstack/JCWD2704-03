@@ -109,16 +109,62 @@ class PropertyService {
             },
           },
         },
-        include: {
+        select: {
+          id: true,
+          tenant_id: true,
+          name: true,
+          category: true,
+          desc: true,
+          city: true,
+          address: true,
+          latitude: true,
+          longitude: true,
+          createdAt: true,
+          updatedAt: true,
+          deletedAt: true,
+          pic_name: true, // Include if you need pic_name
+
           Room: {
-            where: {
-              deletedAt: null,
-            },
-            include: {
-              roomCategory: true, // Include roomCategory to access price
+            select: {
+              id: true,
+              roomCategory_id: true,
+              property_id: true,
+              deletedAt: true,
+              createdAt: true,
+              updatedAt: true,
+
+              roomCategory: {
+                select: {
+                  id: true,
+                  property_id: true,
+                  type: true,
+                  guest: true,
+                  price: true,
+                  peak_price: true,
+                  start_date_peak: true,
+                  end_date_peak: true,
+                  isBreakfast: true,
+                  isRefunable: true,
+                  isSmoking: true,
+                  bed: true,
+                  desc: true,
+                  createdAt: true,
+                  updatedAt: true,
+                  deletedAt: true,
+                  pic_name: true, // Include if you need pic_name
+                },
+              },
             },
           },
-          tenant: true,
+          tenant: {
+            select: {
+              id: true,
+              email: true,
+              first_name: true,
+              last_name: true,
+              // Add other fields you need from tenant
+            },
+          },
         },
         skip: (page - 1) * limit,
         take: limit,
@@ -190,33 +236,57 @@ class PropertyService {
 
   async getAllPropByTenantId(req: Request) {
     try {
-      // Check if req.user and req.user.id are defined
       if (!req.user || !req.user.id) {
         throw new Error('User or User ID is undefined');
       }
 
-      // Log tenant ID for debugging purposes
       console.log('Fetching properties for tenant ID:', req.user.id);
 
-      // Fetch properties associated with the tenant ID
       const properties = await prisma.property.findMany({
         where: { tenant_id: req.user.id, deletedAt: null },
-        // Filter by tenant ID
-        include: {
-          RoomCategory: true, // Include RoomCategory, but it should not filter out properties without RoomCategory
+        select: {
+          id: true,
+          tenant_id: true,
+          name: true,
+          category: true,
+          desc: true,
+          city: true,
+          address: true,
+          latitude: true,
+          longitude: true,
+          createdAt: true,
+          updatedAt: true,
+          deletedAt: true,
+          pic_name: true,
+          RoomCategory: {
+            select: {
+              id: true,
+              property_id: true,
+              type: true,
+              guest: true,
+              price: true,
+              peak_price: true,
+              start_date_peak: true,
+              end_date_peak: true,
+              isBreakfast: true,
+              isRefunable: true,
+              isSmoking: true,
+              bed: true,
+              desc: true,
+              createdAt: true,
+              updatedAt: true,
+              deletedAt: true,
+              pic_name: true,
+            },
+          },
         },
       });
 
-      // Log the retrieved properties for debugging
       console.log('Retrieved properties:', properties);
 
-      // Return the properties
       return properties;
     } catch (error) {
-      // Log any errors that occur during the fetch
       console.error('Error fetching properties:', error);
-
-      // Rethrow the error to be handled by the calling function
       throw error;
     }
   }
@@ -227,12 +297,38 @@ class PropertyService {
 
       const properties = await prisma.property.findMany({
         where: { tenant_id: id, deletedAt: null },
-
-        include: {
+        select: {
+          id: true,
+          tenant_id: true,
+          name: true,
+          category: true,
+          pic_name: true,
+          desc: true,
+          city: true,
+          address: true,
+          latitude: true,
+          longitude: true,
+          createdAt: true,
+          updatedAt: true,
+          deletedAt: true,
           RoomCategory: true,
           Review: {
-            include: {
-              user: true,
+            select: {
+              id: true,
+              review: true,
+              reply: true,
+              rating: true,
+              createdAt: true,
+              updatedAt: true,
+              user: {
+                select: {
+                  id: true,
+                  email: true,
+                  first_name: true,
+                  last_name: true,
+                  image_name: true,
+                },
+              },
             },
           },
         },
@@ -289,12 +385,10 @@ class PropertyService {
   async getPropertyDetailHost(req: Request) {
     const { propertyId } = req.params;
 
-    // Check if propertyId is provided
     if (!propertyId) {
       throw new Error('Property ID is required');
     }
 
-    // Fetch property details from the database
     const data = await prisma.property.findUnique({
       where: { id: propertyId },
       select: {
@@ -326,22 +420,19 @@ class PropertyService {
       },
     });
 
-    // Handle case where property is not found or is deleted
     if (!data || data.deletedAt) {
       throw new Error('Property not found or is deleted');
     }
 
-    // Calculate the remaining rooms for each category
     const roomCategoriesWithAvailableRooms = data.RoomCategory.map(
       (category) => {
-        // Skip the room category if it is deleted
         if (category.deletedAt) {
           return null;
         }
 
         const totalRooms = category.Room.filter(
           (room) => !room.deletedAt,
-        ).length; // Count only non-deleted rooms
+        ).length;
         const bookedRooms = category.Room.filter((room) => {
           return (
             !room.deletedAt &&
@@ -360,7 +451,6 @@ class PropertyService {
 
         return totalRooms > 0
           ? {
-              // Only include categories with at least one room
               ...category,
               roomCount: totalRooms, // Added roomCount
               remainingRooms: totalRooms - bookedRooms,
@@ -412,7 +502,7 @@ class PropertyService {
         latitude: true,
         longitude: true,
         createdAt: true,
-        pic_name: true,
+        pic_name: true, // Include if you need pic_name
         updatedAt: true,
         deletedAt: true,
         tenant: {
@@ -425,23 +515,68 @@ class PropertyService {
           },
         },
         RoomCategory: {
-          include: {
+          select: {
+            id: true,
+            property_id: true,
+            type: true,
+            guest: true,
+            price: true,
+            peak_price: true,
+            start_date_peak: true,
+            end_date_peak: true,
+            isBreakfast: true,
+            isRefunable: true,
+            isSmoking: true,
+            bed: true,
+            desc: true,
+            createdAt: true,
+            updatedAt: true,
+            deletedAt: true,
+            pic_name: true, // Include if you need pic_name
+
             Room: {
-              include: {
+              select: {
+                id: true,
+                roomCategory_id: true,
+                property_id: true,
+                deletedAt: true,
+                createdAt: true,
+                updatedAt: true,
+
                 OrderRoom: {
-                  include: {
-                    order: true,
+                  select: {
+                    id: true,
+                    order_id: true,
+                    room_id: true,
+                    createdAt: true,
+                    updatedAt: true,
+                    order: {
+                      select: {
+                        id: true,
+                        user_id: true,
+                        property_id: true,
+                        roomCategory_id: true,
+                        checkIn_date: true,
+                        checkOut_date: true,
+                        total_price: true,
+                        payment_method: true,
+                        // Exclude payment_proof here
+                        payment_date: true,
+                        cancel_date: true,
+                        status: true,
+                        token_midTrans: true,
+                        invoice_id: true,
+                        createdAt: true,
+                        updatedAt: true,
+                      },
+                    },
                   },
                 },
               },
               where: {
                 deletedAt: null,
-                // Hanya sertakan kamar yang tidak memiliki pesanan yang bertentangan
                 OrderRoom: {
                   none: {
-                    // roomCategory:{},
-                    // property:{},
-                    // room:{},
                     order: {
                       OR: [
                         {

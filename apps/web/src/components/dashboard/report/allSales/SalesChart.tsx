@@ -1,5 +1,5 @@
 'use client';
-import React from 'react';
+import React, { useState } from 'react';
 import { Line } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -33,7 +33,8 @@ interface SalesChartProps {
   period: 'month' | 'week';
 }
 
-const SalesChart: React.FC<SalesChartProps> = ({ data, period }) => {
+const SalesChart: React.FC<SalesChartProps> = ({ data }) => {
+  const [period, setPeriod] = useState<'month' | 'week'>('month');
   let chartData;
   let labels;
   let title;
@@ -75,6 +76,24 @@ const SalesChart: React.FC<SalesChartProps> = ({ data, period }) => {
   return (
     <div>
       <h2>{title}</h2>
+      <div className="flex justify-center mb-4">
+        <button
+          onClick={() => setPeriod('month')}
+          className={`px-4 py-2 mx-2 font-semibold text-sm text-white rounded-full ${
+            period === 'month' ? 'bg-blue-600' : 'bg-gray-400'
+          }`}
+        >
+          Monthly
+        </button>
+        <button
+          onClick={() => setPeriod('week')}
+          className={`px-4 py-2 mx-2 font-semibold text-sm text-white rounded-full ${
+            period === 'week' ? 'bg-blue-600' : 'bg-gray-400'
+          }`}
+        >
+          Weekly
+        </button>
+      </div>
       <div className="m-0 md:w-full md:h-full">
         <Line data={chartConfig} />
       </div>
