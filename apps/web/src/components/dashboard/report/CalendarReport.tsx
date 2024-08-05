@@ -34,7 +34,6 @@ const Calendar: React.FC = () => {
         },
         {},
       );
-      console.log('data calendar', dataObject);
       setAvailability(dataObject);
     } catch (error) {
       console.error('Error fetching availability data:', error);

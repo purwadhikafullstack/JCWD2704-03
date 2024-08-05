@@ -97,7 +97,7 @@ function EditProfileForm() {
         });
 
         dispatch(login(fetchedUser));
-        window.location.reload();
+        // window.location.reload();
       } catch (error) {
         if (error instanceof AxiosError) {
           alert(error.response?.data.message);

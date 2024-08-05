@@ -69,12 +69,7 @@ class ReservationRouter {
       verifyBuyer,
       reservationController.creatingSnapMidtrans,
     );
-    this.router.post(
-      '/updateTransaction/',
-      verifyUser,
-      verifyBuyer,
-      reservationController.transferNotif,
-    );
+    this.router.post('/updateTransaction', reservationController.transferNotif);
   }
   getRouter() {
     return this.router;

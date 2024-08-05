@@ -1,14 +1,14 @@
 import { CookieOptions } from 'express';
 
-export const cookieOpt: CookieOptions = {
+export const cookiesOpt: CookieOptions = {
   sameSite: 'strict',
   secure: true,
-  domain: process.env.BASE_WEB_URL,
+  domain: process.env.BASE_API_URL,
 };
 
 // export const cookieHTTPonlyOpt: CookieOptions = {
 //   sameSite: 'strict',
 //   httpOnly: true,
 //   secure: true,
-//   domain: process.env.BASE_WEB_URL,
+//   domain: process.env.BASE_API_URL,
 // };

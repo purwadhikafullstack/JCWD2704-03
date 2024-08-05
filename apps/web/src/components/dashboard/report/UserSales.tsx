@@ -1,6 +1,7 @@
 'use client';
 import { axiosInstance } from '@/libs/axios.config';
 import { useEffect, useState } from 'react';
+import Spinner from 'react-bootstrap/Spinner';
 
 type SaleDetail = {
   property_id: string;
@@ -24,17 +25,18 @@ const UserReport: React.FC = () => {
     'total_sales',
   );
   const [order, setOrder] = useState<'asc' | 'desc'>('asc');
-
+  const [loading, setLoading] = useState(true);
   useEffect(() => {
     const fetchSales = async () => {
       try {
         const response = await axiosInstance().get('/api/sales/UserSales', {
           params: { sortBy, order },
         });
-        console.log(response.data.data);
         setSales(response.data.data);
       } catch (error) {
         console.error('Error fetching sales data', error);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -49,7 +51,15 @@ const UserReport: React.FC = () => {
     setSortBy(key);
     setOrder(direction);
   };
-
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center">
+        <Spinner animation="border" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </Spinner>
+      </div>
+    );
+  }
   return (
     <div className="overflow-x-auto">
       <h1 className="text-2xl font-bold mb-4">User Report</h1>

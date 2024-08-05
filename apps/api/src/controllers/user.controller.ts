@@ -1,6 +1,7 @@
 import { type NextFunction, type Response, type Request } from 'express';
 import usersServices from '@/services/user.services';
 import authService from '@/services/auth.service';
+import { cookiesOpt } from '@/utils/cookie';
 
 export class UserController {
   async userRegisterEmail(req: Request, res: Response, next: NextFunction) {
@@ -90,11 +91,6 @@ export class UserController {
       const { accessToken, refreshToken } =
         await authService.tenantGoogleLogin(req);
       res
-        .cookie('access_token', accessToken, {
-          secure: true,
-          domain: 'purwadhikabootcamp.com',
-          sameSite: 'strict',
-        })
         .cookie('refresh_token', refreshToken, {
           secure: true,
           domain: 'purwadhikabootcamp.com',
@@ -244,6 +240,7 @@ export class UserController {
   async editUserProfile(req: Request, res: Response, next: NextFunction) {
     try {
       const result = await usersServices.editUserProfile(req);
+
       res.cookie('access_token', result.token, {
         secure: true,
         domain: 'purwadhikabootcamp.com',
@@ -262,6 +259,7 @@ export class UserController {
   async reverifyEmail(req: Request, res: Response) {
     try {
       const result = await usersServices.reverifyEmail(req);
+
       res.cookie('access_token', result.token, {
         secure: true,
         domain: 'purwadhikabootcamp.com',
