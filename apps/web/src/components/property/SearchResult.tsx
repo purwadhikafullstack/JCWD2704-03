@@ -15,6 +15,7 @@ import { IoSadOutline } from 'react-icons/io5';
 import { FaHouse } from 'react-icons/fa6';
 import dayjs from 'dayjs';
 import { RoomCategory } from '@/models/roomCategory.model';
+import { useSearchParams } from 'next/navigation';
 
 export type SearchParams = {
   city: string;
@@ -27,9 +28,7 @@ async function fetchResults(searchParams: SearchParams) {
   const { city, checkIn, checkOut, page = 1 } = searchParams;
   const baseUrl =
     process.env.NEXT_PUBLIC_BASE_API_URL || 'http://localhost:8000/';
-
   const url = `${baseUrl}/api/properties/search?city=${city}&checkIn=${checkIn}&checkOut=${checkOut}&page=${page}`;
-
   try {
     const response = await axiosInstance().get(url);
     return response.data;
@@ -39,47 +38,62 @@ async function fetchResults(searchParams: SearchParams) {
   }
 }
 
-function SearchPage({ searchParams }: { searchParams: SearchParams }) {
+function SearchPage() {
+  const searchParams = useSearchParams();
   const [results, setResults] = useState<any>({});
-  const [currentPage, setCurrentPage] = useState(searchParams.page || 1);
+  const [currentPage, setCurrentPage] = useState(
+    Number(searchParams.get('page')) || 1,
+  );
   const [loading, setLoading] = useState(true);
   const [finalPrice, setFinalPrice] = useState<string | null>(null);
+
   const { checkIn: reduxCheckIn, checkOut: reduxCheckOut } = useSelector(
     (state: RootState) => state.checkInOut,
   );
 
-  const checkIn = searchParams.checkIn || reduxCheckIn;
-  const checkOut = searchParams.checkOut || reduxCheckOut;
+  const city = searchParams.get('city') || '';
+  const checkIn = searchParams.get('checkIn') || reduxCheckIn;
+  const checkOut = searchParams.get('checkOut') || reduxCheckOut;
 
   useEffect(() => {
     const fetchResultsAndSetState = async () => {
-      setLoading(true); // Set loading to true when starting to fetch data
+      setLoading(true);
       const finalSearchParams = {
-        city: searchParams.city,
+        city,
         checkIn,
         checkOut,
         page: currentPage,
       };
       const fetchedResults = await fetchResults(finalSearchParams);
       setResults(fetchedResults || {});
-
       setLoading(false);
     };
 
-    fetchResultsAndSetState();
-  }, [searchParams, checkIn, checkOut, currentPage]);
+    if (city) {
+      fetchResultsAndSetState();
+    }
+  }, [city, checkIn, checkOut, currentPage]);
 
   const handlePageChange = (newPage: number) => {
     setCurrentPage(newPage);
   };
 
-  if (!searchParams.city || !checkIn || !checkOut) {
-    return <div>Not found</div>;
+  useEffect(() => {
+    console.log('use effect search params starts');
+    console.log('Search Params:', {
+      city,
+      checkIn,
+      checkOut,
+      page: currentPage,
+    });
+  }, [city, checkIn, checkOut, currentPage]);
+
+  if (!city) {
+    return <div>Please enter a city to search</div>;
   }
 
   return (
     <>
-      <Header />
       <section className="flex flex-col min-h-screen">
         <div className="mx-auto max-w-7xl lg:px-4 tracking-tight flex-1">
           <div className="hidden lg:flex py-5">
@@ -150,7 +164,7 @@ function SearchPage({ searchParams }: { searchParams: SearchParams }) {
                     <div className="lg:text-md text-sm truncate lg:w-80 w-40">
                       {property.desc}
                     </div>
-                    <div className="lg:text-md text-sm text-gray-500 truncate">
+                    <div className="lg:text-md text-sm text-gray-500 truncate w-80">
                       {property.city}
                     </div>
 
@@ -180,7 +194,6 @@ function SearchPage({ searchParams }: { searchParams: SearchParams }) {
           onPageChange={handlePageChange}
         />
       </section>
-      <Footer />
     </>
   );
 }

@@ -18,7 +18,7 @@ export type TOrder = {
   payment_proof?: Buffer | null;
   status: Status;
   payment_date?: Date;
-  invoice_id?: string;
+  invoice_id: string;
   createdAt?: Date;
   updatedAt?: Date;
   user: User;

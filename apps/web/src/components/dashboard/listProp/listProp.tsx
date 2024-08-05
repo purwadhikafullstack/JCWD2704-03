@@ -7,6 +7,9 @@ import { useEffect, useState } from 'react';
 import { imageSrc } from '@/utils/imagerender';
 import { Spinner } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import Swal from 'sweetalert2';
+import { useAppSelector } from '@/app/hooks';
+import { User } from '@/models/user.model';
 
 function MyProperty() {
   const [properties, setProperties] = useState<Property[]>([]);
@@ -16,6 +19,7 @@ function MyProperty() {
   const router = useRouter();
   const params = useParams();
   const { propertyId } = params;
+  const user = useAppSelector((state) => state.auth) as User;
 
   useEffect(() => {
     const fetchProperties = async () => {
@@ -37,6 +41,14 @@ function MyProperty() {
   const handlePropertyDetail = async (id: string) => {
     setDetailLoading(true);
     try {
+      if (!user.isVerified) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Please verify your email first',
+          showConfirmButton: true,
+        });
+        return;
+      }
       router.push(`/dashboard/my-property/${id}`);
     } finally {
       setDetailLoading(false);
@@ -46,6 +58,14 @@ function MyProperty() {
   const handleCreateProperty = () => {
     setHostLoading(true);
     try {
+      if (!user.isVerified) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Please verify your email first',
+          showConfirmButton: true,
+        });
+        return;
+      }
       router.push('/dashboard/becomehost/create');
     } finally {
       setHostLoading(false);
@@ -116,7 +136,7 @@ function MyProperty() {
                             : 'https://default-image-url.jpg'
                         }
                         alt={property.name || 'Property image'}
-                        className="rounded-xl"
+                        className="rounded-xl h-60 w-80 object-cover"
                         width=""
                       />
                     </div>

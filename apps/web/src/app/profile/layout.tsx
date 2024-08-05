@@ -7,7 +7,7 @@ import Sidebar from '../../components/Sidebar';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Atcasa',
+  title: 'Atcasa | Profile',
 };
 
 export default function DashboardLayout({

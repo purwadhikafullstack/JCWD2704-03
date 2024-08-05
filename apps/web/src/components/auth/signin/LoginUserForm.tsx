@@ -107,9 +107,10 @@ const LoginForm: React.FC = () => {
                 first_name,
                 last_name,
                 role: 'user',
-                isVerified: 'true', // Assuming the user is verified upon login, adjust accordingly
+                isVerified: 'true',
               }),
             );
+            
           } catch (error) {
             console.error('Error logging in with Google:', error);
           }

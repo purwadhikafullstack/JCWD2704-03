@@ -63,7 +63,6 @@ function MyOrder() {
           },
         },
       );
-      console.log('Response data:', response.data.data);
       const orders: Order[] = response.data.data;
       setOrders(orders);
     } catch (error) {

@@ -45,9 +45,7 @@ export default function ResendEmail() {
     <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden py-6 sm:py-12 bg-white">
       {isLoading && (
         <div className="fixed inset-0 flex items-center justify-center bg-white bg-opacity-75 z-50">
-          <Spinner animation="border" role="status">
-            <span className="visually-hidden">Loading...</span>
-          </Spinner>
+          <Spinner animation="border" role="status"></Spinner>
         </div>
       )}
       <div className="max-w-xl px-3 text-center flex flex-col items-center">
@@ -85,9 +83,7 @@ export default function ResendEmail() {
               role="status"
               size="sm"
               className="me-2"
-            >
-              <span className="visually-hidden">Loading...</span>
-            </Spinner>
+            ></Spinner>
           ) : (
             'Resend e-mail'
           )}

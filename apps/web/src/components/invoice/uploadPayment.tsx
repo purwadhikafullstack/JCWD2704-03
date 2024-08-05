@@ -32,8 +32,6 @@ function FormPaymentProofComponent({ order }: { order: Order }) {
     }
   };
   const [message, setMessage] = useState('');
-  console.log('iddddd', order.id);
-  console.log('test', order.payment_method);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();

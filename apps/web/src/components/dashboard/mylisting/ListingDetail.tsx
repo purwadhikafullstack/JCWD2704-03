@@ -21,7 +21,6 @@ function ListingDetail() {
           `/api/properties/detail/${propertyId}`,
         );
         const property: Property = response.data.data;
-        console.log('isii dataa', response.data);
         setProperty(property);
         setLoading(false); // Set loading to false after the request is complete
       } catch (error) {

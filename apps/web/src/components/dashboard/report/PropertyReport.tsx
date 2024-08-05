@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { axiosInstance } from '@/libs/axios.config';
 import { Sale } from '@/models/sale.model';
 import Spinner from 'react-bootstrap/Spinner';
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 const PropertyReport: React.FC = () => {
   const [sales, setSales] = useState<Sale[]>([]);
