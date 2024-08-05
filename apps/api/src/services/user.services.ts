@@ -120,19 +120,10 @@ class UserService {
     templatePath: string,
     action: 'verify' | 'reverify' | 'changePassword',
   ) {
-
     if (!userEmail) {
       console.error('No recipient email defined');
       return 'No recipient email defined';
     }
-    const verifyToken = createToken({ id: userId }, '1hr');
-    const template = fs
-      .readFileSync(__dirname + pathToEmailTemplate)
-      .toString();
-    const html = render(template, {
-      email: userEmail,
-      verify_url: `${'https://jcwd270403.purwadhikabootcamp.com'}/${verify_url}/${verifyToken}`,
-    });
 
     const template = fs.readFileSync(__dirname + templatePath).toString();
 
@@ -360,15 +351,6 @@ class UserService {
 
         console.log('Preparing to send verification email to:', email);
 
-        const sentEmail = await this.sendingEmail(
-          email,
-          verificationToken,
-          'We received a request to change your e-mail on Atcasa',
-          '/../templates/reverify.html',
-          'reverify',
-        const baseUrl =
-          'https://jcwd270403.purwadhikabootcamp.com' ||
-          'http://localhost:3000';
         const token = createToken(
           {
             id: userId,
@@ -383,19 +365,6 @@ class UserService {
           },
           '1h',
         );
-        const verificationUrl = `${baseUrl}/reverify/${token}`;
-
-        const templatePath = path.join(__dirname, '../templates/reverify.html');
-        let htmlTemplate = fs.readFileSync(templatePath, 'utf-8');
-        const html = htmlTemplate.replace(
-          /{verificationUrl}/g,
-          verificationUrl,
-        );
-
-        if (!sentEmail) {
-          throw new Error('Failed to send verification email');
-        }
-
         console.log('Verification email sent');
       }
 
