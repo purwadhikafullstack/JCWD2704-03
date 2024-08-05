@@ -37,35 +37,29 @@ class ReservationService {
             address: true,
             latitude: true,
             longitude: true,
-            createdAt: true,
-            updatedAt: true,
-            deletedAt: true,
             pic_name: true,
-            Room: true,
-            Order: true,
+            Order: {
+              select: {
+                invoice_id: true,
+                checkIn_date: true,
+                checkOut_date: true,
+                status: true,
+                cancel_date: true,
+              },
+            },
             Review: true,
-            tenant: true,
             RoomCategory: {
               select: {
                 id: true,
                 property_id: true,
                 type: true,
                 guest: true,
-                price: true,
-                peak_price: true,
-                start_date_peak: true,
-                end_date_peak: true,
                 isBreakfast: true,
                 isRefunable: true,
                 isSmoking: true,
                 bed: true,
-                desc: true,
-                createdAt: true,
-                updatedAt: true,
                 deletedAt: true,
                 pic_name: true,
-                Order: true,
-                Room: true,
               },
             },
           },
@@ -138,10 +132,34 @@ class ReservationService {
         updatedAt: 'desc',
       },
       include: {
-        property: true,
-        user: true,
-        RoomCategory: true,
-        OrderRoom: true,
+        property: {
+          select: {
+            name: true,
+            pic_name: true,
+            city: true,
+            address: true,
+            id: true,
+          },
+        },
+        user: {
+          select: {
+            first_name: true,
+          },
+        },
+        RoomCategory: {
+          select: {
+            id: true,
+            pic_name: true,
+            type: true,
+            price: true,
+            peak_price: true,
+            start_date_peak: true,
+            end_date_peak: true,
+            isBreakfast: true,
+            isRefunable: true,
+            isSmoking: true,
+          },
+        },
       },
     });
     return data;
@@ -156,11 +174,29 @@ class ReservationService {
           tenant_id: req.user?.id,
         },
       },
-      include: {
-        property: true,
-        user: true,
-        RoomCategory: true,
-        OrderRoom: true,
+      select: {
+        invoice_id: true,
+        createdAt: true,
+        payment_method: true,
+        checkIn_date: true,
+        checkOut_date: true,
+        status: true,
+        payment_date: true,
+        property: {
+          select: {
+            name: true,
+          },
+        },
+        user: {
+          select: {
+            first_name: true,
+          },
+        },
+        RoomCategory: {
+          select: {
+            type: true,
+          },
+        },
       },
       orderBy: {
         updatedAt: 'desc',
@@ -281,9 +317,28 @@ class ReservationService {
     const order = await prisma.order.findUnique({
       where: { id: orderId },
       include: {
-        property: true,
+        property: {
+          select: {
+            name: true,
+            city: true,
+            address: true,
+            id: true,
+            pic_name: true,
+          },
+        },
         OrderRoom: true,
-        RoomCategory: true,
+        RoomCategory: {
+          select: {
+            id: true,
+            property_id: true,
+            type: true,
+            price: true,
+            peak_price: true,
+            start_date_peak: true,
+            end_date_peak: true,
+            pic_name: true,
+          },
+        },
       },
     });
     if (!order) {
