@@ -58,7 +58,7 @@ const Callback = () => {
                     last_name,
                     role: 'user',
                   });
-                  router.push('/');
+                  window.location.reload();
                 } else if (userType === 'tenant') {
                   await axiosInstance().post('/api/users/v5', {
                     email,
@@ -67,7 +67,7 @@ const Callback = () => {
                     last_name,
                     role: 'tenant',
                   });
-                  router.push('/dashboard');
+                  window.location.reload();
                 }
               } catch (error) {
                 console.error('Error logging in with Google:', error);

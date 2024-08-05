@@ -126,7 +126,7 @@ function UpdateProperty() {
     }).then((result) => {
       if (result.isConfirmed) {
         formik.handleSubmit();
-        router.push('/dashboard/my-property');
+        router.push(`/dashboard/my-property/${id}`);
       }
     });
   };

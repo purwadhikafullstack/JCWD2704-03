@@ -187,6 +187,7 @@ function UpdateRoom() {
       if (result.isConfirmed) {
         try {
           const formData = new FormData();
+
           formData.append('pic', values.pic);
           formData.append('type', values.type);
           formData.append('guest', values.guest.toString());
@@ -341,6 +342,18 @@ function UpdateRoom() {
     event?: React.SyntheticEvent,
   ) => {
     formik.setFieldValue(field, date);
+  };
+
+  const handleBreakfastChange = () => {
+    const newValue = !formik.values.isBreakfast;
+
+    formik.setFieldValue('isBreakfast', newValue);
+  };
+
+  const handleSmokingChange = () => {
+    const newValue = !formik.values.isSmoking;
+ 
+    formik.setFieldValue('isSmoking', newValue);
   };
 
   return (
@@ -594,12 +607,7 @@ function UpdateRoom() {
                           ? 'border-2 border-zinc-600 bg-zinc-200'
                           : ''
                       }`}
-                      onClick={() =>
-                        formik.setFieldValue(
-                          'isBreakfast',
-                          !formik.values.isBreakfast,
-                        )
-                      }
+                      onClick={handleBreakfastChange}
                     >
                       <div className="text-3xl">
                         <PiForkKnife />
@@ -613,12 +621,7 @@ function UpdateRoom() {
                           ? 'border-2 border-zinc-600 bg-zinc-200'
                           : ''
                       }`}
-                      onClick={() =>
-                        formik.setFieldValue(
-                          'isSmoking',
-                          !formik.values.isSmoking,
-                        )
-                      }
+                      onClick={handleSmokingChange}
                     >
                       <div className="text-3xl">
                         <LiaSmokingSolid />

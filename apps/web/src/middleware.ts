@@ -101,6 +101,14 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/', request.url));
   }
 
+  if (pathname.startsWith('/reverify')) {
+    if (validate && is_verified && isGuest) {
+      return NextResponse.redirect(new URL('/', request.url));
+    } else if (validate && is_verified && !isGuest) {
+      return NextResponse.redirect(new URL('/dashboard', request.url));
+    }
+  }
+
   if (
     validate &&
     !isGuest &&
@@ -133,5 +141,6 @@ export const config = {
     '/property/:path*',
     '/success',
     '/profile/:path*',
+    '/reverify/:path*',
   ],
 };

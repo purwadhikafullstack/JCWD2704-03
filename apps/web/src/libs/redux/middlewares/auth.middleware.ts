@@ -107,54 +107,6 @@ export const tenantLogin = ({ email, password }: UserLoginPayload) => {
   };
 };
 
-// export const userLogin = ({ email, password }: UserLoginPayload) => {
-//   return async (dispatch: Dispatch) => {
-//     try {
-//       const response = await axiosInstance().post(
-//         'api/users/v6',
-//         {
-//           email,
-//           password,
-//         },
-//         {
-//           withCredentials: true,
-//         },
-//       );
-
-//       // Extract data from the response
-//       const { role, url } = response.data;
-
-//       if (role === 'tenant') {
-//         toast.error('Please log in on the guest login page.');
-//         return;
-//       }
-
-//       if (role === 'user') {
-//         const access_token = getCookie('access_token') || '';
-//         if (access_token) {
-//           const user: User = jwtDecode(access_token);
-//           dispatch(login(user));
-//         }
-//         return { role, url };
-//       }
-//     } catch (err: unknown) {
-//       if (axios.isAxiosError(err)) {
-//         if (err.response) {
-//           if (err.response.data.error === 'Unauthorized') {
-//             toast.error('Please log in on the guest login page.');
-//           } else {
-//             toast.error('Wrong email/password');
-//           }
-//         } else {
-//           toast.error('An unexpected error occurred.');
-//         }
-//       } else {
-//         toast.error('An unexpected error occurred.');
-//       }
-//     }
-//   };
-// };
-
 export const keepLogin = () => {
   return async (dispatch: Dispatch) => {
     try {
@@ -162,19 +114,8 @@ export const keepLogin = () => {
       if (token) {
         dispatch(login(jwtDecode(token)));
       }
-      // const res = await axiosInstance().get("/users", {
-      //   params: { username: storage.username },
-      // });
-      // const user: TUser = res.data[0];
-
-      // if (user.id) {
-      //   dispatch(login(user));
-      // }
-      // return;
     } catch (err: any) {
       deleteCookie('access_token');
-      // window.location.reload();
-      // return err.message;
     }
   };
 };

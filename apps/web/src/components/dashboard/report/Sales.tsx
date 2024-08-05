@@ -4,6 +4,7 @@ import { Sale } from '@/models/sale.model';
 import React, { useState, useEffect } from 'react';
 import { IoIosArrowForward } from 'react-icons/io';
 import { IoIosArrowBack } from 'react-icons/io';
+import Spinner from 'react-bootstrap/Spinner';
 
 const Sales: React.FC = () => {
   const [sales, setSales] = useState<Sale[]>([]);
@@ -13,6 +14,7 @@ const Sales: React.FC = () => {
   const [limit, setLimit] = useState(10);
   const [endDate, setEndDate] = useState('');
   const [totalPages, setTotalPages] = useState(1);
+  const [loading, setLoading] = useState(true);
   const fetchSales = async () => {
     try {
       const response = await axiosInstance().get('/api/sales/all', {
@@ -25,10 +27,11 @@ const Sales: React.FC = () => {
         },
       });
       setSales(response.data.data.sales);
-      console.log('data all sales', response.data.data);
       setTotalPages(response.data.data.totalPages);
     } catch (error) {
       console.error('Error fetching sales data:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -41,6 +44,15 @@ const Sales: React.FC = () => {
   const handlePageChange = (newPage: number) => {
     setPage(newPage);
   };
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center">
+        <Spinner animation="border" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </Spinner>
+      </div>
+    );
+  }
   return (
     <div className="">
       <h1 className="text-2xl font-bold mb-4">Sales Report</h1>
