@@ -3,7 +3,7 @@ import { Request, Response } from 'express';
 import { comparePassword, hashPassword } from '../libs/bcrypt';
 import { createToken } from '../libs/jwt';
 import { transporter } from '../libs/nodemailer';
-import { SECRET_KEY } from '../configs/config';
+import { BASE_WEB_URL, SECRET_KEY } from '../configs/config';
 import { verify } from 'jsonwebtoken';
 import fs from 'fs';
 import path, { join } from 'path';
@@ -105,7 +105,7 @@ class UserService {
       .toString();
     const html = render(template, {
       email: userEmail,
-      verify_url: `${process.env.BASE_WEB_URL}/${verify_url}/${verifyToken}`,
+      verify_url: `${BASE_WEB_URL}/${verify_url}/${verifyToken}`,
     });
 
     let returnFromTransporter = await transporter
@@ -246,7 +246,6 @@ class UserService {
 
         console.log('Preparing to send verification email to:', email);
 
-        const baseUrl = process.env.BASE_WEB_URL || 'http://localhost:3000';
         const token = createToken(
           {
             id: userId,
@@ -261,7 +260,7 @@ class UserService {
           },
           '1h',
         );
-        const verificationUrl = `${baseUrl}/reverify/${token}`;
+        const verificationUrl = `${BASE_WEB_URL}/reverify/${token}`;
 
         const templatePath = path.join(__dirname, '../templates/reverify.html');
         let htmlTemplate = fs.readFileSync(templatePath, 'utf-8');
