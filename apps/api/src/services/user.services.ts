@@ -246,7 +246,9 @@ class UserService {
 
         console.log('Preparing to send verification email to:', email);
 
-        const baseUrl = process.env.BASE_WEB_URL || 'http://localhost:3000';
+        const baseUrl =
+          'https://jcwd270403.purwadhikabootcamp.com' ||
+          'http://localhost:3000';
         const token = createToken(
           {
             id: userId,
