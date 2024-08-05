@@ -52,7 +52,11 @@ export const keepLogin = () => {
       // }
       // return;
     } catch (err: any) {
-      deleteCookie('access_token');
+      deleteCookie('access_token', {
+        domain: 'purwadhikabootcamp.com',
+        sameSite: 'strict',
+        secure: true,
+      });
       console.error('Error in keepLogin:', err.message);
     }
   };
