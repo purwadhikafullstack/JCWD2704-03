@@ -25,8 +25,16 @@ export const userSlice = createSlice({
       return state;
     },
     logout: (state) => {
-      deleteCookie('access_token');
-      deleteCookie('refresh_token');
+      deleteCookie('access_token', {
+        domain: 'purwadhikabootcamp.com',
+        sameSite: 'strict',
+        secure: true,
+      });
+      deleteCookie('refresh_token', {
+        domain: 'purwadhikabootcamp.com',
+        sameSite: 'strict',
+        secure: true,
+      });
       return initialUser;
     },
   },
