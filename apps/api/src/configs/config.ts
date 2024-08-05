@@ -6,7 +6,11 @@ export const PORT = process.env.PORT || 6000;
 export const SECRET_KEY = process.env.SECRET_KEY || '';
 
 export const corsOptions: CorsOptions = {
-  origin: process.env.BASE_WEB_URL,
+
+  origin: [
+    'http://localhost:3000',
+    'https://jcwd270403.purwadhikabootcamp.com',
+  ],
   methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
   credentials: true,
   allowedHeaders: 'Content-Type,Authorization',

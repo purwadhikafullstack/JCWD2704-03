@@ -105,7 +105,7 @@ class UserService {
       .toString();
     const html = render(template, {
       email: userEmail,
-      verify_url: `${process.env.BASE_WEB_URL}/${verify_url}/${verifyToken}`,
+      verify_url: `${'https://jcwd270403.purwadhikabootcamp.com'}/${verify_url}/${verifyToken}`,
     });
 
     let returnFromTransporter = await transporter
