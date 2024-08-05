@@ -19,7 +19,7 @@ function DeniedOrder() {
     const fetchOrders = async () => {
       try {
         const response = await axiosInstance().get(
-          `http://localhost:8000/api/reservations/${orderId}`,
+          `/api/reservations/${orderId}`,
         );
         const order: Order = response.data.data;
         setOrders(order);
@@ -45,7 +45,7 @@ function DeniedOrder() {
       if (result.isConfirmed) {
         try {
           const response = await axiosInstance().patch(
-            `http://localhost:8000/api/reservations/tenant/order/denied/${orderId}`,
+            `/api/reservations/tenant/order/denied/${orderId}`,
           );
           Swal.fire({
             title: 'Deny',
@@ -99,10 +99,10 @@ function DeniedOrder() {
       }
     });
   };
+
+  const baseURL = process.env.NEXT_PUBLIC_BASE_API_URL;
   const handleSeeProofment = async () => {
-    window.open(
-      `http://localhost:8000/api/reservations/payment/image/${orderId}`,
-    );
+    window.open(`${baseURL}/api/reservations/payment/image/${orderId}`);
   };
   if (loading) {
     return (

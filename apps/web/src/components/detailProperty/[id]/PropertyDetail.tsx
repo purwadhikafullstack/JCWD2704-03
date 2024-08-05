@@ -20,6 +20,8 @@ import ChangeDateCalendar from '@/components/property/ChangeDateCalendar';
 import { Review } from '@/models/review.modal';
 import { FaStar } from 'react-icons/fa6';
 import { Spinner } from 'react-bootstrap';
+import Swal from 'sweetalert2';
+import { useAppSelector } from '@/app/hooks';
 
 interface RoomPriceProps {
   roomCategory: RoomCategory;
@@ -36,6 +38,7 @@ function PropertyDetail() {
   const { name } = useParams();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const user = useAppSelector((state) => state.auth);
 
   const [property, setProperty] = useState<Property | null>(null);
   const [roomCategories, setRoomCategories] = useState<RoomCategory[]>([]);
@@ -126,6 +129,14 @@ function PropertyDetail() {
     totalPrice: number,
     roomIds: string[],
   ) => {
+    if (!user || !user.isVerified) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Please verify your email first',
+        showConfirmButton: true,
+      });
+      return;
+    }
     const roomIdsParam = roomIds.join('-');
     router.push(
       `/reservation/${roomCategoryId}?checkIn=${checkIn}&checkOut=${checkOut}&total=${totalPrice}&Ids=${roomIdsParam}`,
@@ -342,13 +353,13 @@ function PropertyDetail() {
                 return (
                   <div
                     key={roomCategory.id}
-                    className="room-category p-3 shadow-sm flex items-center gap-4 rounded-lg text-sm"
+                    className="room-category p-3 shadow-sm flex flex-col lg:flex-row items-center lg:gap-10 rounded-lg text-sm"
                   >
                     <div className="">
                       <img
                         src={`${imageSrcRoom}${roomCategory?.pic_name}`}
                         alt="Room picture"
-                        className="w-40 h-40 lg:w-80 lg:h-72 object-cover rounded-lg"
+                        className="w-[450px] h-60 lg:w-96 lg:h-72 object-cover rounded-lg"
                       />
                     </div>
 

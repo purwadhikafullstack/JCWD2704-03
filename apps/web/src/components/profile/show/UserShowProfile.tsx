@@ -103,7 +103,7 @@ function UserShowProfile() {
             0,
           ) / ratedProperties.length
         ).toFixed(1)
-      : 'No rating available';
+      : '0';
 
   return (
     <>
@@ -111,7 +111,7 @@ function UserShowProfile() {
         <div className="lg:p-10 p-10 w-3/4">
           <div className="flex lg:flex-row lg:justify-between flex-col tracking-tighter gap-4 lg:gap-5">
             {/* CARD PROFILE */}
-            <div className="rounded-2xl shadow-lg p-2 flex flex-row lg:w-1/2 lg:h-80">
+            <div className="rounded-2xl shadow-lg lg:p-2 py-3 flex flex-row lg:w-1/2 lg:h-80">
               <div className="flex flex-row w-full justify-between items-center px-10 lg:h-72 gap-5">
                 {/* IMAGE & NAME*/}
                 <div className="flex flex-col items-center gap-3">
@@ -139,7 +139,7 @@ function UserShowProfile() {
                   </div>
 
                   <div className="flex flex-col items-center">
-                    <div className="lg:text-xl text-lg  font-semibold flex items-center gap-2">
+                    <div className="lg:text-xl text-base  font-semibold flex items-center gap-2">
                       {user.first_name} {user.last_name}
                       {user.isVerified && (
                         <span className="text-[#ED777B]">
@@ -294,7 +294,7 @@ function UserShowProfile() {
                         passHref
                         className="text-black"
                       >
-                        <div className="flex-none w-60 h-72 p-2 rounded-lg border border-gray-300 hover:shadow-lg cursor-pointer">
+                        <div className="flex-none w-60 h-64 p-2 rounded-lg border border-gray-300 hover:shadow-lg cursor-pointer">
                           <img
                             src={`${imageSrc}${property.pic_name}`}
                             alt={property.name}
@@ -314,7 +314,7 @@ function UserShowProfile() {
                             </div>
                           </div>
                           <div className="text-sm ">{property.category}</div>
-                          <div className="text-sm text-gray-500">
+                          <div className="text-sm text-gray-500 truncate w-48">
                             {property.city}
                           </div>
                         </div>

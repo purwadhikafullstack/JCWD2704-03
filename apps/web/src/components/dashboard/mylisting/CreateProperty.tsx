@@ -151,6 +151,29 @@ function CreateProperty() {
     });
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.currentTarget.files) {
+      const selectedFile = e.currentTarget.files[0];
+
+      // Check file size
+      if (selectedFile.size > 1048576) {
+        // 1MB = 1048576 bytes
+        toast.error('File size exceeds 1MB. Please select a smaller file.', {
+          position: 'bottom-right',
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+        });
+        return;
+      }
+
+      formik.setFieldValue('pic', selectedFile);
+    }
+  };
+
   const { isLoaded, loadError } = useLoadScript({
     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '',
     libraries,
@@ -231,6 +254,7 @@ function CreateProperty() {
 
   return (
     <>
+      <ToastContainer />
       <div className="tracking-tighter lg:px-10">
         <div className="flex justify-center items-center">
           <div className="w-full">
@@ -457,11 +481,7 @@ function CreateProperty() {
                       hidden
                       accept="image/*"
                       // className="w-full h-10"
-                      onChange={(e) => {
-                        if (e.currentTarget.files) {
-                          formik.setFieldValue('pic', e.currentTarget.files[0]);
-                        }
-                      }}
+                      onChange={handleFileChange}
                     />
 
                     {formik.errors.pic && (

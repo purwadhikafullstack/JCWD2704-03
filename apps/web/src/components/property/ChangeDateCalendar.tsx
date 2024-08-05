@@ -33,6 +33,15 @@ const ChangeDateCalendar: React.FC = () => {
     return urlParams.get(param) || defaultValue;
   };
 
+  const getDayAfter = (dateStr: string) => {
+    const date = new Date(dateStr);
+    date.setDate(date.getDate() + 1);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
   const initialValues = {
     checkIn: getInitialDate('checkIn', getTodayDate()),
     checkOut: getInitialDate('checkOut', getTomorrowDate()),
@@ -63,12 +72,11 @@ const ChangeDateCalendar: React.FC = () => {
     if (name === 'checkIn') {
       setFieldValue(name, value);
       setCheckInDate(value);
-      formikRef.current?.setFieldValue(
-        'checkOut',
-        value > formikRef.current.values.checkOut
-          ? value
-          : formikRef.current.values.checkOut,
-      );
+      const newCheckOutDate = new Date(value);
+      newCheckOutDate.setDate(newCheckOutDate.getDate() + 1);
+      const formattedCheckOutDate = newCheckOutDate.toISOString().split('T')[0];
+      setFieldValue('checkOut', formattedCheckOutDate);
+      setCheckOutDate(formattedCheckOutDate);
     } else if (name === 'checkOut') {
       const checkIn = formikRef.current?.values.checkIn;
       if (new Date(value) < new Date(checkIn)) {
@@ -153,8 +161,12 @@ const ChangeDateCalendar: React.FC = () => {
                           name="checkOut"
                           className="border-none text-gray-900 text-sm rounded-lg focus:ring-zinc-100 focus:border-zinc-100 focus:shadow-lg focus:bg-white block py-2 w-full border-zinc-200 border"
                           placeholder="Select date end"
-                          defaultValue={initialValues.checkOut}
-                          min={checkInDate}
+                          value={checkOutDate}
+                          min={
+                            new Date(new Date(checkInDate).getTime() + 86400000)
+                              .toISOString()
+                              .split('T')[0]
+                          }
                           onChange={(e: any) =>
                             handleDateChange(e, setFieldValue)
                           }

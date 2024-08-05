@@ -14,7 +14,6 @@ const HomePage = () => {
         <HomeHero />
         <HomePromo />
         <HomePopularDestination />
-        {/* <HomeFeaturedProperties /> */}
       </div>
       <Footer />
     </div>

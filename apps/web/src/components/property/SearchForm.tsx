@@ -12,6 +12,12 @@ import { axiosInstance } from '@/libs/axios.config';
 
 const libraries: Libraries = ['places'];
 
+interface SearchFormValues {
+  city: string;
+  checkIn: string;
+  checkOut: string;
+}
+
 const SearchForm: React.FC = () => {
   const router = useRouter();
   const autocompleteInputRef = useRef<HTMLInputElement>(null);
@@ -46,7 +52,7 @@ const SearchForm: React.FC = () => {
     checkOut: Yup.string().required('Check-out date is required'),
   });
 
-  const handleSearchSubmit = async (values: any) => {
+  const handleSearchSubmit = async (values: SearchFormValues) => {
     try {
       const response = await axiosInstance().get(`/api/properties/search`, {
         params: {
@@ -79,9 +85,10 @@ const SearchForm: React.FC = () => {
       autocomplete.addListener('place_changed', () => {
         const place = autocomplete.getPlace();
         if (place.address_components && formikRef.current) {
+          const city = place.formatted_address;
           formikRef.current.setValues({
             ...formikRef.current.values,
-            city: place.formatted_address,
+            city,
           });
         }
       });
@@ -105,14 +112,19 @@ const SearchForm: React.FC = () => {
             <Formik
               initialValues={initialValues}
               validationSchema={validationSchema}
-              onSubmit={(values) => {
-                router.push(
-                  `/search?city=${values.city}&checkIn=${values.checkIn}&checkOut=${values.checkOut}&page=1`,
-                );
+              onSubmit={(values: SearchFormValues) => {
+                // Ensure typing here
+                if (values.city) {
+                  router.push(
+                    `/search?city=${encodeURIComponent(values.city)}&checkIn=${values.checkIn}&checkOut=${values.checkOut}&page=1`,
+                  );
+                } else {
+                  console.error('City is required');
+                }
               }}
               innerRef={formikRef}
             >
-              {({ isSubmitting, handleChange }) => (
+              {({ isSubmitting, handleChange, values }) => (
                 <Form className="shadow-xl border-zinc-800 rounded-xl m-4 p-4 text-zinc-800 lg:w-[800px] w-96 bg-white">
                   <div className="flex flex-col gap-3">
                     <div>
@@ -130,6 +142,7 @@ const SearchForm: React.FC = () => {
                           className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                           placeholder="Search destination"
                           onChange={handleChange}
+                          value={values.city}
                         />
                       </div>
                     </div>

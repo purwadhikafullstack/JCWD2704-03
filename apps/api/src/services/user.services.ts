@@ -43,7 +43,6 @@ class UserService {
       });
       console.log('New user created:', newUser);
 
-      // TODO: GANTI TEMPLATENYA
       let sentEmail = await this.sendingEmail(
         newUser.id,
         newUser.email,
@@ -100,12 +99,7 @@ class UserService {
     emailSubject: string,
     verify_url: string,
   ) {
-    // const tokenStore: Record<string, { used: boolean }> = {};
-
     const verifyToken = createToken({ id: userId }, '1hr');
-
-    // tokenStore[verifyToken] = { used: false };
-
     const template = fs
       .readFileSync(__dirname + pathToEmailTemplate)
       .toString();
@@ -150,17 +144,14 @@ class UserService {
     }
 
     if (existingUser.isVerified) {
-      // Redirect to home if already verified
       return { redirectUrl: '/' };
     }
 
-    // Update user to verified
     await prisma.user.update({
       where: { id: decodedToken.id },
       data: { isVerified: true },
     });
 
-    // After verification, redirect to the form page where the user will submit additional info
     return { redirectUrl: `/verify/${token}` };
   }
 
