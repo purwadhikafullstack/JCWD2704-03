@@ -68,7 +68,7 @@ const LoginForm: React.FC = () => {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${process.env.NEXT_PUBLIC_BASE_WEB_URL}/auth/callback?userType=tenant`,
+          redirectTo: `${'https://jcwd270403.purwadhikabootcamp.com'}/auth/callback?userType=tenant`,
         },
       });
 
@@ -94,8 +94,16 @@ const LoginForm: React.FC = () => {
               role: 'tenant',
             });
 
-            setCookie('access_token', session.access_token);
-            setCookie('refresh_token', session.refresh_token);
+            setCookie('access_token', session.access_token, {
+              secure: true,
+              domain: 'purwadhikabootcamp.com',
+              sameSite: 'strict',
+            });
+            setCookie('refresh_token', session.refresh_token, {
+              secure: true,
+              domain: 'purwadhikabootcamp.com',
+              sameSite: 'strict',
+            });
 
             dispatch(
               login({

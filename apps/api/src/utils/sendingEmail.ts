@@ -4,5 +4,5 @@ export function generateVerificationUrl(
   verificationToken: string,
   action: 'verify' | 'reverify' | 'changePassword',
 ): string {
-  return `${BASE_WEB_URL}/${action}/${verificationToken}`;
+  return `${'https://jcwd270403.purwadhikabootcamp.com'}/${action}/${verificationToken}`;
 }
