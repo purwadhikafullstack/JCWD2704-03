@@ -29,8 +29,13 @@ export class UserController {
   async sendVerif(req: Request, res: Response, next: NextFunction) {
     try {
       const result = await usersServices.sendVerification(req);
-      if (result?.redirectUrl) {
-        res.redirect(result.redirectUrl);
+
+      if (result) {
+        res.status(200).json({
+          isVerified: result.isVerified,
+          message: result.message,
+          user: result.user,
+        });
       } else {
         res.status(400).send({ message: 'Verification failed' });
       }
@@ -38,6 +43,23 @@ export class UserController {
       next(error);
     }
   }
+
+  async verifyTokenUser(req: Request, res: Response, next: NextFunction) {
+    try {
+      const result = await authService.verifyTokenUser(req);
+
+      if (result) {
+        res.status(200).json({
+          result,
+        });
+      } else {
+        res.status(400).send({ message: 'Verification failed' });
+      }
+    } catch (error) {
+      next(error);
+    }
+  }
+
   async userEntryData(req: Request, res: Response, next: NextFunction) {
     try {
       const updatedUser = await usersServices.userEntryData(req);
@@ -50,13 +72,21 @@ export class UserController {
     }
   }
 
-  async resendEmail(req: Request, res: Response, next: NextFunction) {
+  async resendEmail(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
     try {
-      let { email, message } = await usersServices.resendVerification(req);
-      res.status(201).send({
-        message,
-        email,
-      });
+      const result = await usersServices.resendVerification(req);
+
+      if (result.message === 'Internal server error') {
+        res.status(500).send({ message: result.message });
+      } else {
+        res
+          .status(200)
+          .send({ message: result.message, email: result.email || '' });
+      }
     } catch (error) {
       next(error);
     }
@@ -91,6 +121,12 @@ export class UserController {
       const { accessToken, refreshToken } =
         await authService.tenantGoogleLogin(req);
       res
+        .cookie('access_token', accessToken, {
+          secure: true,
+          domain: 'purwadhikabootcamp.com',
+          sameSite: 'strict',
+        })
+
         .cookie('refresh_token', refreshToken, {
           secure: true,
           domain: 'purwadhikabootcamp.com',

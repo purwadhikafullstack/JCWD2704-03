@@ -49,7 +49,7 @@ const PasswordResetForm = () => {
 
   return (
     <>
-      <div className="w-screen h-screen flex flex-col items-center justify-center">
+      <div className="w-screen h-screen flex flex-col items-center justify-center tracking-tighter">
         {/* HEADER SECTION */}
         <div className="mb-3 flex items-center justify-center flex-col">
           <Link href="/">

@@ -126,7 +126,7 @@ function DeniedOrder() {
             <div className=" bg-white grid place-items-center">
               <img
                 src={
-                  order.property.pic_name
+                  order.RoomCategory.pic_name
                     ? `${imageSrcRoom}${order.RoomCategory.pic_name}`
                     : 'https://images.pexels.com/photos/4381392/pexels-photo-4381392.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500'
                 }

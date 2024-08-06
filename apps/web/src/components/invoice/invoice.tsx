@@ -112,8 +112,8 @@ const Invoice = () => {
                       {order?.invoice_id}
                     </div>
                   </div>
-                  {order.payment_method !== 'gopay' &&
-                    order.payment_method !== 'qris' && (
+                  {order.payment_method !== 'GOPAY' &&
+                    order.payment_method !== 'SHOPEE' && (
                       <div className="flex flex-row justify-between">
                         <div>
                           <div className="font-normal">
@@ -156,8 +156,8 @@ const Invoice = () => {
               </div>
               <div className="flex flex-col items-center gap-4 pt-4 text-center">
                 <div>
-                  {order.payment_method === 'gopay' ||
-                  order.payment_method === 'qris' ? (
+                  {order.payment_method === 'GOPAY' ||
+                  order.payment_method === 'SHOPEE' ? (
                     <div className="font-semibold text-blue-700">
                       Please click here to pay your order.{' '}
                     </div>
@@ -170,8 +170,8 @@ const Invoice = () => {
                 </div>
                 {/* isi form */}
                 {order.status !== 'success' &&
-                (order.payment_method === 'gopay' ||
-                  order.payment_method === 'qris') ? (
+                (order.payment_method === 'GOPAY' ||
+                  order.payment_method === 'SHOPEE') ? (
                   <button
                     className="text-white bg-gray-800 hover:bg-gray-900 focus:outline-none focus:ring-4 focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-gray-800 dark:hover:bg-gray-700 dark:focus:ring-gray-700 dark:border-gray-700"
                     onClick={handleLinkPayment}

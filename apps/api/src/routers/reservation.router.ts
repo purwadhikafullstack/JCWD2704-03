@@ -15,7 +15,8 @@ class ReservationRouter {
     this.router.get('/:orderId', reservationController.getOrderByOrderId);
     this.router.get(
       '/user/myOrder',
-
+      verifyUser,
+      verifyBuyer,
       reservationController.getOrderByUserId,
     );
     this.router.get(

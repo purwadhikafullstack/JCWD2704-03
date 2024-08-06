@@ -75,12 +75,14 @@ const UserReport: React.FC = () => {
               onClick={() => requestSort('total_sales')}
             >
               Total Sales
+              {sortBy === 'total_sales' && (order === 'asc' ? '↑' : '↓')}
             </th>
             <th
               className="py-3 px-6 text-left cursor-pointer"
               onClick={() => requestSort('total_orders')}
             >
               Total Orders
+              {sortBy === 'total_orders' && (order === 'asc' ? '↑' : '↓')}
             </th>
           </tr>
         </thead>

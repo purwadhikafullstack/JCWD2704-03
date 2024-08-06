@@ -97,13 +97,13 @@ function EditProfileForm() {
         });
 
         dispatch(login(fetchedUser));
-        // window.location.reload();
+        window.location.reload();
       } catch (error) {
         if (error instanceof AxiosError) {
           alert(error.response?.data.message);
         }
       } finally {
-        setLoading(false); // Reset loading state after submission
+        setLoading(false);
       }
     },
   });

@@ -3,7 +3,7 @@ import { Request, Response } from 'express';
 import { comparePassword, hashPassword } from '../libs/bcrypt';
 import { createToken } from '../libs/jwt';
 import { transporter } from '../libs/nodemailer';
-import { SECRET_KEY } from '../configs/config';
+import { BASE_WEB_URL, SECRET_KEY } from '../configs/config';
 import { verify } from 'jsonwebtoken';
 import fs from 'fs';
 import path, { join } from 'path';
@@ -12,6 +12,8 @@ import { prisma } from '../libs/prisma';
 import type { Prisma } from '@prisma/client';
 import sharp from 'sharp';
 import shortid from 'shortid';
+import { addHours } from 'date-fns';
+import { generateVerificationUrl } from '@/utils/sendingEmail';
 
 class UserService {
   async userRegisterEmail(req: Request) {
@@ -21,12 +23,7 @@ class UserService {
     console.log('User email:', email);
 
     try {
-      const existingUser = await prisma.user.findMany({
-        where: {
-          email,
-        },
-      });
-      console.log('Existing user:', existingUser);
+      const existingUser = await prisma.user.findMany({ where: { email } });
 
       if (existingUser.length) {
         const error = new Error('Email has already been registered');
@@ -43,17 +40,28 @@ class UserService {
       });
       console.log('New user created:', newUser);
 
+      const verificationToken = createToken({ id: newUser.id }, '1h');
+      const tokenExpiration = addHours(new Date(), 1);
+
+      await prisma.user.update({
+        where: { id: newUser.id },
+        data: {
+          verificationToken,
+          tokenExpiration,
+        },
+      });
+
       let sentEmail = await this.sendingEmail(
-        newUser.id,
         newUser.email,
-        '/../templates/verification.html',
+        verificationToken,
         'Confirm Your Email Address For Atcasa',
+        '/../templates/verification.html',
         'verify',
       );
       console.log('Email sent:', sentEmail);
     } catch (error) {
       console.error('Error in userRegisterEmail:', error);
-      throw error; // Rethrow the error after logging it
+      throw error;
     }
   }
 
@@ -62,43 +70,61 @@ class UserService {
 
     const { email } = req.body;
     console.log('Tenant input email:', email);
-    console.log(req.user);
 
-    const existingUser = await prisma.user.findMany({
-      where: {
-        email,
-      },
-    });
-    console.log('Existing user check result:', existingUser);
+    try {
+      const existingUser = await prisma.user.findMany({ where: { email } });
 
-    if (existingUser.length) throw new Error('Email has already been used');
+      if (existingUser.length) {
+        const error = new Error('Email has already been registered');
+        (error as any).statusCode = 409;
+        throw error;
+      }
 
-    const newUser = await prisma.user.create({
-      data: {
-        email,
-        role: 'tenant',
-        isVerified: false,
-      },
-    });
-    console.log('New user created:', newUser);
+      const newUser = await prisma.user.create({
+        data: {
+          email,
+          role: 'tenant',
+          isVerified: false,
+        },
+      });
+      console.log('New user created:', newUser);
 
-    // TODO: GANTI TEMPLATENYA
-    let sentEmail = await this.sendingEmail(
-      newUser.id,
-      newUser.email,
-      '/../templates/verification.html',
-      'Confirm Your Email Address For Atcasa',
-      'verify',
-    );
+      const verificationToken = createToken({ id: newUser.id }, '1h');
+      const tokenExpiration = addHours(new Date(), 1);
+
+      await prisma.user.update({
+        where: { id: newUser.id },
+        data: {
+          verificationToken,
+          tokenExpiration,
+        },
+      });
+
+      let sentEmail = await this.sendingEmail(
+        newUser.email,
+        verificationToken,
+        'Confirm Your Email Address For Atcasa',
+        '/../templates/verification.html',
+        'verify',
+      );
+    } catch (error) {
+      console.error('Error in tenantRegisterEmail:', error);
+      throw error;
+    }
   }
 
   async sendingEmail(
-    userId: string,
     userEmail: string,
-    pathToEmailTemplate: string,
+    verificationToken: string,
     emailSubject: string,
-    verify_url: string,
+    templatePath: string,
+    action: 'verify' | 'reverify' | 'changePassword',
   ) {
+
+    if (!userEmail) {
+      console.error('No recipient email defined');
+      return 'No recipient email defined';
+    }
     const verifyToken = createToken({ id: userId }, '1hr');
     const template = fs
       .readFileSync(__dirname + pathToEmailTemplate)
@@ -108,51 +134,103 @@ class UserService {
       verify_url: `${'https://jcwd270403.purwadhikabootcamp.com'}/${verify_url}/${verifyToken}`,
     });
 
-    let returnFromTransporter = await transporter
-      .sendMail({
+    const template = fs.readFileSync(__dirname + templatePath).toString();
+
+    const verifyUrl = generateVerificationUrl(verificationToken, action);
+
+    const html = template
+      .replace('{{verify_url}}', verifyUrl)
+      .replace('{{email_subject}}', emailSubject);
+
+    try {
+      await transporter.sendMail({
         to: userEmail,
         subject: emailSubject,
         html,
-      })
-      .then(() => 'Email sent successfully')
-      .catch((error) => error.message);
-
-    return returnFromTransporter;
+      });
+      return 'Email sent successfully';
+    } catch (error) {
+      if (error instanceof Error) {
+        console.error('Error message:', error.message);
+      } else {
+        console.error('Unexpected error:', error);
+      }
+    }
   }
 
   async sendVerification(req: Request) {
     const { token } = req.params;
 
     if (!token) {
+      console.error('Token is missing');
       throw new Error('Token is missing');
     }
 
-    const decodedToken = verify(token, process.env.SECRET_KEY as string) as {
-      id: string;
-    };
+    try {
+      console.log('Received token:', token);
 
-    if (!decodedToken || !decodedToken.id) {
-      throw new Error('Invalid token');
+      const decodedToken = verify(token, process.env.SECRET_KEY as string) as {
+        id: string;
+      };
+
+      console.log('Decoded token:', decodedToken);
+
+      if (!decodedToken || !decodedToken.id) {
+        console.error('Invalid token');
+        return { isVerified: false, message: 'Invalid token', user: null };
+      }
+
+      const existingUser = await prisma.user.findUnique({
+        where: { id: decodedToken.id },
+      });
+
+      console.log('Existing user:', existingUser);
+
+      if (!existingUser) {
+        console.error('User not found');
+        return { isVerified: false, message: 'User not found', user: null };
+      }
+
+      if (
+        existingUser.tokenExpiration &&
+        new Date() > new Date(existingUser.tokenExpiration)
+      ) {
+        console.error('Token has expired');
+        return { isVerified: false, message: 'Token has expired', user: null };
+      }
+
+      if (existingUser.verificationToken !== token) {
+        console.error('Invalid token');
+        return { isVerified: false, message: 'Invalid token', user: null };
+      }
+
+      if (existingUser.isVerified) {
+        console.error('User already verified');
+        return {
+          isVerified: true,
+          message: 'User already verified',
+          user: existingUser,
+        };
+      }
+
+      console.log('Token verification successful');
+      return {
+        isVerified: false,
+        message: 'Token is valid but user not yet verified',
+        user: existingUser,
+      };
+    } catch (error) {
+      if (error instanceof Error) {
+        console.error('Error during verification:', error.message);
+      } else {
+        console.error('Unknown error:', error);
+      }
+      return {
+        isVerified: false,
+        message: 'Error during verification',
+        user: null,
+      };
     }
-
-    const existingUser = await prisma.user.findUnique({
-      where: { id: decodedToken.id },
-    });
-
-    if (!existingUser) {
-      throw new Error('User not found');
-    }
-
-    if (existingUser.isVerified) {
-      return { redirectUrl: '/' };
-    }
-
-    await prisma.user.update({
-      where: { id: decodedToken.id },
-      data: { isVerified: true },
-    });
-
-    return { redirectUrl: `/verify/${token}` };
   }
 
   async userEntryData(req: Request) {
@@ -172,6 +250,10 @@ class UserService {
       throw new Error('User not found');
     }
 
+    if (user.isVerified) {
+      throw new Error('User is already verified');
+    }
+
     const hashPass = await hashPassword(password);
     const updatedUser = await prisma.user.update({
       where: { id: userId },
@@ -180,42 +262,69 @@ class UserService {
         last_name,
         password: hashPass,
         isVerified: true,
+        verificationToken: null,
+        tokenExpiration: null,
       },
     });
 
-    console.log('Updated User:', updatedUser); // Log the updated user
-    console.log('User Role:', user.role); // Log the role
+    // console.log('Updated User:', updatedUser);
+    console.log('User Role:', user.role);
 
-    return { ...updatedUser, role: user.role }; // Include the role in the response
+    return { ...updatedUser, role: user.role };
   }
 
-  async resendVerification(req: Request) {
+  async resendVerification(
+    req: Request,
+  ): Promise<{ email?: string; message: string }> {
     try {
       const { email } = req.body;
+
+      if (!email) {
+        return { message: 'Email is required' };
+      }
+
       const select: Prisma.UserSelectScalar = {
         id: true,
         isVerified: true,
       };
+
       const data = await prisma.user.findUnique({
         select,
         where: { email: email },
       });
-      if (data) {
-        if (data.isVerified) {
-          return 'You have previously verified your email';
-        } else {
-          let message = await this.sendingEmail(
-            data.id,
-            email,
-            '/../templates/verification.html',
-            'Confirm Your Email Address For Atcasa',
-            'verify',
-          );
-          return message;
-        }
+
+      if (!data) {
+        return { message: 'User not found' };
       }
+
+      if (data.isVerified) {
+        return { message: 'You have previously verified your email' };
+      }
+
+      const verificationToken = createToken({ id: data.id }, '1h');
+      console.log('Generated verificationToken:', verificationToken);
+      const tokenExpiration = addHours(new Date(), 1);
+
+      await prisma.user.update({
+        where: { id: data.id },
+        data: {
+          verificationToken,
+          tokenExpiration,
+        },
+      });
+
+      const message = await this.sendingEmail(
+        email,
+        verificationToken,
+        'Confirm Your Email Address For Atcasa',
+        '/../templates/verification.html',
+        'verify',
+      );
+
+      return { email, message: message || 'Verification email sent' };
     } catch (error) {
-      console.log('error resend email');
+      console.error('Error resend email', error);
+      return { message: 'Internal server error' };
     }
   }
 
@@ -240,12 +349,23 @@ class UserService {
       const updatedData: Prisma.UserUpdateInput = {};
 
       if (email && email !== user.email) {
+        const verificationToken = createToken({ id: userId }, '1h');
+        const tokenExpiration = addHours(new Date(), 1);
+
         updatedData.email = email;
         updatedData.isVerified = false;
         updatedData.isRequestingEmailChange = true;
+        updatedData.verificationToken = verificationToken;
+        updatedData.tokenExpiration = tokenExpiration;
 
         console.log('Preparing to send verification email to:', email);
 
+        const sentEmail = await this.sendingEmail(
+          email,
+          verificationToken,
+          'We received a request to change your e-mail on Atcasa',
+          '/../templates/reverify.html',
+          'reverify',
         const baseUrl =
           'https://jcwd270403.purwadhikabootcamp.com' ||
           'http://localhost:3000';
@@ -272,20 +392,11 @@ class UserService {
           verificationUrl,
         );
 
-        const mailOptions = {
-          from: 'purwadhika2704@gmail.com',
-          to: email,
-          subject: 'Email Address Change Request',
-          html,
-        };
-
-        // Send the email
-        try {
-          await transporter.sendMail(mailOptions);
-          console.log('Verification email sent');
-        } catch (emailError) {
-          console.error('Error sending email:', emailError);
+        if (!sentEmail) {
+          throw new Error('Failed to send verification email');
         }
+
+        console.log('Verification email sent');
       }
 
       if (first_name !== undefined) {
@@ -316,7 +427,7 @@ class UserService {
         data: updatedData,
       });
 
-      console.log('Updated User:', updatedUser);
+      // console.log('Updated User:', updatedUser);
 
       const updatedUserInfo = await prisma.user.findUnique({
         select: {
@@ -357,7 +468,6 @@ class UserService {
     }
 
     try {
-      // Decode and verify the token
       const decodedToken = verify(token, process.env.SECRET_KEY as string) as {
         id: string;
         email: string;
@@ -381,12 +491,11 @@ class UserService {
       const id = decodedToken.id;
       console.log('User ID from token:', id);
 
-      // Fetch the user from the database
       const user = await prisma.user.findUnique({
         where: { id: id },
       });
 
-      console.log('Fetched user:', user);
+      // console.log('Fetched user:', user);
 
       if (!user) {
         throw new Error('User not found');
@@ -396,16 +505,17 @@ class UserService {
         throw new Error('Invalid or expired token');
       }
 
-      // Update the user record
       const updatedUser = await prisma.user.update({
         where: { id: id },
         data: {
           isVerified: true,
           isRequestingEmailChange: false,
+          verificationToken: null,
+          tokenExpiration: null,
         },
       });
 
-      console.log('Updated user:', updatedUser);
+      // console.log('Updated user:', updatedUser);
 
       console.log('Email verification successful for user:', id);
 
@@ -421,7 +531,7 @@ class UserService {
           role: updatedUser.role,
           type: 'access-token',
         },
-        '1h', // Adjust the expiration time as needed
+        '1h',
       );
 
       return {

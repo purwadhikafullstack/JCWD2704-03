@@ -37,35 +37,20 @@ class ReservationService {
             address: true,
             latitude: true,
             longitude: true,
-            createdAt: true,
-            updatedAt: true,
-            deletedAt: true,
             pic_name: true,
-            Room: true,
-            Order: true,
             Review: true,
-            tenant: true,
             RoomCategory: {
               select: {
                 id: true,
                 property_id: true,
                 type: true,
                 guest: true,
-                price: true,
-                peak_price: true,
-                start_date_peak: true,
-                end_date_peak: true,
                 isBreakfast: true,
                 isRefunable: true,
                 isSmoking: true,
                 bed: true,
-                desc: true,
-                createdAt: true,
-                updatedAt: true,
                 deletedAt: true,
                 pic_name: true,
-                Order: true,
-                Room: true,
               },
             },
           },
@@ -74,7 +59,6 @@ class ReservationService {
           select: {
             id: true,
             email: true,
-            password: true,
             social_id: true,
             first_name: true,
             last_name: true,
@@ -85,8 +69,6 @@ class ReservationService {
             isRequestingEmailChange: true,
             image_name: true,
             Property: true,
-            Order: true,
-            Review: true,
           },
         },
         RoomCategory: {
@@ -108,7 +90,6 @@ class ReservationService {
             updatedAt: true,
             deletedAt: true,
             pic_name: true,
-            Order: true,
             Room: true,
           },
         },
@@ -138,10 +119,34 @@ class ReservationService {
         updatedAt: 'desc',
       },
       include: {
-        property: true,
-        user: true,
-        RoomCategory: true,
-        OrderRoom: true,
+        property: {
+          select: {
+            name: true,
+            pic_name: true,
+            city: true,
+            address: true,
+            id: true,
+          },
+        },
+        user: {
+          select: {
+            first_name: true,
+          },
+        },
+        RoomCategory: {
+          select: {
+            id: true,
+            pic_name: true,
+            type: true,
+            price: true,
+            peak_price: true,
+            start_date_peak: true,
+            end_date_peak: true,
+            isBreakfast: true,
+            isRefunable: true,
+            isSmoking: true,
+          },
+        },
       },
     });
     return data;
@@ -156,11 +161,33 @@ class ReservationService {
           tenant_id: req.user?.id,
         },
       },
-      include: {
-        property: true,
-        user: true,
-        RoomCategory: true,
-        OrderRoom: true,
+      select: {
+        id: true,
+        invoice_id: true,
+        createdAt: true,
+        payment_method: true,
+        checkIn_date: true,
+        checkOut_date: true,
+        status: true,
+        payment_date: true,
+        payment_proof: true,
+        property: {
+          select: {
+            name: true,
+            pic_name: true,
+          },
+        },
+        user: {
+          select: {
+            first_name: true,
+          },
+        },
+        RoomCategory: {
+          select: {
+            type: true,
+            pic_name: true,
+          },
+        },
       },
       orderBy: {
         updatedAt: 'desc',
@@ -281,9 +308,28 @@ class ReservationService {
     const order = await prisma.order.findUnique({
       where: { id: orderId },
       include: {
-        property: true,
+        property: {
+          select: {
+            name: true,
+            city: true,
+            address: true,
+            id: true,
+            pic_name: true,
+          },
+        },
         OrderRoom: true,
-        RoomCategory: true,
+        RoomCategory: {
+          select: {
+            id: true,
+            property_id: true,
+            type: true,
+            price: true,
+            peak_price: true,
+            start_date_peak: true,
+            end_date_peak: true,
+            pic_name: true,
+          },
+        },
       },
     });
     if (!order) {
@@ -348,7 +394,10 @@ class ReservationService {
     let responseData = null;
     let transactionStatus = data.transaction_status;
     let fraudStatus = data.fraud_status;
-    let paymentMethod = data.payment_type;
+    let paymentMethod = data.acquirer;
+    console.log('enable payment', data.enabled_payments);
+    paymentMethod = data.acquirer === 'airpay shopee' ? 'SHOPEE' : 'GOPAY';
+    console.log('isiii data midtrans', data);
     if (transactionStatus == 'capture') {
       if (fraudStatus == 'accept') {
         const transaction = await prisma.order.update({
@@ -378,9 +427,17 @@ class ReservationService {
       const orderDetails = await prisma.order.findUnique({
         where: { id: order_id },
         include: {
-          user: true,
-          property: true,
-          RoomCategory: true,
+          user: {
+            select: {
+              email: true,
+            },
+          },
+          property: {
+            select: {
+              name: true,
+            },
+          },
+          RoomCategory: { select: { type: true } },
         },
       });
       if (orderDetails) {
@@ -395,7 +452,7 @@ class ReservationService {
           .replace(/{checkOutDate}/g, checkOutDate)
           .replace(/{roomType}/g, roomType);
 
-        const krimEmail = transporter.sendMail({
+        transporter.sendMail({
           from: 'atcasaco@gmail.com',
           to: userEmail,
           subject: 'Booking Confirmation',
@@ -471,12 +528,6 @@ class ReservationService {
     const { order_id, status, payment_method } = req.body;
     const transactionDetail = await prisma.order.findUnique({
       where: { id: order_id },
-      include: {
-        property: true,
-        user: true,
-        RoomCategory: true,
-        OrderRoom: true,
-      },
     });
     if (transactionDetail) {
       this.updateStatusBasedOnMidtransResponse(

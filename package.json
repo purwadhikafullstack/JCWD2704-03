@@ -39,6 +39,7 @@
     "bootstrap": "^5.3.3",
     "chart.js": "^4.4.3",
     "crypto": "^1.0.1",
+    "date-fns": "^3.6.0",
     "ngrok": "^5.0.0-beta.2",
     "react-calendar": "^5.0.0",
     "react-datepicker": "^7.3.0",
