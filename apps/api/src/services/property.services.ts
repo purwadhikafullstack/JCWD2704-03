@@ -405,12 +405,90 @@ class PropertyService {
         pic_name: true,
         deletedAt: true,
         RoomCategory: {
-          include: {
+          select: {
+            id: true,
+            type: true,
+            guest: true,
+            price: true,
+            peak_price: true,
+            start_date_peak: true,
+            end_date_peak: true,
+            isBreakfast: true,
+            isRefunable: true,
+            isSmoking: true,
+            bed: true,
+            desc: true,
+            pic_name: true,
+            createdAt: true,
+            updatedAt: true,
+            deletedAt: true,
             Room: {
-              include: {
+              select: {
+                id: true,
+                createdAt: true,
+                updatedAt: true,
+                deletedAt: true,
                 OrderRoom: {
-                  include: {
-                    order: true,
+                  select: {
+                    id: true,
+                    createdAt: true,
+                    updatedAt: true,
+                    order: {
+                      select: {
+                        id: true,
+                        checkIn_date: true,
+                        checkOut_date: true,
+                        status: true,
+                        invoice_id: true,
+                        createdAt: true,
+                        updatedAt: true,
+                        property_id: true,
+                        user_id: true,
+                        roomCategory_id: true,
+                        Review: {
+                          select: {
+                            id: true,
+                            review: true,
+                            reply: true,
+                            rating: true,
+                            createdAt: true,
+                            updatedAt: true,
+                            user_id: true,
+                            order_id: true,
+                            property_id: true,
+                          },
+                        },
+                        RoomCategory: {
+                          select: {
+                            id: true,
+                            type: true,
+                            guest: true,
+                            price: true,
+                            peak_price: true,
+                            start_date_peak: true,
+                            end_date_peak: true,
+                            isBreakfast: true,
+                            isRefunable: true,
+                            isSmoking: true,
+                            bed: true,
+                            desc: true,
+                            pic_name: true,
+                            createdAt: true,
+                            updatedAt: true,
+                            deletedAt: true,
+                          },
+                        },
+                        OrderRoom: {
+                          select: {
+                            id: true,
+                            createdAt: true,
+                            updatedAt: true,
+                            room_id: true,
+                            order_id: true,
+                          },
+                        },
+                      },
+                    },
                   },
                 },
               },
@@ -502,7 +580,7 @@ class PropertyService {
         latitude: true,
         longitude: true,
         createdAt: true,
-        pic_name: true, // Include if you need pic_name
+        pic_name: true,
         updatedAt: true,
         deletedAt: true,
         tenant: {
@@ -532,7 +610,7 @@ class PropertyService {
             createdAt: true,
             updatedAt: true,
             deletedAt: true,
-            pic_name: true, // Include if you need pic_name
+            pic_name: true,
 
             Room: {
               select: {

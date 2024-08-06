@@ -276,7 +276,6 @@ class UserService {
           html,
         };
 
-        // Send the email
         try {
           await transporter.sendMail(mailOptions);
           console.log('Verification email sent');
