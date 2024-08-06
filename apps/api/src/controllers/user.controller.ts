@@ -126,6 +126,7 @@ export class UserController {
           domain: 'purwadhikabootcamp.com',
           sameSite: 'strict',
         })
+
         .cookie('refresh_token', refreshToken, {
           secure: true,
           domain: 'purwadhikabootcamp.com',
@@ -275,6 +276,7 @@ export class UserController {
   async editUserProfile(req: Request, res: Response, next: NextFunction) {
     try {
       const result = await usersServices.editUserProfile(req);
+
       res.cookie('access_token', result.token, {
         secure: true,
         domain: 'purwadhikabootcamp.com',
@@ -293,6 +295,7 @@ export class UserController {
   async reverifyEmail(req: Request, res: Response) {
     try {
       const result = await usersServices.reverifyEmail(req);
+
       res.cookie('access_token', result.token, {
         secure: true,
         domain: 'purwadhikabootcamp.com',

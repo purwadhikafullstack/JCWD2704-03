@@ -120,12 +120,19 @@ class UserService {
     templatePath: string,
     action: 'verify' | 'reverify' | 'changePassword',
   ) {
-    console.log('Sending email to:', userEmail);
 
     if (!userEmail) {
       console.error('No recipient email defined');
       return 'No recipient email defined';
     }
+    const verifyToken = createToken({ id: userId }, '1hr');
+    const template = fs
+      .readFileSync(__dirname + pathToEmailTemplate)
+      .toString();
+    const html = render(template, {
+      email: userEmail,
+      verify_url: `${'https://jcwd270403.purwadhikabootcamp.com'}/${verify_url}/${verifyToken}`,
+    });
 
     const template = fs.readFileSync(__dirname + templatePath).toString();
 

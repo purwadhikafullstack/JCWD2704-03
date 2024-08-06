@@ -89,12 +89,14 @@ const SignupUserForm = () => {
                   role: 'user',
                 });
 
-                setCookie('access_token', session.access_token, {
+
+                setCookie('access_token', session.access_token ?? '', {
                   secure: true,
                   domain: 'purwadhikabootcamp.com',
                   sameSite: 'strict',
                 });
-                setCookie('refresh_token', session.refresh_token, {
+
+                setCookie('refresh_token', session.refresh_token ?? '', {
                   secure: true,
                   domain: 'purwadhikabootcamp.com',
                   sameSite: 'strict',
