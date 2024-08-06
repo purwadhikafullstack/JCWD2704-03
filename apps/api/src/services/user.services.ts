@@ -120,6 +120,8 @@ class UserService {
     templatePath: string,
     action: 'verify' | 'reverify' | 'changePassword',
   ) {
+    console.log('Sending email to:', userEmail);
+
     if (!userEmail) {
       console.error('No recipient email defined');
       return 'No recipient email defined';
@@ -351,20 +353,18 @@ class UserService {
 
         console.log('Preparing to send verification email to:', email);
 
-        const token = createToken(
-          {
-            id: userId,
-            email: user.email,
-            isVerified: user.isVerified,
-            first_name: user.first_name,
-            last_name: user.last_name,
-            isRequestingEmailChange: true,
-            image_name: user.image_name,
-            role: user.role,
-            type: 'access-token',
-          },
-          '1h',
+        const sentEmail = await this.sendingEmail(
+          email,
+          verificationToken,
+          'We received a request to change your e-mail on Atcasa',
+          '/../templates/reverify.html',
+          'reverify',
         );
+
+        if (!sentEmail) {
+          throw new Error('Failed to send verification email');
+        }
+
         console.log('Verification email sent');
       }
 
