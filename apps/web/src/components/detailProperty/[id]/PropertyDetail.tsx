@@ -22,6 +22,8 @@ import { FaStar } from 'react-icons/fa6';
 import { Spinner } from 'react-bootstrap';
 import Swal from 'sweetalert2';
 import { useAppSelector } from '@/app/hooks';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 interface RoomPriceProps {
   roomCategory: RoomCategory;
@@ -129,14 +131,13 @@ function PropertyDetail() {
     totalPrice: number,
     roomIds: string[],
   ) => {
-    if (!user || !user.isVerified) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Please verify your email first',
-        showConfirmButton: true,
-      });
+    console.log('Reserve button clicked');
+
+    if (user && user.id && !user?.isVerified) {
+      toast.error('Please verify your email first');
       return;
     }
+
     const roomIdsParam = roomIds.join('-');
     router.push(
       `/reservation/${roomCategoryId}?checkIn=${checkIn}&checkOut=${checkOut}&total=${totalPrice}&Ids=${roomIdsParam}`,
@@ -501,6 +502,7 @@ function PropertyDetail() {
                               </button>
                             )}
                           </div>
+                          <ToastContainer />
 
                           <div>
                             Total:{' '}

@@ -159,7 +159,7 @@ function Reservation() {
                         src={
                           rooms?.pic_name
                             ? `${imageSrcRoom}${rooms.pic_name}`
-                            : 'https://images.pexels.com/photos/4381392/pexels-photo-4381392.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500'
+                            : 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ3kQG95yVmiHcRpsOPdjbVHSYgQfN-hFD5gw&s'
                         }
                         alt="roomType"
                         className="rounded-xl"
@@ -276,7 +276,7 @@ function Reservation() {
                         </option>
                         <option value="BCA">BCA</option>
                         <option value="MANDIRI">MANDIRI</option>
-                        <option value={'gopay'}>E-Wallet (Gopay / Qris)</option>
+                        <option value={'GOPAY'}>E-Wallet (Gopay/Shopee)</option>
                       </select>
                     </div>
                     <div>

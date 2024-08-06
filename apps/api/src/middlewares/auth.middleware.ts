@@ -7,13 +7,12 @@ export const verifyUser = (req: Request, res: Response, next: NextFunction) => {
   try {
     const token = req.headers.authorization?.replace('Bearer ', '') || '';
     req.user = verify(token, SECRET_KEY) as TUser;
-    // console.log('decoded token', req.user);
 
     next();
   } catch (error) {
     console.log('jwt error');
     next(error);
-    console.log(error);
+    // console.log(error);
   }
 };
 
@@ -24,16 +23,16 @@ export const validateAccessToken = (
 ) => {
   try {
     const token = req.headers.authorization?.replace('Bearer ', '');
-    console.log('received token', token);
+    // console.log('received token', token);
 
     const decode = verify(token!, SECRET_KEY) as TDecode;
     if (decode.type != 'accessToken') throw new Error('invalid token');
     req.user = decode.user;
-    console.log('decoded token', req.user);
+    // console.log('decoded token', req.user);
 
     next();
   } catch (error) {
-    console.log('validation error');
+    // console.log('validation error');
 
     next(error);
   }

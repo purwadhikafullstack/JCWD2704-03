@@ -61,7 +61,7 @@ const SignupUserForm = () => {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${process.env.NEXT_PUBLIC_BASE_WEB_URL}/auth/callback?userType=user`,
+          redirectTo: `${'https://jcwd270403.purwadhikabootcamp.com'}/auth/callback?userType=user`,
         },
       });
 
@@ -89,11 +89,13 @@ const SignupUserForm = () => {
                   role: 'user',
                 });
 
+
                 setCookie('access_token', session.access_token ?? '', {
                   secure: true,
                   domain: 'purwadhikabootcamp.com',
                   sameSite: 'strict',
                 });
+
                 setCookie('refresh_token', session.refresh_token ?? '', {
                   secure: true,
                   domain: 'purwadhikabootcamp.com',

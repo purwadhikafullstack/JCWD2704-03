@@ -25,8 +25,16 @@ export const userSlice = createSlice({
       return state;
     },
     logout: (state) => {
-      deleteCookie('access_token');
-      deleteCookie('refresh_token');
+      deleteCookie('access_token', {
+        domain: 'purwadhikabootcamp.com',
+        sameSite: 'strict',
+        secure: true,
+      });
+      deleteCookie('refresh_token', {
+        domain: 'purwadhikabootcamp.com',
+        sameSite: 'strict',
+        secure: true,
+      });
       return initialUser;
     },
   },
@@ -39,20 +47,14 @@ export const keepLogin = () => {
       if (token) {
         // dispatch(login(jwtDecode(token)));
         const decodedToken = jwtDecode<UserLoginPayload>(token);
-        dispatch(login(decodedToken.user)); // Ensure the payload matches your User structure
+        dispatch(login(decodedToken.user));
       }
-
-      // const res = await axiosInstance().get("/users", {
-      //   params: { username: storage.username },
-      // });
-      // const user: TUser = res.data[0];
-
-      // if (user.id) {
-      //   dispatch(login(user));
-      // }
-      // return;
     } catch (err: any) {
-      deleteCookie('access_token');
+      deleteCookie('access_token', {
+        domain: 'purwadhikabootcamp.com',
+        sameSite: 'strict',
+        secure: true,
+      });
       console.error('Error in keepLogin:', err.message);
     }
   };

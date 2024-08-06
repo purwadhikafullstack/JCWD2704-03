@@ -45,7 +45,9 @@ const LoginForm: React.FC = () => {
           } as UserLoginPayload),
         );
         formik.resetForm();
-        window.location.reload();
+        setTimeout(() => {
+          window.location.reload();
+        }, 2000);
       } catch (error) {
         if (error instanceof AxiosError) {
           toast.error(
@@ -66,7 +68,7 @@ const LoginForm: React.FC = () => {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${process.env.NEXT_PUBLIC_BASE_WEB_URL}/auth/callback?userType=tenant`,
+          redirectTo: `${'https://jcwd270403.purwadhikabootcamp.com'}/auth/callback?userType=tenant`,
         },
       });
 

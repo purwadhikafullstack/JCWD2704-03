@@ -324,12 +324,48 @@ class RoomService {
     // Fetch the room category and associated rooms
     const roomCategory = await prisma.roomCategory.findUnique({
       where: { id: roomCategoryId },
-      include: {
+      select: {
+        id: true,
+        type: true,
+        guest: true,
+        price: true,
+        peak_price: true,
+        start_date_peak: true,
+        end_date_peak: true,
+        isBreakfast: true,
+        isRefunable: true,
+        isSmoking: true,
+        bed: true,
+        desc: true,
+        pic_name: true,
+        createdAt: true,
+        updatedAt: true,
+        deletedAt: true,
         Room: {
-          include: {
+          select: {
+            id: true,
+            createdAt: true,
+            updatedAt: true,
+            deletedAt: true,
             OrderRoom: {
-              include: {
-                order: true,
+              select: {
+                id: true,
+                createdAt: true,
+                updatedAt: true,
+                order: {
+                  select: {
+                    id: true,
+                    checkIn_date: true,
+                    checkOut_date: true,
+                    cancel_date: true,
+                    status: true,
+                    createdAt: true,
+                    updatedAt: true,
+                    property_id: true,
+                    user_id: true,
+                    roomCategory_id: true,
+                  },
+                },
               },
             },
           },
@@ -392,7 +428,6 @@ class RoomService {
   async getRoomCatByRoomCatId(req: Request) {
     const { id } = req.params;
 
-    // Fetch room category data
     const roomCategory = await prisma.roomCategory.findUnique({
       where: { id },
       select: {
@@ -414,25 +449,24 @@ class RoomService {
     });
 
     if (!roomCategory) {
-      return null; // Or handle not found case
+      return null;
     }
 
-    // Count current number of rooms (not in ongoing or future orders, not deleted)
     const currentNumberOfRooms = await prisma.room.count({
       where: {
         roomCategory_id: id,
-        deletedAt: null, // Exclude deleted rooms
+        deletedAt: null,
         OrderRoom: {
           every: {
             order: {
               OR: [
                 {
                   checkOut_date: {
-                    lt: new Date(), // Rooms with checkOut_date in the past
+                    lt: new Date(),
                   },
                 },
                 {
-                  status: 'success', // Only successful orders
+                  status: 'success',
                 },
               ],
             },
@@ -441,11 +475,10 @@ class RoomService {
       },
     });
 
-    // Count total number of rooms (including those with orders)
     const allNumberOfRooms = await prisma.room.count({
       where: {
         roomCategory_id: id,
-        deletedAt: null, // Exclude deleted rooms
+        deletedAt: null,
       },
     });
 

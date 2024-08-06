@@ -55,7 +55,7 @@ const PropertyReport: React.FC = () => {
             <th className="py-2 px-4 border">Room Category</th>
             <th className="py-2 px-4 border">Total Orders</th>
             <th
-              className="py-2 px-4 border"
+              className="py-2 px-4 border cursor-pointer"
               onClick={() => handleSort('total_sales')}
             >
               Total Sales
