@@ -1,5 +1,5 @@
 'use client';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import { axiosInstance } from '@/libs/axios.config';
 import { useParams, useRouter } from 'next/navigation';
@@ -12,16 +12,46 @@ import 'react-toastify/dist/ReactToastify.css';
 import { Spinner } from 'react-bootstrap';
 
 const ChangePassword = () => {
-  const { token } = useParams();
   const router = useRouter();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isVerified, setIsVerified] = useState(false);
+  const params = useParams();
+  const { token } = params;
 
   useEffect(() => {
-    // Check if the password reset flag is set in session storage
-    if (sessionStorage.getItem('passwordReset')) {
-      // Redirect to homepage if the flag is set
-      router.push('/');
+    if (!token) {
+      router.push('/auth/login/user');
+      return;
     }
-  }, [router]);
+
+    const verifyToken = async () => {
+      try {
+        const response = await axiosInstance().get(
+          `/api/users/verifyTokenUser/${token}`,
+        );
+
+        const { isVerified, message, user } = response.data;
+
+        if (user === null) {
+          // Jika user null, redirect ke '/'
+          router.push('/');
+        } else if (isVerified === false) {
+          setIsVerified(false);
+          console.log('Token is valid but user is not verified:', message);
+        } else if (isVerified === true) {
+          toast.success(
+            'Your account is already verified. Redirecting to home page...',
+          );
+          setTimeout(() => router.push('/'), 2000);
+        }
+      } catch (error) {
+        console.error('Verification error:', error);
+        router.push('/');
+      }
+    };
+
+    verifyToken();
+  }, [token]);
 
   YupPassword(Yup);
   const validationSchema = Yup.object().shape({
@@ -54,11 +84,8 @@ const ChangePassword = () => {
         'New password has been set. Please login with your new password.',
       );
 
-      const { updatedUser } = response.data; // Extract the updated user data
-      const { role } = updatedUser; // Extract the role from the updated user data
-
-      // Set a flag in localStorage to indicate the password has been reset
-      sessionStorage.setItem('passwordReset', 'true');
+      const { updatedUser } = response.data;
+      const { role } = updatedUser;
 
       if (role === 'user') {
         router.push('/auth/login/user');
@@ -75,7 +102,7 @@ const ChangePassword = () => {
   return (
     <>
       <div className="">
-        <div className="flex flex-col justify-center items-center h-screen">
+        <div className="flex flex-col justify-center items-center h-screen tracking-tighter">
           {/* HEADER SECTION */}
           <div className="mb-3 flex items-center justify-center flex-col">
             <Link href="/">

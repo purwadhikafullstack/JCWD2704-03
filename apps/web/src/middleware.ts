@@ -42,8 +42,8 @@ export async function middleware(request: NextRequest) {
     decode = jwtDecode<User>(access_token);
     console.log(decode, 'ini decode');
 
-    console.log('Role from token:', decode.role);
-    console.log('isVerified from token:', decode.isVerified);
+    // console.log('Role from token:', decode.role);
+    // console.log('isVerified from token:', decode.isVerified);
 
     isGuest = decode.role === 'user';
 
@@ -51,7 +51,7 @@ export async function middleware(request: NextRequest) {
 
     const not_verified = !decode.isVerified && !decode.isRequestingEmailChange;
   } catch (error) {
-    console.error('Error decoding token:', error);
+    // console.error('Error decoding token:', error);
   }
 
   const validate = res ? true : false;
@@ -60,9 +60,9 @@ export async function middleware(request: NextRequest) {
   // console.log(pathname.startsWith('/dashboard'), validate, isGuest);
   // console.log(decode?.role);
 
-  console.log('Is Guest:', isGuest);
-  console.log('Is Verified:', is_verified);
-  console.log('Pathname:', pathname);
+  // console.log('Is Guest:', isGuest);
+  // console.log('Is Verified:', is_verified);
+  // console.log('Pathname:', pathname);
 
   if (!token) {
     if (pathname.startsWith('/dashboard') || pathname.startsWith('/profile')) {

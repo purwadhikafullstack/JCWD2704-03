@@ -6,11 +6,10 @@ import { transporter } from '../libs/nodemailer';
 import { SECRET_KEY } from '../configs/config';
 import { verify } from 'jsonwebtoken';
 import fs from 'fs';
-import { join } from 'path';
-import { render } from 'mustache';
 import { prisma } from '../libs/prisma';
 import type { Prisma } from '@prisma/client';
 import userServices from './user.services';
+import { addHours } from 'date-fns';
 
 class AuthService {
   async userGoogleLogin(req: Request) {
@@ -106,70 +105,6 @@ class AuthService {
       throw new Error('Failed to login with Google');
     }
   }
-
-  // async userLogin(req: Request) {
-  //   const { email, password } = req.body;
-
-  //   const where: Prisma.UserWhereUniqueInput = {
-  //     email: email,
-  //   };
-
-  //   const select: Prisma.UserSelectScalar = {
-  //     id: true,
-  //     email: true,
-  //     first_name: true,
-  //     last_name: true,
-  //     social_id: true,
-  //     image: true,
-  //     isVerified: true,
-  //     password: true,
-  //     role: true,
-  //   };
-
-  //   const data = await prisma.user.findFirst({
-  //     select,
-  //     where,
-  //   });
-
-  //   if (!data) throw new Error('Wrong e-mail!');
-  //   if (!data.password) throw new Error('Wrong e-mail!');
-
-  //   if (data.role === 'tenant' && req.body.role !== 'tenant') {
-  //     throw new Error('Please log in on the property host login page.');
-  //   }
-
-  //   if (data.role === 'user' && req.body.role !== 'user') {
-  //     throw new Error('Please log in on the guest login page.');
-  //   }
-
-  //   const checkUser = await comparePassword(data.password, password);
-  //   if (!checkUser) throw new Error('Wrong password!');
-
-  //   const userData: TUser = {
-  //     id: data.id,
-  //     email: data.email,
-  //     first_name: data.first_name,
-  //     last_name: data.last_name,
-  //     social_id: data.social_id,
-  //     image: data.image,
-  //     isVerified: data.isVerified,
-  //     role: data.role,
-  //     password: data.password,
-  //     createdAt: data.createdAt,
-  //     updatedAt: data.updatedAt,
-  //   };
-
-  //   delete userData.password;
-
-  //   const accessToken = createToken(userData, '1hr');
-  //   const refreshToken = createToken({ id: userData.id }, '1hr');
-
-  //   return {
-  //     accessToken,
-  //     refreshToken,
-  //     role: userData.role,
-  //   };
-  // }
 
   async userLogin(req: Request) {
     const { email, password } = req.body;
@@ -300,75 +235,110 @@ class AuthService {
 
   async sendChangePasswordLink(req: Request) {
     const { email } = req.body;
+
     const select: Prisma.UserSelectScalar = {
       id: true,
       first_name: true,
     };
-    const data = await prisma.user.findUnique({
+
+    const user = await prisma.user.findUnique({
       select,
-      where: {
-        email: email,
+      where: { email: email },
+    });
+
+    if (!user) {
+      return { message: 'User not found' };
+    }
+
+    const verificationToken = createToken({ id: user.id }, '1h'); // Token valid for 1 hour
+    const tokenExpiration = addHours(new Date(), 1); // Set expiration time
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        verificationToken,
+        tokenExpiration,
       },
     });
-    if (data === null) {
-      return false;
-    } else {
-      let sendEmailResult = await userServices.sendingEmail(
-        data.id,
-        email,
-        '/../templates/resetpassword.html',
-        'We received request to change your password on Atcasa',
-        'auth/changePassword',
-      );
-      return sendEmailResult;
-    }
+
+    const message = await userServices.sendingEmail(
+      email,
+      verificationToken,
+      'We received a request to change your password on Atcasa',
+      '/../templates/resetpassword.html', // Path to email template
+      'changePassword',
+    );
+
+    return { message: message || 'Password reset email sent' };
   }
 
-  // async verifyChangePass(req: Request) {
-  //   try {
-  //     const { token, newPassword } = req.body;
-  //     const user = verify(token, SECRET_KEY) as TUser;
-  //     if (!user || !user.id) {
-  //       throw new Error('invalid token');
-  //     }
-  //     const hashPass = await hashPassword(newPassword);
-  //     await prisma.user.update({
-  //       where: {
-  //         id: user.id,
-  //       },
-  //       data: {
-  //         password: hashPass,
-  //       },
-  //     });
-  //     return 'Password has changed succesfully!';
-  //   } catch (error) {
-  //     return 'Failed to change password from our API';
-  //   }
-  // }
+  async verifyTokenUser(req: Request) {
+    const { token } = req.params;
+    const decodedToken = verify(token, SECRET_KEY) as { id: string };
+
+    if (!decodedToken || !decodedToken.id) {
+      throw new Error('Invalid token');
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: decodedToken.id },
+      select: {
+        id: true,
+        verificationToken: true,
+        tokenExpiration: true,
+      },
+    });
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    if (
+      user.verificationToken !== token ||
+      !user.tokenExpiration ||
+      new Date() > new Date(user.tokenExpiration)
+    ) {
+      throw new Error('Token is invalid or has expired');
+    }
+
+    return user;
+  }
 
   async verifyChangePass(req: Request) {
-    try {
-      const { token, newPassword } = req.body;
-      const user = verify(token, SECRET_KEY) as TUser;
-      if (!user || !user.id) {
-        throw new Error('Invalid token');
-      }
-      const hashPass = await hashPassword(newPassword);
-      const updatedUser = await prisma.user.update({
-        where: {
-          id: user.id,
-        },
-        data: {
-          password: hashPass,
-        },
-      });
-      return {
-        message: 'Password has changed successfully!',
-        updatedUser,
-      };
-    } catch (error) {
-      throw new Error('Failed to change password from our API');
+    const { token, newPassword } = req.body;
+
+    const decodedToken = verify(token, SECRET_KEY) as { id: string };
+
+    if (!decodedToken || !decodedToken.id) {
+      throw new Error('Invalid token');
     }
+
+    const user = await prisma.user.findUnique({
+      where: { id: decodedToken.id },
+      select: {
+        id: true,
+      },
+    });
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    const hashPass = await hashPassword(newPassword);
+
+    const updatedUser = await prisma.user.update({
+      where: { id: user?.id },
+      data: {
+        password: hashPass,
+        verificationToken: null,
+        tokenExpiration: null,
+      },
+    });
+
+    return {
+      message: 'Password has been changed successfully!',
+      updatedUser,
+    };
   }
 
   async validate(req: Request) {

@@ -133,8 +133,7 @@ function PropertyDetail() {
   ) => {
     console.log('Reserve button clicked');
 
-    if (user && !user.isVerified) {
-      console.log(user?.isVerified);
+    if (user && user.id && !user?.isVerified) {
       toast.error('Please verify your email first');
       return;
     }

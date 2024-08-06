@@ -1,5 +1,6 @@
 import React, { Suspense } from 'react';
 import ResendEmail from '@/components/auth/verification/ResendEmail';
+import { ToastContainer } from 'react-toastify';
 
 function VerifyPage() {
   return (
@@ -7,6 +8,7 @@ function VerifyPage() {
       <Suspense fallback={<div>Loading...</div>}>
         <ResendEmail />;
       </Suspense>
+      <ToastContainer />
     </>
   );
 }

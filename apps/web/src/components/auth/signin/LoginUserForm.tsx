@@ -44,7 +44,9 @@ const LoginForm: React.FC = () => {
           } as UserLoginPayload),
         );
         formik.resetForm();
-        window.location.reload();
+        setTimeout(() => {
+          window.location.reload();
+        }, 2000);
       } catch (error) {
         if (error instanceof AxiosError) {
           toast.error(
@@ -110,7 +112,6 @@ const LoginForm: React.FC = () => {
                 isVerified: 'true',
               }),
             );
-            
           } catch (error) {
             console.error('Error logging in with Google:', error);
           }

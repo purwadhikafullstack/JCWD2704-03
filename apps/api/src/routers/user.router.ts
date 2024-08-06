@@ -29,6 +29,10 @@ export class UserRouter {
       this.userController.resendEmail,
     );
     this.router.get('/verification/:token', this.userController.sendVerif);
+    this.router.get(
+      '/verifyTokenUser/:token',
+      this.userController.verifyTokenUser,
+    );
     this.router.post(
       '/sendChangePassword',
       this.userController.sendChangePassword,
