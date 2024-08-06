@@ -110,7 +110,6 @@ const LoginForm: React.FC = () => {
                 isVerified: 'true',
               }),
             );
-            
           } catch (error) {
             console.error('Error logging in with Google:', error);
           }

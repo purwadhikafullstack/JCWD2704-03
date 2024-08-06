@@ -83,6 +83,8 @@ function FormPaymentProofComponent({ order }: { order: Order }) {
     order.status === 'cancelled' ||
     order.status === 'success' ||
     order.status === 'awaiting_confirmation';
+  const paymentMethod =
+    order.payment_method === 'GOPAY' || order.payment_method === 'SHOPEE';
   return (
     <form onSubmit={handleSubmit}>
       <div className="w-full max-w-xs mt-4 p-4 border border-gray-300 rounded-lg">
@@ -100,13 +102,16 @@ function FormPaymentProofComponent({ order }: { order: Order }) {
           <input
             type="file"
             className="file-input file-input-bordered w-full max-w-xs"
-            disabled={statusExpired}
+            disabled={statusExpired || paymentMethod}
             onChange={handleFileChange}
           />
         </div>
 
         <div>
-          <button className="btn btn-dark" disabled={statusExpired}>
+          <button
+            className="btn btn-dark"
+            disabled={statusExpired || paymentMethod}
+          >
             Submit
           </button>
         </div>
