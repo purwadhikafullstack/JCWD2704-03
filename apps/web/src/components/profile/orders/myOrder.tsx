@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { FaMoon } from 'react-icons/fa';
 import Spinner from 'react-bootstrap/Spinner';
-import { imageSrcRoom } from '@/utils/imagerender';
+import { imageSrc } from '@/utils/imagerender';
 function MyOrder() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
@@ -143,7 +143,7 @@ function MyOrder() {
                       <img
                         src={
                           order.property.pic_name
-                            ? `${imageSrcRoom}${order.RoomCategory.pic_name}`
+                            ? `${imageSrc}${order.property.pic_name}`
                             : 'https://images.pexels.com/photos/4381392/pexels-photo-4381392.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500'
                         }
                         alt="hotel" // Use room.type for the alt text
