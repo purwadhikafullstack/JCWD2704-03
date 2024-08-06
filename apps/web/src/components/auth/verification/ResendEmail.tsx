@@ -5,15 +5,15 @@ import { axiosInstance } from '@/libs/axios.config';
 import { User } from '@/models/user.model';
 import { useSearchParams } from 'next/navigation';
 import { useState } from 'react';
-import Swal from 'sweetalert2';
-import 'bootstrap/dist/css/bootstrap.min.css';
 import { Spinner } from 'react-bootstrap';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 export default function ResendEmail() {
   const searchParams = useSearchParams();
-  const [responseMessage, setResponseMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { email } = useAppSelector((state) => state.auth) as User;
+
   let userEmail: string | undefined = email || undefined;
   if (!userEmail) {
     const emailParam: string | null = searchParams.get('email');
@@ -21,6 +21,7 @@ export default function ResendEmail() {
       userEmail = emailParam;
     }
   }
+
   const resendVerif = async () => {
     setIsLoading(true);
     try {
@@ -29,25 +30,30 @@ export default function ResendEmail() {
         { email: userEmail },
         { headers: { 'Content-Type': 'application/json' } },
       );
-      setResponseMessage(response.data.message);
-      Swal.fire({
-        title: 'Success!',
-        text: 'Verification e-mail has been sent. Please check your inbox!',
-        icon: 'success',
-      });
-    } catch (error) {
-      setResponseMessage('API call failed');
+
+      const { message } = response.data;
+      console.log(response.data);
+
+      if (message === 'You have previously verified your email') {
+        toast.error(message);
+      } else {
+        toast.success(
+          message ||
+            'Verification e-mail has been sent. Please check your inbox!',
+        );
+      }
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        toast.error(error.message);
+      } else {
+        toast.error('An unexpected error occurred');
+      }
     } finally {
       setIsLoading(false);
     }
   };
   return (
-    <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden py-6 sm:py-12 bg-white">
-      {isLoading && (
-        <div className="fixed inset-0 flex items-center justify-center bg-white bg-opacity-75 z-50">
-          <Spinner animation="border" role="status"></Spinner>
-        </div>
-      )}
+    <div className="flex min-h-screen flex-col items-center justify-center tracking-tighter overflow-hidden py-6 sm:py-12 bg-white">
       <div className="max-w-xl px-3 text-center flex flex-col items-center">
         <a className="py-4">
           <img
@@ -59,17 +65,17 @@ export default function ResendEmail() {
         <h2 className="pb-4 lg:text-[42px] font-bold text-zinc-800">
           Thank you for signing up!
         </h2>
-        <h2 className=" lg:text-xl text-base font-semibold text-zinc-800">
+        <h2 className="lg:text-xl text-base font-semibold text-zinc-800">
           Please check your e-mail and verify your account{' '}
           <span className="lg:hidden">
             to continue browsing properties in Atcasa.
           </span>
         </h2>
-        <h2 className=" lg:text-xl text-base font-semibold text-zinc-800 hidden lg:flex md:flex">
+        <h2 className="lg:text-xl text-base font-semibold text-zinc-800 hidden lg:flex md:flex">
           to continue browsing properties in Atcasa.
         </h2>
 
-        <p className="text-base lg:text-lg font-medium text-zinc-500 py-2">
+        <p className="text-base lg:text-lg font-medium text-zinc-500 py-4">
           {"Didn't get e-mail? "}
         </p>
         <button
@@ -88,12 +94,6 @@ export default function ResendEmail() {
             'Resend e-mail'
           )}
         </button>
-        {responseMessage && (
-          <div className="mt-10 text-center font-medium text-blue-600">
-            <p>{responseMessage}</p>
-            {userEmail && <p>Email: {userEmail}</p>}
-          </div>
-        )}
       </div>
     </div>
   );

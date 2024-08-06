@@ -14,6 +14,8 @@ export type TUser = {
   image_name?: string | null;
   createdAt?: Date;
   updatedAt?: Date;
+  verificationToken?: string | null;
+  tokenExpiration?: Date;
 };
 
 export type TDecode = {

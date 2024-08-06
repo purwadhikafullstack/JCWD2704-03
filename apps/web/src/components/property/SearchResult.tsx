@@ -96,7 +96,7 @@ function SearchPage() {
     <>
       <section className="flex flex-col min-h-screen">
         <div className="mx-auto max-w-7xl lg:px-4 tracking-tight flex-1">
-          <div className="flex flex-col justify-center">
+          <div className="flex flex-col justify-center items-center">
             <div className="hidden lg:flex py-5">
               <FormCalendar />
             </div>

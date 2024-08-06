@@ -209,8 +209,8 @@ class SalesService {
 
     const startDate = new Date(Date.UTC(yearNumber, monthNumber - 1, 1));
     const endDate = new Date(Date.UTC(yearNumber, monthNumber, 0));
-    console.log('Start Date:', startDate);
-    console.log('End Date:', endDate);
+    // console.log('Start Date:', startDate);
+    // console.log('End Date:', endDate);
     const orders = await prisma.order.findMany({
       where: {
         checkIn_date: {
@@ -249,7 +249,7 @@ class SalesService {
 
     const daysInMonth = new Date(yearNumber, monthNumber, 0).getDate();
     const calendar: { date: Date; orders: any[] }[] = [];
-    console.log(daysInMonth);
+    // console.log(daysInMonth);
 
     for (let day = 2; day <= daysInMonth + 1; day++) {
       const date = new Date(yearNumber, monthNumber - 1, day);

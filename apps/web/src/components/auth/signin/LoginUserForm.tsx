@@ -44,7 +44,9 @@ const LoginForm: React.FC = () => {
           } as UserLoginPayload),
         );
         formik.resetForm();
-        window.location.reload();
+        setTimeout(() => {
+          window.location.reload();
+        }, 2000);
       } catch (error) {
         if (error instanceof AxiosError) {
           toast.error(

@@ -25,31 +25,41 @@ const EntryData = () => {
   const { token } = params;
 
   useEffect(() => {
+    if (!token) {
+      router.push('/auth/login/user');
+      return;
+    }
+
     const verifyToken = async () => {
-      if (token && !isVerified) {
-        try {
-          await axiosInstance().get(`/api/users/verification/${token}`);
-          setIsVerified(true);
-        } catch (error) {
-          console.error('Error verifying email:', error);
+      try {
+        const response = await axiosInstance().get(
+          `/api/users/verification/${token}`,
+        );
+
+        const { isVerified: verified, message, user } = response.data;
+
+        if (user === null) {
+          // Jika user null, redirect ke '/'
+          router.push('/');
+        } else if (verified === false) {
+          // Jika token valid dan isVerified false, stay di halaman
+          setIsVerified(false);
+          console.log('Token is valid but user is not verified:', message);
+        } else if (verified === true) {
+          // Jika token valid dan isVerified true, redirect ke '/'
+          toast.success(
+            'Your account is already verified. Redirecting to home page...',
+          );
+          setTimeout(() => router.push('/'), 2000);
         }
+      } catch (error) {
+        console.error('Verification error:', error);
+        router.push('/');
       }
     };
 
     verifyToken();
-  }, [token, isVerified]);
-
-  useEffect(() => {
-    if (isVerified) {
-      toast.success('Email verified successfully!');
-    }
-  }, [isVerified]);
-
-  useEffect(() => {
-    if (!token) {
-      router.push('/auth/login/user');
-    }
-  }, [token, router]);
+  }, [token]);
 
   YupPassword(Yup);
 
@@ -108,12 +118,14 @@ const EntryData = () => {
         }
       } catch (error) {
         if (error instanceof AxiosError) {
-          toast.error(
-            error.response?.data.message ||
-              'An error occurred while signing up.',
-          );
-        } else {
-          toast.error('An unexpected error occurred.');
+          if (error.response?.data.message === 'User is already verified') {
+            toast.error('You have already verified your account.');
+          } else {
+            toast.error(
+              error.response?.data.message ||
+                'An error occurred while signing up.',
+            );
+          }
         }
       } finally {
         setIsSubmitting(false);
