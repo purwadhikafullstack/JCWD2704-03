@@ -24,7 +24,23 @@ class StatusService {
     let htmlTemplate = fs.readFileSync(templatePath, 'utf-8');
     const orderDetails = await prisma.order.findUnique({
       where: { id: orderId },
-      include: { user: true, RoomCategory: true, property: true },
+      include: {
+        user: {
+          select: {
+            email: true,
+          },
+        },
+        RoomCategory: {
+          select: {
+            type: true,
+          },
+        },
+        property: {
+          select: {
+            name: true,
+          },
+        },
+      },
     });
     if (orderDetails) {
       const userEmail = orderDetails.user.email;
@@ -61,9 +77,19 @@ class StatusService {
     const orderDetails = await prisma.order.findUnique({
       where: { id: orderId },
       include: {
-        user: true,
-        property: true,
-        RoomCategory: true,
+        user: {
+          select: {
+            email: true,
+          },
+        },
+        property: {
+          select: {
+            name: true,
+          },
+        },
+        RoomCategory: {
+          select: { type: true },
+        },
       },
     });
     const templatePath = path.join(__dirname, '../templates/cancelled.html');
@@ -139,9 +165,21 @@ class StatusService {
     const orderDetails = await prisma.order.findUnique({
       where: { id: orderId },
       include: {
-        user: true,
-        property: true,
-        RoomCategory: true,
+        user: {
+          select: {
+            email: true,
+          },
+        },
+        RoomCategory: {
+          select: {
+            type: true,
+          },
+        },
+        property: {
+          select: {
+            name: true,
+          },
+        },
       },
     });
     if (orderDetails) {

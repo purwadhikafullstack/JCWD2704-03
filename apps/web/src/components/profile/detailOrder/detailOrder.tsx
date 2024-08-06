@@ -9,6 +9,7 @@ import { FaMoon, FaStar } from 'react-icons/fa';
 import Swal from 'sweetalert2';
 import FormPaymentProofComponent from '@/components/invoice/uploadPayment';
 import ReviewModal from '../reviewModal';
+import MapComponent from '@/components/map/ComponentMap';
 import Spinner from 'react-bootstrap/Spinner';
 import { imageSrc } from '@/utils/imagerender';
 function DetailOrder() {
@@ -228,12 +229,27 @@ function DetailOrder() {
                     </div>
                   </div>
                   <div className="border border-dashed"></div>
+                  <div className="font-bold">Payment Method</div>
+                  <div className="flex text-gray-400">
+                    <div> {order.payment_method}</div>
+                  </div>
+                  <div className="border border-dashed"></div>
+                </div>
+                <div>
                   <div>
                     <div className="font-bold">Address</div>
                     <div className=" text-gray-400">
                       {order.property.address} {order.property.city}
                     </div>
                   </div>
+                  {order.property.latitude && order.property.longitude && (
+                    <>
+                      <MapComponent
+                        latitude={order.property.latitude}
+                        longitude={order.property.longitude}
+                      />
+                    </>
+                  )}
                 </div>
               </div>
             </div>

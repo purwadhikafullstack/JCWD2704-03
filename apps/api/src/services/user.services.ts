@@ -260,7 +260,7 @@ class UserService {
       },
     });
 
-    console.log('Updated User:', updatedUser);
+    // console.log('Updated User:', updatedUser);
     console.log('User Role:', user.role);
 
     return { ...updatedUser, role: user.role };
@@ -396,7 +396,7 @@ class UserService {
         data: updatedData,
       });
 
-      console.log('Updated User:', updatedUser);
+      // console.log('Updated User:', updatedUser);
 
       const updatedUserInfo = await prisma.user.findUnique({
         select: {
@@ -464,7 +464,7 @@ class UserService {
         where: { id: id },
       });
 
-      console.log('Fetched user:', user);
+      // console.log('Fetched user:', user);
 
       if (!user) {
         throw new Error('User not found');
@@ -484,7 +484,7 @@ class UserService {
         },
       });
 
-      console.log('Updated user:', updatedUser);
+      // console.log('Updated user:', updatedUser);
 
       console.log('Email verification successful for user:', id);
 
