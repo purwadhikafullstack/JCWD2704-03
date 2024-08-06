@@ -6,16 +6,197 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
-  url      = env("DATABASE_URL")
+  provider          = "mysql"
+  url               = env("DATABASE_URL")
+  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
 }
 
-model Sample {
-  id        Int      @id @default(autoincrement())
+// model Sample {
+//   id        Int      @id @default(autoincrement())
+//   name      String
+//   code      String   @unique
+//   createdAt DateTime @default(now())
+//   updatedAt DateTime @updatedAt
+
+//   @@map("samples") // if you want to use snake_case format
+// }
+
+enum Role {
+  user
+  tenant
+}
+
+model User {
+  id                      String    @id @default(cuid())
+  email                   String    @unique
+  password                String?
+  social_id               String?
+  first_name              String?
+  last_name               String?
+  role                    Role
+  isVerified              Boolean?  @default(false)
+  image                   Bytes?    @db.LongBlob
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+  isRequestingEmailChange Boolean?  @default(false)
+  image_name              String?   @unique
+  verificationToken       String?
+  tokenExpiration         DateTime?
+
+  Property Property[]
+  Order    Order[]
+  Review   Review[]
+
+  @@map("users")
+}
+
+enum Category {
+  Apartment
+  Guesthouse
+  Hotel
+}
+
+model Property {
+  id        String    @id @default(cuid())
+  tenant_id String
   name      String
-  code      String   @unique
+  category  Category
+  pic       Bytes?    @db.LongBlob
+  desc      String    @db.LongText
+  city      String?
+  address   String
+  latitude  Float?
+  longitude Float?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+  pic_name  String?   @unique
+
+  Room   Room[]
+  Order  Order[]
+  Review Review[]
+
+  tenant       User           @relation(fields: [tenant_id], references: [id])
+  RoomCategory RoomCategory[]
+
+  @@map("properties")
+}
+
+enum Type {
+  Standard
+  Deluxe
+}
+
+enum Bed {
+  king
+  twin
+  single
+}
+
+model RoomCategory {
+  id              String    @id @default(cuid())
+  property_id     String
+  type            Type
+  guest           Int
+  price           Float     @db.Double
+  peak_price      Float?    @db.Double
+  start_date_peak DateTime?
+  end_date_peak   DateTime?
+  isBreakfast     Boolean
+  isRefunable     Boolean
+  isSmoking       Boolean
+  bed             Bed
+  desc            String    @db.LongText
+  pic             Bytes?    @db.LongBlob
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  deletedAt       DateTime?
+  pic_name        String?   @unique
+
+  property Property @relation(fields: [property_id], references: [id])
+
+  Order Order[]
+  Room  Room[]
+
+  @@map("rooms")
+}
+
+enum Status {
+  pending_payment
+  awaiting_confirmation
+  cancelled
+  success
+}
+
+enum Payment {
+  BCA
+  MANDIRI
+  GOPAY
+  SHOPEE
+}
+
+model Room {
+  id              String       @id @default(cuid())
+  roomCategory_id String
+  property_id     String
+  deletedAt       DateTime?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  roomCategory    RoomCategory @relation(fields: [roomCategory_id], references: [id])
+  property        Property     @relation(fields: [property_id], references: [id])
+  OrderRoom       OrderRoom[]
+}
+
+model Order {
+  id              String        @id @default(cuid())
+  user_id         String
+  property_id     String
+  roomCategory_id String
+  checkIn_date    DateTime
+  checkOut_date   DateTime
+  total_price     Float
+  payment_method  Payment?
+  payment_proof   Bytes?        @db.LongBlob
+  payment_date    DateTime?
+  cancel_date     DateTime?
+  status          Status
+  token_midTrans  String?
+  invoice_id      String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  user            User          @relation(fields: [user_id], references: [id])
+  property        Property      @relation(fields: [property_id], references: [id])
+  Review          Review[]
+  RoomCategory    RoomCategory? @relation(fields: [roomCategory_id], references: [id])
+  OrderRoom       OrderRoom[]
+
+  @@map("orders")
+}
+
+model OrderRoom {
+  id        String   @id @default(uuid())
+  order_id  String
+  order     Order    @relation(fields: [order_id], references: [id])
+  room_id   String
+  room      Room     @relation(fields: [room_id], references: [id])
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
 
-  @@map("samples") // if you want to use snake_case format
+model Review {
+  id          String   @id @default(cuid())
+  user_id     String?
+  order_id    String
+  property_id String
+  review      String   @db.LongText
+  reply       String?  @db.LongText
+  rating      Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user     User?    @relation(fields: [user_id], references: [id])
+  order    Order    @relation(fields: [order_id], references: [id])
+  property Property @relation(fields: [property_id], references: [id])
+
+  @@map("reviews")
 }

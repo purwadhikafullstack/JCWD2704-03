@@ -17,6 +17,7 @@
     "husky": "^8.0.0",
     "lint-staged": "^15.1.0",
     "prettier": "^3.1.0",
+    "prisma": "^5.16.1",
     "tsc-alias": "^1.8.10",
     "tsconfig": "*",
     "turbo": "latest"
@@ -31,5 +32,17 @@
     "hooks": {
       "pre-commit": "npx lint-staged"
     }
+  },
+  "dependencies": {
+    "@prisma/client": "^5.16.1",
+    "@types/chart.js": "^2.9.41",
+    "bootstrap": "^5.3.3",
+    "chart.js": "^4.4.3",
+    "crypto": "^1.0.1",
+    "date-fns": "^3.6.0",
+    "ngrok": "^5.0.0-beta.2",
+    "react-calendar": "^5.0.0",
+    "react-datepicker": "^7.3.0",
+    "react-toastify": "^10.0.5"
   }
 }
