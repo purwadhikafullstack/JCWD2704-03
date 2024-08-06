@@ -366,6 +366,30 @@ class UserService {
           'We received a request to change your e-mail on Atcasa',
           '/../templates/reverify.html',
           'reverify',
+        const baseUrl =
+          'https://jcwd270403.purwadhikabootcamp.com' ||
+          'http://localhost:3000';
+        const token = createToken(
+          {
+            id: userId,
+            email: user.email,
+            isVerified: user.isVerified,
+            first_name: user.first_name,
+            last_name: user.last_name,
+            isRequestingEmailChange: true,
+            image_name: user.image_name,
+            role: user.role,
+            type: 'access-token',
+          },
+          '1h',
+        );
+        const verificationUrl = `${baseUrl}/reverify/${token}`;
+
+        const templatePath = path.join(__dirname, '../templates/reverify.html');
+        let htmlTemplate = fs.readFileSync(templatePath, 'utf-8');
+        const html = htmlTemplate.replace(
+          /{verificationUrl}/g,
+          verificationUrl,
         );
 
         if (!sentEmail) {
