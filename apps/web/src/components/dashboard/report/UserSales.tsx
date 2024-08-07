@@ -66,7 +66,6 @@ const UserReport: React.FC = () => {
       <table className="min-w-full bg-white rounded-lg shadow-md">
         <thead>
           <tr className="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
-            <th className="py-2 px-4 border">No</th>
             <th className="py-3 px-6 text-left">User Name</th>
             <th className="py-3 px-6 text-left">Property Name</th>
             <th className="py-3 px-6 text-left">Property ID</th>
@@ -93,7 +92,6 @@ const UserReport: React.FC = () => {
                 key={`${sale.user_id}-${detail.property_id}`}
                 className="border-b border-gray-200 hover:bg-gray-100"
               >
-                <td className="py-2 px-4 border text-center">{index + 1}</td>
                 <td className="py-3 px-6 text-left">
                   {index === 0 ? sale.user_name : ''}
                 </td>
